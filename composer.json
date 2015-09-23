@@ -1,0 +1,25 @@
+{
+    "name": "larowlan/tl",
+    "description": "Time logger for redmine",
+    "require": {
+        "symfony/console": "^2.7",
+        "doctrine/dbal": "^2.5",
+        "symfony/yaml": "^2.7",
+        "symfony/dependency-injection": "^2.7"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^4.8"
+    },
+    "license": "GPL2",
+    "autoload": {
+        "psr-4": {
+            "Larowlan\\Tl\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Lee Rowlands",
+            "email": "lee.rowlands@previousnext.com.au"
+        }
+    ]
+}
