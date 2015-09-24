@@ -1,0 +1,18 @@
+parameters:
+  sqlite_url: "sqlite:////usr/local/var/tldb.sqlite"
+
+services:
+  dbal:
+    class: Doctrine\DBAL\Connection
+    factory: [Doctrine\DBAL\DriverManager, getConnection]
+    arguments: [ { url: "%sqlite_url%" } ]
+  app.command.start:
+    class: Larowlan\Tl\Commands\Start
+    arguments: ["@dbal"]
+    tags:
+      -  { name: command }
+  app.command.configure:
+    class: Larowlan\Tl\Commands\Configure
+    tags:
+      -  { name: command }
+
