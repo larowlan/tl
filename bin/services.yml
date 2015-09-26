@@ -1,18 +1,31 @@
 parameters:
-  sqlite_url: "sqlite:////usr/local/var/tldb.sqlite"
+  db_name: ".tldb.sq3"
+  directory: ''
 
 services:
-  dbal:
+  config.processor:
+    class: Symfony\Component\Config\Definition\Processor
+  config.configuration:
+    class: Larowlan\Tl\Configuration\LoggerConfiguration
+  connection:
     class: Doctrine\DBAL\Connection
-    factory: [Doctrine\DBAL\DriverManager, getConnection]
-    arguments: [ { url: "%sqlite_url%" } ]
+    factory: [Larowlan\Tl\Repository\ConnectionFactory, createConnection]
+    arguments: ['%directory%', '%db_name%']
+  schema:
+    class: Larowlan\Tl\Repository\Schema
   app.command.start:
     class: Larowlan\Tl\Commands\Start
-    arguments: ["@dbal"]
+    arguments: ["@connection"]
+    tags:
+      -  { name: command }
+  app.command.install:
+    class: Larowlan\Tl\Commands\Install
+    arguments: ["@connection", '%directory%', "@schema"]
     tags:
       -  { name: command }
   app.command.configure:
     class: Larowlan\Tl\Commands\Configure
+    arguments: ["%directory%"]
     tags:
       -  { name: command }
 
