@@ -4,7 +4,10 @@
         "src"
     ],
     "files": [
-        "LICENSE"
+        "LICENSE",
+        "Readme.md",
+        "bin/services.yml",
+        "manifest.json"
     ],
     "finder": [
         {
