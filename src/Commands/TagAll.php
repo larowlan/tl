@@ -43,10 +43,10 @@ class TagAll extends Command {
    */
   protected function configure() {
     $this
-      ->setName('tag_all')
+      ->setName('tag-all')
       ->setDescription('Tag time entries')
       ->setHelp('Tag all time entries. <comment>Usage:</comment> <info>tl tag_all</info>')
-      ->addUsage('tl tag_all');
+      ->addUsage('tl tag-all');
   }
 
   /**
