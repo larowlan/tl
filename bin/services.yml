@@ -59,6 +59,11 @@ services:
     arguments: ["@connector", "@repository"]
     tags:
       -  { name: command }
+  app.command.tag_all:
+    class: Larowlan\Tl\Commands\TagAll
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
   app.command.send:
     class: Larowlan\Tl\Commands\Send
     arguments: ["@connector", "@repository", "@reviewer"]
