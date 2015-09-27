@@ -94,30 +94,27 @@ class DbRepository implements Repository {
     return array($this->connection()->lastInsertId(), FALSE);
   }
 
-  public function status($uid, $date = NULL) {
-    $stop = $this->stop($uid);
+  public function status($date = NULL) {
+    $stop = $this->stop();
     if (!$date) {
       $stamp = mktime('0', '0');
     }
     else {
       $stamp = strtotime($date);
     }
-    $query = $this->connection()->select('bot_tl_slot', 'b')
-      ->condition('uid', $uid)
-      ->condition('start', $stamp, '>');
-    $query->addExpression('end - start', 'duration');
-    if ($stop) {
-      $query->addExpression('CASE WHEN id = :id THEN 1 ELSE 0 END', 'active', array(
-        ':id' => $stop->id,
-      ));
-    }
-    $return = $query->fields('b', array('id', 'tid'))
+    $return = $this->qb()->select('id', 'tid', 'end - start AS duration', 'CASE WHEN id = :id THEN 1 ELSE 0 END AS active')
+      ->from('slots')
+      ->where('start > :stamp')
+      ->setParameter(':stamp', $stamp)
+      ->setParameter(':id', isset($stop->id) ? $stop->id : 0)
       ->execute()
-      ->fetchAll();
+      ->fetchAll(\PDO::FETCH_OBJ);
     if ($stop) {
-      $this->connection()->update('bot_tl_slot')
-        ->fields(array('end' => NULL))
-        ->condition('id', $stop->id)
+      $this->qb()->update('slots')
+        ->set('end', ':end')
+        ->setParameter(':end', NULL)
+        ->where('id = :id')
+        ->setParameter(':id', $stop->id)
         ->execute();
     }
     return $return;

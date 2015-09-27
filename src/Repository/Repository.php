@@ -15,7 +15,7 @@ interface Repository {
 
   public function start($ticket_id);
 
-  public function status($uid, $date = NULL);
+  public function status($date = NULL);
 
   public function comment($uid, $ticket_id, $comment);
 
