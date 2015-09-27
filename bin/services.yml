@@ -26,10 +26,52 @@ services:
   connector:
     class: Larowlan\Tl\Connector\RedmineConnector
     arguments: ['@http_client', '@cache', '%config%']
+  reviewer:
+    class: Larowlan\Tl\Reviewer
+    arguments: ["@connector", "@repository"]
   #commands
+  app.command.update:
+    class: Larowlan\Tl\Commands\Update
+    tags:
+      -  { name: command }
   app.command.start:
     class: Larowlan\Tl\Commands\Start
     arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.open:
+    class: Larowlan\Tl\Commands\Open
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.edit:
+    class: Larowlan\Tl\Commands\Edit
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.comment:
+    class: Larowlan\Tl\Commands\Comment
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.tag:
+    class: Larowlan\Tl\Commands\Tag
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.send:
+    class: Larowlan\Tl\Commands\Send
+    arguments: ["@connector", "@repository", "@reviewer"]
+    tags:
+      -  { name: command }
+  app.command.review:
+    class: Larowlan\Tl\Commands\Review
+    arguments: ["@reviewer"]
+    tags:
+      -  { name: command }
+  app.command.total:
+    class: Larowlan\Tl\Commands\Total
+    arguments: ["@reviewer"]
     tags:
       -  { name: command }
   app.command.stop:

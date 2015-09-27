@@ -17,16 +17,16 @@ interface Repository {
 
   public function status($date = NULL);
 
-  public function comment($uid, $ticket_id, $comment);
+  public function comment($slot_id, $comment);
 
-  public function review($uid, $date = NULL, $check = FALSE);
+  public function review($date = NULL, $check = FALSE);
 
-  public function send($uid);
+  public function send();
 
-  public function store($entries, $uid);
+  public function store($entries);
 
-  public function edit($uid, $slot_id, $duration);
+  public function edit($slot_id, $duration);
 
-  public function tag($uid, $tag_id, $ticket_id = NULL);
+  public function tag($tag_id, $slot_id = NULL);
 
 }

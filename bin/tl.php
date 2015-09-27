@@ -16,5 +16,5 @@ $loader->load('services.yml');
 $home = $_SERVER['HOME'];
 $container->setParameter('directory', $home);
 
-$application = new Application('Time logger', '0.0.1', $container);
+$application = new Application('Time logger', '@package_version@', $container);
 $application->run();

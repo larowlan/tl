@@ -120,74 +120,62 @@ class DbRepository implements Repository {
     return $return;
   }
 
-  public function review($uid, $date = NULL, $check = FALSE) {
-    $stop = $this->stop($uid);
+  public function review($date = NULL, $check = FALSE) {
+    $stop = $this->stop();
     if (!$date) {
       $stamp = mktime('0', '0');
     }
     else {
       $stamp = strtotime($date);
     }
-    $query = $this->connection()->select('bot_tl_slot', 'b')
-      ->condition('uid', $uid)
-      ->isNull('teid')
-      ->condition('start', $stamp, '>');
-    $query->addExpression('ROUND((end - start) / 900) * 900 / 3600', 'duration');
+    $query = $this->qb()->select('ROUND((end - start) / 900) * 900 / 3600 AS duration', 'tid', 'category', 'comment', 'id', 'start')
+    ->from('slots');
+    $where = $this->qb()->expr()->andX(
+      $this->qb()->expr()->isNull('teid'),
+      $this->qb()->expr()->gt('start', ':stamp')
+    );
+    $query->setParameter(':stamp', $stamp);
     if ($check) {
       // Only incomplete records.
-      $query->condition($this->orCondition()
-        ->isNull('category')
-        ->isNull('comment'));
+      $where->add($this->qb()->expr()->orX(
+        $this->qb()->expr()->isNull('comment'),
+        $this->qb()->expr()->isNull('category')
+      ));
     }
-    $return = $query->fields('b', array('tid', 'category', 'comment', 'id', 'start'))
-      ->execute()
-      ->fetchAll();
+    $return = $query->where($where)->execute()->fetchAll(\PDO::FETCH_OBJ);
     if ($stop) {
-      $this->connection()->update('bot_tl_slot')
-        ->fields(array('end' => NULL))
-        ->condition('id', $stop->id)
+      $this->qb()->update('slots')
+        ->set('end', ':end')
+        ->setParameter(':end', NULL)
+        ->where('id = :id')
+        ->setParameter(':id', $stop->id)
         ->execute();
     }
     return $return;
   }
 
-  public function send($uid) {
-    return $this->review($uid, '19780101');
+  public function send() {
+    return $this->review('19780101');
   }
 
-  public function store($entries, $uid) {
+  public function store($entries) {
     foreach ($entries as $tid => $entry_id) {
-      $this->connection()->update('bot_tl_slot')
-        ->fields(array('teid' => $entry_id))
-        ->condition('tid', $tid)
-        ->condition('uid', $uid)
-        ->isNull('teid')
+      $this->qb()->update('slots')
+        ->set('teid', $entry_id)
+        ->where('tid = :tid')
+        ->setParameter(':tid', $tid)
+        ->where('teid IS NULL')
         ->execute();
     }
   }
 
-  public function edit($uid, $slot_id, $duration) {
+  public function edit($slot_id, $duration) {
     $request_time = $this::requestTime();
-    $query = $this->connection()->update('bot_tl_slot', array(
-      'return' => \Database::RETURN_AFFECTED,
-    ))
-      ->fields(array(
-        'start' => $request_time - ($duration * 3600),
-        'end' => $request_time,
-      ))
-      ->condition('uid', $uid)
-      ->condition('id', $slot_id);
-    return $query->execute();
-  }
-
-  /**
-   * Returns the active connection.
-   *
-   * @return \Doctrine\Dbal\Connection
-   *   The active connection.
-   */
-  protected function connection() {
-    return $this->connection;
+    return $this->qb()->update('slots')
+      ->set('start', $request_time - ($duration * 3600))
+      ->set('end', $request_time)
+      ->where('id = :id')
+      ->setParameter(':id', $slot_id)->execute();
   }
 
   /**
@@ -200,30 +188,29 @@ class DbRepository implements Repository {
     return time();
   }
 
-  public function tag($uid, $tag_id, $ticket_id = NULL) {
-    $query = $this->connection()->update('bot_tl_slot', array(
-      'return' => \Database::RETURN_AFFECTED,
-    ))
-      ->fields(array('category' => $tag_id))
-      ->condition('uid', $uid);
-    if (!$ticket_id) {
-      // Tagging all open slots.
-      $query->isNull('category');
-    }
-    else {
-      $query->condition('tid', $ticket_id);
+  public function tag($tag_id, $slot_id = NULL) {
+    $query = $this->qb()->update('slots')
+      ->set('category', ':tag')
+      ->setParameter(':tag', $tag_id)
+      ->where('category IS NULL');
+    if ($slot_id) {
+      $query->where('id = :id')
+        ->setParameter(':id', $slot_id);
     }
     return $query->execute();
   }
 
-  public function comment($uid, $ticket_id, $comment) {
-    return $this->connection()->update('bot_tl_slot', array(
-      'return' => \Database::RETURN_AFFECTED,
-    ))
-      ->fields(array('comment' => $comment))
-      ->condition('uid', $uid)
-      ->condition('tid', $ticket_id)
-      ->isNull('comment')
+  public function comment($slot_id, $comment) {
+    return $this->qb()->update('slots')
+      ->set('comment', ':comment')
+      ->setParameter(':comment', $comment)
+      ->where('id = :id')
+      ->setParameter(':id', $slot_id)
+      ->where('comment IS NULL')
       ->execute();
+  }
+
+  protected function connection() {
+    return $this->connection;
   }
 }

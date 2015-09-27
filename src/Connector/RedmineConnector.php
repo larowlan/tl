@@ -57,16 +57,16 @@ class RedmineConnector implements Connector {
    */
   public function fetchCategories() {
     $cid = 'redmine-categories';
-    if (($details = $this->cacheGet($cid))) {
-      return $details->data;
+    if (($details = $this->cache->fetch($cid))) {
+      return $details;
     }
-    $url = variable_get('bot_tl_redmine_url', BOT_TL_DEFAULT_URL) . '/enumerations/time_entry_activities.xml';
-    if ($xml = $this->fetch($url, $account->bot_tl->api_key)) {
+    $url = $this->url . '/enumerations/time_entry_activities.xml';
+    if ($xml = $this->fetch($url, $this->apiKey)) {
       $categories = array();
       foreach ($xml->time_entry_activity as $node) {
         $categories[(string) $node->id] = $node->id . ':' . $node->name;
       }
-      $this->cacheSet($cid, $categories);
+      $this->cache->save($cid, $categories, static::LIFETIME);
       return $categories;
     }
     return FALSE;
@@ -81,30 +81,29 @@ class RedmineConnector implements Connector {
       // Return 0 to ensure doesn't send again.
       return 0;
     }
-    $url = variable_get('bot_tl_redmine_url', BOT_TL_DEFAULT_URL) . '/time_entries.xml';
-    $details = $this->ticketDetails($entry->tid, $account);
-    $data = array(
+    $url = $this->url . '/time_entries.xml';
+    $details = $this->ticketDetails($entry->tid);
+    $data = [
       'issue_id'    => $entry->tid,
       'project_id'  => $details['project'],
       'spent_on'    => date('Y-m-d', $entry->start),
       'hours'       => $entry->duration,
       'activity_id' => $entry->category,
       'comments'    => $entry->comment,
-    );
+    ];
     $xml = new \SimpleXMLElement('<?xml version="1.0"?><time_entry></time_entry>');
     foreach ($data as $key => $value) {
       $xml->addChild($key, $value);
     }
-    $response = drupal_http_request($url, array(
-      'method' => 'POST',
-      'headers' => array(
+    $response = $this->httpClient->request('POST', $url, [
+      'headers' => [
         'Content-Type' => 'application/xml',
-        'X-Redmine-API-Key' => $account->bot_tl->api_key,
-      ),
-      'data' => $xml->asXml(),
-    ));
-    if (in_array(substr($response->code, 0, 1), array(2, 3))) {
-      $return = new \SimpleXMLElement($response->data);
+        'X-Redmine-API-Key' => $this->apiKey,
+      ],
+      'body' => $xml->asXml(),
+    ]);
+    if (in_array(substr($response->getStatusCode(), 0, 1), [2, 3])) {
+      $return = new \SimpleXMLElement((string) $response->getBody());
       return (string) $return->id;
     }
     // Try again.
