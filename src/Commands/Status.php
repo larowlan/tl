@@ -12,6 +12,7 @@ use Larowlan\Tl\Formatter;
 use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -62,6 +63,7 @@ class Status extends Command {
       }
       $rows[] = [$record->id, $record->tid, Formatter::formatDuration($record->duration), $details['title']];
     }
+    $rows[] = new TableSeparator();
     $rows[] = ['', '<comment>Total</comment>', '<info>' . Formatter::formatDuration($total) . '</info>', ''];
     $table->setRows($rows);
     $table->render();
