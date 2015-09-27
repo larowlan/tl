@@ -56,9 +56,6 @@ class Application extends BaseApplication {
   public function __construct($name = 'UNKNOWN', $version = 'UNKNOWN', ContainerBuilder $container) {
     parent::__construct($name, $version);
     $this->container = $container;
-    foreach ($this->container->findTaggedServiceIds('command') as $service_id => $tags) {
-      $this->add($container->get($service_id));
-    }
   }
 
   /**
@@ -70,6 +67,9 @@ class Application extends BaseApplication {
       if ($result = $this->setupCheck($output)) {
         return $result;
       }
+    }
+    foreach ($this->container->findTaggedServiceIds('command') as $service_id => $tags) {
+      $this->add($this->container->get($service_id));
     }
     return parent::doRun($input, $output);
   }

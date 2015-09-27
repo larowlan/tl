@@ -1,6 +1,8 @@
 parameters:
   db_name: ".tldb.sq3"
   directory: ''
+  # This is set in Application::checkConfig
+  config: []
 
 services:
   config.processor:
@@ -13,9 +15,26 @@ services:
     arguments: ['%directory%', '%db_name%']
   schema:
     class: Larowlan\Tl\Repository\Schema
+  http_client:
+    class: GuzzleHttp\Client
+  cache:
+    class: Doctrine\Common\Cache\FileSystemCache
+    factory: [Larowlan\Tl\CacheFactory, create]
+  repository:
+    class: Larowlan\Tl\Repository\DbRepository
+    arguments: ["@connection"]
+  connector:
+    class: Larowlan\Tl\Connector\RedmineConnector
+    arguments: ['@http_client', '@cache', '%config%']
+  #commands
   app.command.start:
     class: Larowlan\Tl\Commands\Start
-    arguments: ["@connection"]
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.stop:
+    class: Larowlan\Tl\Commands\Stop
+    arguments: ["@connector", "@repository"]
     tags:
       -  { name: command }
   app.command.install:
