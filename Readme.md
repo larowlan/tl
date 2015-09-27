@@ -3,6 +3,10 @@
 * Entries stored in sqlite in your home directory
 * Sends complete entries to redmine
 
+## Requirements
+
+PHP 5.4+ (short array syntax)
+
 ## Installation
 
 ```bash
