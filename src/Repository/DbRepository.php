@@ -55,7 +55,7 @@ class DbRepository implements Repository {
       ->from('slots', 's')
       ->where('s.end IS NULL');
     if ($slot_id) {
-      $q = $q->where('s.id = :id')
+      $q = $q->andWhere('s.id = :id')
         ->setParameter('id', $slot_id);
     }
     if ($open = $q
@@ -70,8 +70,8 @@ class DbRepository implements Repository {
     if ($continue = $this->qb()->select('*')
       ->from('slots', 's')
       ->where('s.tid = :tid')
-      ->where('s.comment IS NULL')
-      ->where('s.category IS NULL')
+      ->andWhere('s.comment IS NULL')
+      ->andWhere('s.category IS NULL')
       ->setParameter('tid', $ticket_id)
       ->execute()
       ->fetch(\PDO::FETCH_OBJ)) {
@@ -128,7 +128,7 @@ class DbRepository implements Repository {
     else {
       $stamp = strtotime($date);
     }
-    $query = $this->qb()->select('ROUND((end - start) / 900) * 900 / 3600 AS duration', 'tid', 'category', 'comment', 'id', 'start')
+    $query = $this->qb()->select('end', 'tid', 'category', 'comment', 'id', 'start')
     ->from('slots');
     $where = $this->qb()->expr()->andX(
       $this->qb()->expr()->isNull('teid'),
@@ -151,6 +151,9 @@ class DbRepository implements Repository {
         ->setParameter(':id', $stop->id)
         ->execute();
     }
+    foreach ($return as &$row) {
+      $row->duration = round(($row->end - $row->start) / 900) * 900 / 3600;
+    }
     return $return;
   }
 
@@ -164,7 +167,7 @@ class DbRepository implements Repository {
         ->set('teid', $entry_id)
         ->where('tid = :tid')
         ->setParameter(':tid', $tid)
-        ->where('teid IS NULL')
+        ->andWhere('teid IS NULL')
         ->execute();
     }
   }
@@ -194,7 +197,7 @@ class DbRepository implements Repository {
       ->setParameter(':tag', $tag_id)
       ->where('category IS NULL');
     if ($slot_id) {
-      $query->where('id = :id')
+      $query->andWhere('id = :id')
         ->setParameter(':id', $slot_id);
     }
     return $query->execute();
@@ -206,7 +209,7 @@ class DbRepository implements Repository {
       ->setParameter(':comment', $comment)
       ->where('id = :id')
       ->setParameter(':id', $slot_id)
-      ->where('comment IS NULL')
+      ->andWhere('comment IS NULL')
       ->execute();
   }
 
