@@ -67,3 +67,36 @@ tl tag
 tl send
 ```
 Rinse and repeat the next day
+
+## Docker
+
+### Installation
+
+**Build this image**
+
+```bash
+docker build -t larowlan/tl .
+```
+
+NOTE: Until we have builds on the Docker Hub.
+
+**Bash alias**
+
+The following will make your `tl` cli command appear like it's running native, but it's not! it's running in
+a container!
+
+Add the following to your `~/.bashrc` file.
+
+```bash
+alias tl='docker run -v $HOME:/root -it larowlan/tl'
+```
+
+**Run**
+
+You can now follow the same steps as above for installation.
+
+eg.
+
+```bash
+tl install
+```
