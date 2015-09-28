@@ -68,6 +68,11 @@ class Application extends BaseApplication {
         return $result;
       }
     }
+    elseif ($name == 'install') {
+      if ($config_error = $this->checkConfig($output)) {
+        return $config_error;
+      }
+    }
     foreach ($this->container->findTaggedServiceIds('command') as $service_id => $tags) {
       $this->add($this->container->get($service_id));
     }
