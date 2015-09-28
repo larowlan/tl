@@ -22,5 +22,11 @@
     "sha1": "816b396f38af2971ac7e70ad490a71fb531e9b08",
     "url": "http://larowlan.github.io/tl/downloads/tl-0.0.7.phar",
     "version": "0.0.7"
+  },
+  {
+    "name": "tl.phar",
+    "sha1": "0156c4745da580dc7b06ab2d000c231444fa5ffe",
+    "url": "http://larowlan.github.io/tl/downloads/tl-0.0.8.phar",
+    "version": "0.0.8"
   }
 ]
