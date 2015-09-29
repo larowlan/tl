@@ -3,6 +3,7 @@ parameters:
   directory: ''
   # This is set in Application::checkConfig
   config: []
+  version: ''
 
 services:
   config.processor:
@@ -25,7 +26,7 @@ services:
     arguments: ["@connection"]
   connector:
     class: Larowlan\Tl\Connector\RedmineConnector
-    arguments: ['@http_client', '@cache', '%config%']
+    arguments: ['@http_client', '@cache', '%config%', '%version%']
   reviewer:
     class: Larowlan\Tl\Reviewer
     arguments: ["@connector", "@repository"]
@@ -99,4 +100,18 @@ services:
     arguments: ["%directory%"]
     tags:
       -  { name: command }
-
+  app.command.frequent:
+    class: Larowlan\Tl\Commands\MostFrequentlyUsed
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.combine:
+    class: Larowlan\Tl\Commands\Combine
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.delete:
+    class: Larowlan\Tl\Commands\Delete
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }

@@ -24,19 +24,21 @@ class RedmineConnector implements Connector {
    * @param $httpClient
    * @param $cache
    * @param array $config
+   * @param string version
    */
-  public function __construct(ClientInterface $httpClient, Cache $cache, array $config) {
+  public function __construct(ClientInterface $httpClient, Cache $cache, array $config, $version) {
     $this->httpClient = $httpClient;
     $this->cache = $cache;
     $this->url = $config['url'];
     $this->apiKey = $config['api_key'];
+    $this->version = $version;
   }
 
   /**
    * {@inheritdoc}
    */
   public function ticketDetails($id) {
-    if (($details = $this->cache->fetch($id))) {
+    if (($details = $this->cache->fetch($this->version . ':' . $id))) {
       return $details;
     }
     // We need to fetch it.
@@ -46,7 +48,7 @@ class RedmineConnector implements Connector {
         'title' => $xml->subject . ' (' . $xml->project['name'] . ')',
         'project' => (string) $xml->project['id'],
       );
-      $this->cache->save($id, $entry, static::LIFETIME);
+      $this->cache->save($this->version . ':' . $id, $entry, static::LIFETIME);
       return $entry;
     }
     return FALSE;
@@ -57,16 +59,18 @@ class RedmineConnector implements Connector {
    */
   public function fetchCategories() {
     $cid = 'redmine-categories';
-    if (($details = $this->cache->fetch($cid))) {
+    if (($details = $this->cache->fetch($this->version . ':' . $cid))) {
       return $details;
     }
     $url = $this->url . '/enumerations/time_entry_activities.xml';
     if ($xml = $this->fetch($url, $this->apiKey)) {
       $categories = array();
+      $i = 1;
       foreach ($xml->time_entry_activity as $node) {
-        $categories[(string) $node->id] = $node->id . ':' . $node->name;
+        $categories[(string) str_pad($node->id, 2, 0, STR_PAD_LEFT)] = $node->name . ':' . $node->id;
+        $i++;
       }
-      $this->cache->save($cid, $categories, static::LIFETIME);
+      $this->cache->save($this->version . ':' . $cid, $categories, static::LIFETIME);
       return $categories;
     }
     return FALSE;

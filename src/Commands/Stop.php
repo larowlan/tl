@@ -49,7 +49,8 @@ class Stop extends Command {
   protected function execute(InputInterface $input, OutputInterface $output) {
     if ($stop = $this->repository->stop()) {
       $stopped = $this->connector->ticketDetails($stop->tid);
-      $output->writeln(sprintf('Closed slot <comment>%d</comment> against ticket <info>%d</info>: %s, duration <info>%s</info>',
+      $output->writeln(sprintf('<bg=blue;fg=white;options=bold>[%s]</> Closed slot <comment>%d</comment> against ticket <info>%d</info>: %s, duration <info>%s</info>',
+        (new \DateTime())->format('h:i'),
         $stop->id,
         $stop->tid,
         $stopped['title'],
