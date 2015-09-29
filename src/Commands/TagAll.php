@@ -65,7 +65,7 @@ class TagAll extends Command {
       $last ?: static::DEFAULT_TAG
     );
     $tag = $helper->ask($input, $output, $question);
-    list($tag, ) = explode(':', $tag);
+    list(, $tag) = explode(':', $tag);
     foreach ($entries as $entry) {
       if ($entry->category) {
         continue;

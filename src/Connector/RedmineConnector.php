@@ -63,8 +63,10 @@ class RedmineConnector implements Connector {
     $url = $this->url . '/enumerations/time_entry_activities.xml';
     if ($xml = $this->fetch($url, $this->apiKey)) {
       $categories = array();
+      $i = 1;
       foreach ($xml->time_entry_activity as $node) {
-        $categories[(string) $node->id] = $node->id . ':' . $node->name;
+        $categories[(string) str_pad($i, 2, 0, STR_PAD_LEFT)] = $node->name . ':' . $node->id;
+        $i++;
       }
       $this->cache->save($cid, $categories, static::LIFETIME);
       return $categories;
