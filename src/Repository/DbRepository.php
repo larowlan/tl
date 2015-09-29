@@ -241,6 +241,8 @@ class DbRepository implements Repository {
   public function delete($slot_id) {
     return $this->qb()->delete('slots')
       ->where('id = :id')
+      // Can't delete sent entries.
+      ->andWhere('teid IS NULL')
       ->setParameter(':id', $slot_id)
       ->execute();
   }
