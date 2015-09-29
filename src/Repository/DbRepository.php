@@ -213,6 +213,17 @@ class DbRepository implements Repository {
       ->execute();
   }
 
+  public function frequent() {
+    return $this->qb()
+      ->select('tid')
+      ->from('slots', 's')
+      ->groupBy('tid')
+      ->orderBy('COUNT(*)', 'DESC')
+      ->setMaxResults(10)
+      ->execute()
+      ->fetchAll(\PDO::FETCH_OBJ);
+  }
+
   protected function connection() {
     return $this->connection;
   }
