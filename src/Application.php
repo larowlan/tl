@@ -56,6 +56,7 @@ class Application extends BaseApplication {
   public function __construct($name = 'UNKNOWN', $version = 'UNKNOWN', ContainerBuilder $container) {
     parent::__construct($name, $version);
     $this->container = $container;
+    $this->container->setParameter('version', $this->getVersion());
   }
 
   /**

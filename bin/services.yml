@@ -3,6 +3,7 @@ parameters:
   directory: ''
   # This is set in Application::checkConfig
   config: []
+  version: ''
 
 services:
   config.processor:
@@ -25,7 +26,7 @@ services:
     arguments: ["@connection"]
   connector:
     class: Larowlan\Tl\Connector\RedmineConnector
-    arguments: ['@http_client', '@cache', '%config%']
+    arguments: ['@http_client', '@cache', '%config%', '%version%']
   reviewer:
     class: Larowlan\Tl\Reviewer
     arguments: ["@connector", "@repository"]
