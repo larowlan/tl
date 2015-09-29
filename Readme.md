@@ -5,8 +5,8 @@
 
 ## Requirements
 
-PHP 5.4+ (short array syntax)
-php5-sqlite
+* PHP 5.4+ (short array syntax)
+* php5-sqlite
 
 ## Installation
 
