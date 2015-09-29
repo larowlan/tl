@@ -88,10 +88,15 @@ class DbRepository implements Repository {
       'tid' => $ticket_id,
       'start' => $this::requestTime(),
     );
+
+    return array($this->insert($record), FALSE);
+  }
+
+  public function insert($slot) {
     $this->qb()->insert('slots')
-      ->values($record)
+      ->values($slot)
       ->execute();
-    return array($this->connection()->lastInsertId(), FALSE);
+    return $this->connection()->lastInsertId();
   }
 
   public function status($date = NULL) {
@@ -222,6 +227,22 @@ class DbRepository implements Repository {
       ->setMaxResults(10)
       ->execute()
       ->fetchAll(\PDO::FETCH_OBJ);
+  }
+
+  public function slot($slot_id) {
+    return $this->qb()->select('*')
+      ->from('slots')
+      ->where('id = :id')
+      ->setParameter(':id', $slot_id)
+      ->execute()
+      ->fetch();
+  }
+
+  public function delete($slot_id) {
+    return $this->qb()->delete('slots')
+      ->where('id = :id')
+      ->setParameter(':id', $slot_id)
+      ->execute();
   }
 
   protected function connection() {

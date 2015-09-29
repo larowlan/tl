@@ -15,6 +15,8 @@ interface Repository {
 
   public function start($ticket_id);
 
+  public function insert($slot);
+
   public function status($date = NULL);
 
   public function comment($slot_id, $comment);
@@ -30,5 +32,7 @@ interface Repository {
   public function tag($tag_id, $slot_id = NULL);
 
   public function frequent();
+  public function slot($slot_id);
+  public function delete($slot_id);
 
 }
