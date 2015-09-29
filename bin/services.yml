@@ -99,4 +99,8 @@ services:
     arguments: ["%directory%"]
     tags:
       -  { name: command }
-
+  app.command.frequent:
+    class: Larowlan\Tl\Commands\MostFrequentlyUsed
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }

@@ -29,4 +29,6 @@ interface Repository {
 
   public function tag($tag_id, $slot_id = NULL);
 
+  public function frequent();
+
 }
