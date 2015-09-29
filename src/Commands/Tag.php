@@ -30,7 +30,7 @@ class Tag extends Command {
    */
   protected $repository;
 
-  const DEFAULT_TAG = 9;
+  const DEFAULT_TAG = 'Development:9';
 
   public function __construct(Connector $connector, Repository $repository) {
     $this->connector = $connector;
@@ -65,7 +65,7 @@ class Tag extends Command {
       }
       $title = $this->connector->ticketDetails($entry->tid);
       $question = new ChoiceQuestion(
-        sprintf('Enter tag for slot <comment>%d</comment> [<info>%d</info>]: %s [<info>%s h</info>] [%d]',
+        sprintf('Enter tag for slot <comment>%d</comment> [<info>%d</info>]: %s [<info>%s h</info>] [%s]',
           $entry->id,
           $entry->tid,
           $title['title'],
@@ -75,7 +75,8 @@ class Tag extends Command {
         $categories,
         $last ?: static::DEFAULT_TAG
       );
-      $tag = $helper->ask($input, $output, $question);
+      $tag_id = $helper->ask($input, $output, $question);
+      $tag = $categories[$tag_id];
       list(, $tag) = explode(':', $tag);
       $this->repository->tag($tag, $entry->id);
       $last = $tag;
