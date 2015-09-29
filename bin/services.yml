@@ -104,3 +104,13 @@ services:
     arguments: ["@connector", "@repository"]
     tags:
       -  { name: command }
+  app.command.combine:
+    class: Larowlan\Tl\Commands\Combine
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.delete:
+    class: Larowlan\Tl\Commands\Delete
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
