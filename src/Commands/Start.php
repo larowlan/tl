@@ -61,7 +61,8 @@ class Start extends Command {
       }
       try {
         list($slot_id, $continued) = $this->repository->start($ticket_id);
-        $output->writeln(sprintf('<comment>%s</comment> entry for <info>%d</info>: %s [slot:<comment>%d</comment>]',
+        $output->writeln(sprintf('<bg=blue;fg=white;options=bold>[%s]</> <comment>%s</comment> entry for <info>%d</info>: %s [slot:<comment>%d</comment>]',
+          (new \DateTime())->format('h:i'),
           $continued ? 'Continued' : 'Started new',
           $ticket_id,
           $title['title'],
