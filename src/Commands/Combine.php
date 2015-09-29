@@ -6,7 +6,6 @@
 
 namespace Larowlan\Tl\Commands;
 
-use Doctrine\DBAL\Driver\Connection;
 use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\Formatter;
 use Larowlan\Tl\Repository\Repository;
@@ -14,8 +13,6 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\ChoiceQuestion;
-use Symfony\Component\Console\Question\Question;
 
 class Combine extends Command {
 
@@ -54,7 +51,7 @@ class Combine extends Command {
   protected function execute(InputInterface $input, OutputInterface $output) {
     $slot1 = $input->getArgument('slot1');
     $slot2 = $input->getArgument('slot2');
-    list($entry1, $entry2) = $this->validateSlots($slot1, $slot2);
+    list($entry1, $entry2) = $this->validateSlots($slot1, $slot2, $output);
 
     // Create a new combined entry and then remove fields we don't want to keep
     // around in the new entry.
@@ -73,11 +70,15 @@ class Combine extends Command {
     }
   }
 
-  protected function validateSlots($slot1, $slot2) {
+  protected function validateSlots($slot1, $slot2, OutputInterface $output) {
+    // Stop any open tickets to ensure they get an end time.
+    $this->stopTicket($slot1, $output);
     // Ensure we can load both slots.
     if (!$entry1 = $this->repository->slot($slot1)) {
       throw new \InvalidArgumentException(sprintf('Invalid slot id %s', $slot1));
     }
+    // Stop any open tickets to ensure they get an end time.
+    $this->stopTicket($slot2, $output);
     if (!$entry2 = $this->repository->slot($slot2)) {
       throw new \InvalidArgumentException(sprintf('Invalid slot id %s', $slot2));
     }
@@ -90,5 +91,17 @@ class Combine extends Command {
       throw new \InvalidArgumentException('You cannot combine entries from separate issues.');
     }
     return [$entry1, $entry2];
+  }
+
+  protected function stopTicket($slot_id, OutputInterface $output) {
+    if ($stop = $this->repository->stop($slot_id)) {
+      $stopped = $this->connector->ticketDetails($stop->tid);
+      $output->writeln(sprintf('Closed slot <comment>%d</comment> against ticket <info>%d</info>: %s, duration <info>%s</info>',
+        $stop->id,
+        $stop->tid,
+        $stopped['title'],
+        Formatter::formatDuration($stop->duration)
+      ));
+    }
   }
 }
