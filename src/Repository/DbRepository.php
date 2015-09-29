@@ -235,7 +235,7 @@ class DbRepository implements Repository {
       ->where('id = :id')
       ->setParameter(':id', $slot_id)
       ->execute()
-      ->fetch();
+      ->fetch(\PDO::FETCH_OBJ);
   }
 
   public function delete($slot_id) {

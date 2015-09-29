@@ -58,16 +58,16 @@ class Combine extends Command {
 
     // Create a new combined entry and then remove fields we don't want to keep
     // around in the new entry.
-    $combined_entry = $entry1;
-    unset($combined_entry['id'], $combined_entry['tag'], $combined_entry['comment'], $combined_entry['teid']);
+    $combined_entry = clone $entry1;
+    unset($combined_entry->id, $combined_entry->tag, $combined_entry->comment, $combined_entry->teid);
 
     // Extend the entry date by the amount of time logged in the second entry.
-    $combined_entry['end'] = $entry1['end'] + ($entry2['end'] - $entry2['start']);
+    $combined_entry->end = $entry1->end + ($entry2->end - $entry2->start);
 
     // Insert the new entry, if all is well delete the two existing ones.
-    if ($new_slot = $this->repository->insert($combined_entry)) {
-      $this->repository->delete($entry1['id']);
-      $this->repository->delete($entry2['id']);
+    if ($new_slot = $this->repository->insert((array) $combined_entry)) {
+      $this->repository->delete($entry1->id);
+      $this->repository->delete($entry2->id);
 
       $output->writeln(sprintf('Combined %s and %s into new slot %s', $slot1, $slot2, $new_slot));
     }
@@ -82,11 +82,11 @@ class Combine extends Command {
       throw new \InvalidArgumentException(sprintf('Invalid slot id %s', $slot2));
     }
     // Ensure we've not already sent the slots.
-    if (!empty($entry1['teid']) || !empty($entry1['teid'])) {
+    if (!empty($entry1->teid) || !empty($entry1->teid)) {
       throw new \InvalidArgumentException('You cannot combine entries that have already been sent.');
     }
     // Ensure the slots are both against the same job.
-    if ($entry1['tid'] != $entry2['tid']) {
+    if ($entry1->tid != $entry2->tid) {
       throw new \InvalidArgumentException('You cannot combine entries from separate issues.');
     }
     return [$entry1, $entry2];
