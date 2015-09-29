@@ -30,8 +30,6 @@ class TagAll extends Command {
    */
   protected $repository;
 
-  const DEFAULT_TAG = 9;
-
   public function __construct(Connector $connector, Repository $repository) {
     $this->connector = $connector;
     $this->repository = $repository;
@@ -58,14 +56,15 @@ class TagAll extends Command {
     $last = FALSE;
     $categories = $this->connector->fetchCategories();
     $question = new ChoiceQuestion(
-      sprintf('Select tag to use:[%d]',
-        $last ?: static::DEFAULT_TAG
+      sprintf('Select tag to use:[%s]',
+        $last ?: Tag::DEFAULT_TAG
       ),
       $categories,
-      $last ?: static::DEFAULT_TAG
+      $last ?: Tag::DEFAULT_TAG
     );
-    $tag = $helper->ask($input, $output, $question);
-    list($tag, ) = explode(':', $tag);
+    $tag_id = $helper->ask($input, $output, $question);
+    $tag = $categories[$tag_id];
+    list(, $tag) = explode(':', $tag);
     foreach ($entries as $entry) {
       if ($entry->category) {
         continue;

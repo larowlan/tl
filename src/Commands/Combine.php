@@ -56,7 +56,7 @@ class Combine extends Command {
     // Create a new combined entry and then remove fields we don't want to keep
     // around in the new entry.
     $combined_entry = clone $entry1;
-    unset($combined_entry->id, $combined_entry->tag, $combined_entry->comment, $combined_entry->teid);
+    unset($combined_entry->id, $combined_entry->category, $combined_entry->comment, $combined_entry->teid);
 
     // Extend the entry date by the amount of time logged in the second entry.
     $combined_entry->end = $entry1->end + ($entry2->end - $entry2->start);
@@ -71,6 +71,9 @@ class Combine extends Command {
   }
 
   protected function validateSlots($slot1, $slot2, OutputInterface $output) {
+    if ($slot1 === $slot2) {
+      throw new \InvalidArgumentException('You cannot combine a slot with itself.');
+    }
     // Stop any open tickets to ensure they get an end time.
     $this->stopTicket($slot1, $output);
     // Ensure we can load both slots.
