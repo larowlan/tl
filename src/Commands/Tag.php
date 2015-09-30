@@ -45,9 +45,11 @@ class Tag extends Command {
     $this
       ->setName('tag')
       ->setDescription('Tag time entries')
-      ->setHelp('Tag time entries. <comment>Usage:</comment> <info>tl tag</info>')
+      ->setHelp('Tag time entries. <comment>Usage:</comment> <info>tl tag [optional slot id]</info>')
       ->addUsage('tl tag')
       ->addUsage('tl tag --retag')
+      ->addUsage('tl tag 6')
+      ->addArgument('slot_id', InputArgument::OPTIONAL, 'Slot ID', FALSE)
       ->addOption('retag', NULL, InputOption::VALUE_NONE);
   }
 
@@ -55,6 +57,22 @@ class Tag extends Command {
    * {@inheritdoc}
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
+    if ($slot_id = $input->getArgument('slot_id')) {
+      $this->tagOne($input, $output, $slot_id);
+    }
+    else {
+      $this->tagAll($input, $output);
+    }
+
+  }
+
+  /**
+   * Tag all entries.
+   *
+   * @param \Symfony\Component\Console\Input\InputInterface $input
+   * @param \Symfony\Component\Console\Output\OutputInterface $output
+   */
+  protected function tagAll(InputInterface $input, OutputInterface $output) {
     $entries = $this->repository->review(Review::ALL, TRUE);
     $helper = $this->getHelper('question');
     $last = FALSE;
@@ -84,6 +102,35 @@ class Tag extends Command {
     if (!$last) {
       $output->writeln('<error>All items already tagged, use --retag to retag</error>');
     }
+  }
+
+  /**
+   * Tag single entry.
+   *
+   * @param \Symfony\Component\Console\Input\InputInterface $input
+   * @param \Symfony\Component\Console\Output\OutputInterface $output
+   * @param $slot_id
+   */
+  protected function tagOne(InputInterface $input, OutputInterface $output, $slot_id) {
+    $entry = $this->repository->slot($slot_id);
+    $helper = $this->getHelper('question');
+    $title = $this->connector->ticketDetails($entry->tid);
+    $categories = $this->connector->fetchCategories();
+    $question = new ChoiceQuestion(
+      sprintf('Enter tag for slot <comment>%d</comment> [<info>%d</info>]: %s [<info>%s h</info>] [%s]',
+        $entry->id,
+        $entry->tid,
+        $title['title'],
+        Formatter::formatDuration($entry->end - $entry->start),
+        static::DEFAULT_TAG
+      ),
+      $categories,
+      static::DEFAULT_TAG
+    );
+    $tag_id = $helper->ask($input, $output, $question);
+    $tag = $categories[$tag_id];
+    list(, $tag) = explode(':', $tag);
+    $this->repository->tag($tag, $entry->id);
   }
 
 }

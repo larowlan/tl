@@ -55,7 +55,7 @@ class Reviewer {
         $record->tid,
         $record->duration,
         substr($details['title'], 0, 25) . '...',
-        $record->category ? $categories[$record->category] : '',
+        $record->category ? $categories[str_pad($record->category, 3, 0, STR_PAD_LEFT)] : '',
         $record->comment,
       ];
     }
