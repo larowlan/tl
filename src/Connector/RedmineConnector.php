@@ -158,6 +158,10 @@ class RedmineConnector implements Connector {
         // No such ticket.
         return FALSE;
       }
+      if ($e->getResponse() && $e->getResponse()->getStatusCode() == 403) {
+        // Access denied.
+        return FALSE;
+      }
       throw $e;
     }
     if ($result->getStatusCode() != 200) {
