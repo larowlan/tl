@@ -18,7 +18,8 @@ class RedmineConnector implements Connector {
   protected $cache;
   protected $url;
   protected $apiKey;
-  const LIFETIME = 86400;
+  // 7 days cache.
+  const LIFETIME = 604800;
 
   /**
    * Constructs a new RedmineConnector object.
