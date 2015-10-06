@@ -9,6 +9,8 @@ namespace Larowlan\Tl\Connector;
 
 use Doctrine\Common\Cache\Cache;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\ConnectException;
 
 class RedmineConnector implements Connector {
 
@@ -43,13 +45,22 @@ class RedmineConnector implements Connector {
     }
     // We need to fetch it.
     $url = $this->url . '/issues/' . $id . '.xml';
-    if ($xml = $this->fetch($url, $this->apiKey)) {
-      $entry = array(
-        'title' => $xml->subject . ' (' . $xml->project['name'] . ')',
-        'project' => (string) $xml->project['id'],
-      );
-      $this->cache->save($this->version . ':' . $id, $entry, static::LIFETIME);
-      return $entry;
+    try {
+      if ($xml = $this->fetch($url, $this->apiKey)) {
+        $entry = array(
+          'title' => $xml->subject . ' (' . $xml->project['name'] . ')',
+          'project' => (string) $xml->project['id'],
+        );
+        $this->cache->save($this->version . ':' . $id, $entry,
+          static::LIFETIME);
+        return $entry;
+      }
+    }
+    catch (ConnectException $e) {
+      return [
+        'title' => 'Offline: please try again later',
+        'project' => 'Offline',
+      ];
     }
     return FALSE;
   }
@@ -99,13 +110,18 @@ class RedmineConnector implements Connector {
     foreach ($data as $key => $value) {
       $xml->addChild($key, $value);
     }
-    $response = $this->httpClient->request('POST', $url, [
-      'headers' => [
-        'Content-Type' => 'application/xml',
-        'X-Redmine-API-Key' => $this->apiKey,
-      ],
-      'body' => $xml->asXml(),
-    ]);
+    try {
+      $response = $this->httpClient->request('POST', $url, [
+        'headers' => [
+          'Content-Type' => 'application/xml',
+          'X-Redmine-API-Key' => $this->apiKey,
+        ],
+        'body' => $xml->asXml(),
+      ]);
+    }
+    catch (ConnectException $e) {
+      throw new \Exception('You appear to be offline, please retry later.');
+    }
     if (in_array(substr($response->getStatusCode(), 0, 1), [2, 3])) {
       $return = new \SimpleXMLElement((string) $response->getBody());
       return (string) $return->id;
@@ -126,11 +142,23 @@ class RedmineConnector implements Connector {
    *   The returned object or FALSE if not found.
    */
   protected function fetch($url, $redmine_key) {
-    $result = $this->httpClient->request('GET', $url, [
-      'headers' => [
-        'X-Redmine-API-Key' => $redmine_key,
-      ],
-    ]);
+    try {
+      $result = $this->httpClient->request('GET', $url, [
+        'headers' => [
+          'X-Redmine-API-Key' => $redmine_key,
+        ],
+      ]);
+    }
+    catch (ClientException $e) {
+      if ($e->getResponse() && $e->getResponse()->getStatusCode() == 401) {
+        throw new \Exception('Authentication error: please check your redmine API key.');
+      }
+      if ($e->getResponse() && $e->getResponse()->getStatusCode() == 404) {
+        // No such ticket.
+        return FALSE;
+      }
+      throw $e;
+    }
     if ($result->getStatusCode() != 200) {
       return FALSE;
     }
