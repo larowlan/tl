@@ -9,6 +9,7 @@ namespace Larowlan\Tl;
 use Doctrine\DBAL\Exception\TableNotFoundException;
 use Doctrine\DBAL\Schema\Comparator;
 use Doctrine\DBAL\Schema\Schema;
+use Larowlan\Tl\Commands\PreinstallCommand;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Console\Application as BaseApplication;
 use Symfony\Component\Console\Input\InputInterface;
@@ -64,18 +65,26 @@ class Application extends BaseApplication {
    */
   public function doRun(InputInterface $input, OutputInterface $output) {
     $name = $this->getCommandName($input);
+    $installing = FALSE;
     if ($name !== 'install' && $name !== 'configure') {
       if ($result = $this->setupCheck($output)) {
         return $result;
       }
     }
     elseif ($name == 'install') {
+      $installing = TRUE;
       if ($config_error = $this->checkConfig($output)) {
         return $config_error;
       }
     }
+    elseif ($name == 'configure') {
+      $installing = TRUE;
+    }
     foreach ($this->container->findTaggedServiceIds('command') as $service_id => $tags) {
-      $this->add($this->container->get($service_id));
+      if (!$installing || in_array(PreinstallCommand::class, class_implements($this->container->getDefinition($service_id)->getClass()), TRUE)) {
+        // Don't add any commands until install is complete.
+        $this->add($this->container->get($service_id));
+      }
     }
     return parent::doRun($input, $output);
   }

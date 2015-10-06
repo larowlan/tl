@@ -7,6 +7,7 @@
 namespace Larowlan\Tl\Commands;
 
 use Doctrine\DBAL\Driver\Connection;
+use GuzzleHttp\Exception\ConnectException;
 use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\Formatter;
 use Larowlan\Tl\Repository\Repository;
@@ -73,10 +74,16 @@ class Tag extends Command {
    * @param \Symfony\Component\Console\Output\OutputInterface $output
    */
   protected function tagAll(InputInterface $input, OutputInterface $output) {
-    $entries = $this->repository->review(Review::ALL, TRUE);
     $helper = $this->getHelper('question');
     $last = FALSE;
-    $categories = $this->connector->fetchCategories();
+    try {
+      $entries = $this->repository->review(Review::ALL, TRUE);
+      $categories = $this->connector->fetchCategories();
+    }
+    catch (ConnectException $e) {
+      $output->writeln('<error>You are offline, please try again later.</error>');
+      return;
+    }
     foreach ($entries as $entry) {
       if ($entry->category && !$input->getOption('retag')) {
         continue;
@@ -97,7 +104,7 @@ class Tag extends Command {
       $tag = $categories[$tag_id];
       list(, $tag) = explode(':', $tag);
       $this->repository->tag($tag, $entry->id);
-      $last = $tag;
+      $last = $tag_id;
     }
     if (!$last) {
       $output->writeln('<error>All items already tagged, use --retag to retag</error>');
@@ -114,8 +121,14 @@ class Tag extends Command {
   protected function tagOne(InputInterface $input, OutputInterface $output, $slot_id) {
     $entry = $this->repository->slot($slot_id);
     $helper = $this->getHelper('question');
-    $title = $this->connector->ticketDetails($entry->tid);
-    $categories = $this->connector->fetchCategories();
+    try {
+      $title = $this->connector->ticketDetails($entry->tid);
+      $categories = $this->connector->fetchCategories();
+    }
+    catch (ConnectException $e) {
+      $output->writeln('<error>You are offline, please try again later.</error>');
+      return;
+    }
     $question = new ChoiceQuestion(
       sprintf('Enter tag for slot <comment>%d</comment> [<info>%d</info>]: %s [<info>%s h</info>] [%s]',
         $entry->id,

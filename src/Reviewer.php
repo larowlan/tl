@@ -7,6 +7,7 @@
 namespace Larowlan\Tl;
 
 
+use GuzzleHttp\Exception\ConnectException;
 use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Helper\TableSeparator;
@@ -46,16 +47,35 @@ class Reviewer {
     }
 
     $total = 0;
-    $categories = $this->connector->fetchCategories();
+    $offline = FALSE;
+    try {
+      $categories = $this->connector->fetchCategories();
+    }
+    catch (ConnectException $e) {
+      $offline = TRUE;
+    }
     foreach ($data as $record) {
       $total += $record->duration;
       $details = $this->connector->ticketDetails($record->tid);
+      $category_id = str_pad($record->category, 3, 0, STR_PAD_LEFT);
+      $category = '';
+      if ($record->category) {
+        if ($offline) {
+          $category = 'Offline';
+        }
+        elseif (isset($categories[$category_id])) {
+          $category = $categories[$category_id];
+        }
+        else {
+          $category = 'Unknown';
+        }
+      }
       $rows[] = [
         $record->id,
         $record->tid,
         $record->duration,
         substr($details['title'], 0, 25) . '...',
-        $record->category ? $categories[str_pad($record->category, 3, 0, STR_PAD_LEFT)] : '',
+        $category,
         $record->comment,
       ];
     }

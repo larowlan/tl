@@ -15,7 +15,7 @@ use Symfony\Component\Yaml\Yaml;
 /**
  * Defines a class for configuring the app.
  */
-class Configure extends Command {
+class Configure extends Command implements PreinstallCommand {
 
   protected $directory;
 
@@ -53,6 +53,9 @@ class Configure extends Command {
     $config = [];
     $question = new Question(sprintf('Enter your redmine URL: <comment>[%s]</comment>', $default_url), $default_url);
     $config['url'] = $helper->ask($input, $output, $question) ?: $default_url;
+    if (strpos($config['url'], 'https') !== 0) {
+      $output->writeln('<comment>It is recommended to use https, POSTING over http is not supported</comment>');
+    }
     $question = new Question(sprintf('Enter your redmine API Key: <comment>[%s]</comment>', $default_key), $default_key);
     $config['api_key'] = $helper->ask($input, $output, $question) ?: $default_key;
     file_put_contents($file, Yaml::dump($config));

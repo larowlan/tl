@@ -10,9 +10,23 @@
 
 ## Installation
 
+### Linux or homebrew w/ wget
+
 ```bash
 # Get the phar
 wget http://larowlan.github.io/tl/tl.phar
+```
+
+### OSX
+
+```bash
+# Get the phar
+curl -O http://larowlan.github.io/tl/tl.phar
+```
+
+## Setup
+
+```bash
 # Copy to /usr/local/bin/ or somewhere else in your $PATH
 sudo cp tl.phar /usr/local/bin/tl
 # Set execute flag
