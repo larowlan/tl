@@ -15,7 +15,7 @@ use Symfony\Component\Yaml\Yaml;
 /**
  * Defines a class for configuring the app.
  */
-class Configure extends Command {
+class Configure extends Command implements PreinstallCommand {
 
   protected $directory;
 
