@@ -104,7 +104,7 @@ class Tag extends Command {
       $tag = $categories[$tag_id];
       list(, $tag) = explode(':', $tag);
       $this->repository->tag($tag, $entry->id);
-      $last = $tag;
+      $last = $tag_id;
     }
     if (!$last) {
       $output->writeln('<error>All items already tagged, use --retag to retag</error>');
