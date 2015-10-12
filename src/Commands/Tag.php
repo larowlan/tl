@@ -119,31 +119,34 @@ class Tag extends Command {
    * @param $slot_id
    */
   protected function tagOne(InputInterface $input, OutputInterface $output, $slot_id) {
-    $entry = $this->repository->slot($slot_id);
-    $helper = $this->getHelper('question');
-    try {
-      $title = $this->connector->ticketDetails($entry->tid);
-      $categories = $this->connector->fetchCategories();
-    }
-    catch (ConnectException $e) {
-      $output->writeln('<error>You are offline, please try again later.</error>');
-      return;
-    }
-    $question = new ChoiceQuestion(
-      sprintf('Enter tag for slot <comment>%d</comment> [<info>%d</info>]: %s [<info>%s h</info>] [%s]',
-        $entry->id,
-        $entry->tid,
-        $title['title'],
-        Formatter::formatDuration($entry->end - $entry->start),
+    if ($entry = $this->repository->slot($slot_id)) {
+      $helper = $this->getHelper('question');
+      try {
+        $title = $this->connector->ticketDetails($entry->tid);
+        $categories = $this->connector->fetchCategories();
+      } catch (ConnectException $e) {
+        $output->writeln('<error>You are offline, please try again later.</error>');
+        return;
+      }
+      $question = new ChoiceQuestion(
+        sprintf('Enter tag for slot <comment>%d</comment> [<info>%d</info>]: %s [<info>%s h</info>] [%s]',
+          $entry->id,
+          $entry->tid,
+          $title['title'],
+          Formatter::formatDuration($entry->end - $entry->start),
+          static::DEFAULT_TAG
+        ),
+        $categories,
         static::DEFAULT_TAG
-      ),
-      $categories,
-      static::DEFAULT_TAG
-    );
-    $tag_id = $helper->ask($input, $output, $question);
-    $tag = $categories[$tag_id];
-    list(, $tag) = explode(':', $tag);
-    $this->repository->tag($tag, $entry->id);
+      );
+      $tag_id = $helper->ask($input, $output, $question);
+      $tag = $categories[$tag_id];
+      list(, $tag) = explode(':', $tag);
+      $this->repository->tag($tag, $entry->id);
+    }
+    else {
+      $output->writeln('<error>No such slot - please check your slot ID</error>');
+    }
   }
 
 }
