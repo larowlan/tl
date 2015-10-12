@@ -52,6 +52,9 @@ class Start extends Command {
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
     $ticket_id = $input->getArgument('issue_number');
+    if ($alias = $this->repository->loadAlias($ticket_id)) {
+      $ticket_id = $alias;
+    }
     if ($title = $this->connector->ticketDetails($ticket_id)) {
       if ($stop = $this->repository->stop()) {
         $stopped = $this->connector->ticketDetails($stop->tid);

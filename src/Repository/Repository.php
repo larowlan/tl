@@ -35,4 +35,8 @@ interface Repository {
   public function slot($slot_id);
   public function delete($slot_id);
 
+  public function addAlias($ticket_id, $alias);
+  public function removeAlias($ticket_id, $alias);
+  public function loadAlias($alias);
+
 }
