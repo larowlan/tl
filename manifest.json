@@ -46,5 +46,11 @@
     "sha1": "f1660ff50f26afee349735a661909e30042fd21d",
     "url": "https://github.com/larowlan/tl/releases/download/0.0.11/tl-0.0.11.phar",
     "version": "0.0.11"
+  },
+  {
+    "name": "tl.phar",
+    "sha1": "1ace61077a87dc6378dfac9aaf201c87d88bbefb",
+    "url": "https://github.com/larowlan/tl/releases/download/0.0.12/tl-0.0.12.phar",
+    "version": "0.0.12"
   }
 ]
