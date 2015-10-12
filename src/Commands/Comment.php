@@ -59,7 +59,7 @@ class Comment extends Command {
     $helper = $this->getHelper('question');
     $last = FALSE;
     foreach ($entries as $entry) {
-      if ($entry->comment && !$input->getOption('retag')) {
+      if ($entry->comment && !$input->getOption('recomment')) {
         continue;
       }
       $title = $this->connector->ticketDetails($entry->tid);
