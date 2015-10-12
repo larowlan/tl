@@ -13,9 +13,9 @@ interface Repository {
 
   public function stop($slot_id = NULL);
 
-  public function start($ticket_id);
+  public function start($ticket_id, $comment = '');
 
-  public function insert($slot);
+  public function insert($slot, $params = []);
 
   public function status($date = NULL);
 

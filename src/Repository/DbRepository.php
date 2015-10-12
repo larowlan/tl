@@ -66,8 +66,8 @@ class DbRepository implements Repository {
     return FALSE;
   }
 
-  public function start($ticket_id) {
-    if ($continue = $this->qb()->select('*')
+  public function start($ticket_id, $comment = '') {
+    if (!$comment && $continue = $this->qb()->select('*')
       ->from('slots', 's')
       ->where('s.tid = :tid')
       ->andWhere('s.comment IS NULL')
@@ -88,14 +88,22 @@ class DbRepository implements Repository {
       'tid' => $ticket_id,
       'start' => $this::requestTime(),
     );
+    $params = [];
+    if ($comment) {
+      $record['comment'] = ':comment';
+      $params[':comment'] = $comment;
+    }
 
-    return array($this->insert($record), FALSE);
+    return array($this->insert($record, $params), FALSE);
   }
 
-  public function insert($slot) {
-    $this->qb()->insert('slots')
-      ->values($slot)
-      ->execute();
+  public function insert($slot, $params = []) {
+    $query = $this->qb()->insert('slots')
+      ->values($slot);
+    foreach ($params as $key => $value) {
+      $query->setParameter($key, $value);
+    }
+    $query->execute();
     return $this->connection()->lastInsertId();
   }
 
