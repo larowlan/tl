@@ -117,7 +117,7 @@ class DbRepository implements Repository {
     }
     $return = $this->qb()->select('id', 'tid', 'end - start AS duration', 'CASE WHEN id = :id THEN 1 ELSE 0 END AS active')
       ->from('slots')
-      ->where('start > :stamp')
+      ->where('start > :stamp AND :stamp < end')
       ->setParameter(':stamp', $stamp)
       ->setParameter(':id', isset($stop->id) ? $stop->id : 0)
       ->execute()
