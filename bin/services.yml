@@ -50,7 +50,7 @@ services:
     arguments: ["@connector", "@repository"]
     tags:
       -  { name: command }
-  app.command.browser:
+  app.command.visit:
     class: Larowlan\Tl\Commands\Visit
     arguments: ["@connector", "@repository"]
     tags:
