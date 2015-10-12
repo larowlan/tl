@@ -258,4 +258,34 @@ class DbRepository implements Repository {
   protected function connection() {
     return $this->connection;
   }
+
+  public function addAlias($ticket_id, $alias) {
+    return $this->qb()->insert('aliases')
+      ->values([
+        'tid' => ':ticket_id',
+        'alias' => ':alias',
+      ])
+      ->setParameter(':ticket_id', $ticket_id)
+      ->setParameter(':alias', $alias)
+      ->execute();
+  }
+
+  public function removeAlias($ticket_id, $alias) {
+    return $this->qb()->delete('aliases')
+      ->where('tid = :ticket_id')
+      ->andWhere('alias = :alias')
+      ->setParameter(':ticket_id', $ticket_id)
+      ->setParameter(':alias', $alias)
+      ->execute();
+  }
+
+  public function loadAlias($alias) {
+    return $this->qb()->select('tid')
+      ->from('aliases')
+      ->where('alias = :alias')
+      ->setParameter(':alias', $alias)
+      ->execute()
+      ->fetchColumn();
+  }
+
 }
