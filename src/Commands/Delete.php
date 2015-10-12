@@ -13,6 +13,7 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
 
 class Delete extends Command {
 
@@ -49,7 +50,11 @@ class Delete extends Command {
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
     $slot_id = $input->getArgument('slot_id');
-    if (($slot = $this->repository->slot($slot_id)) && $this->repository->delete($slot_id)) {
+    $helper = $this->getHelper('question');
+    $question = new ConfirmationQuestion('Are you sure?', false);
+
+    $confirm = NULL;
+    if (($slot = $this->repository->slot($slot_id)) && ($confirm = $helper->ask($input, $output, $question)) && $this->repository->delete($slot_id)) {
       $deleted = $this->connector->ticketDetails($slot->tid);
       $output->writeln(sprintf('Deleted slot <comment>%d</comment> against ticket <info>%d</info>: %s, duration <info>%s</info>',
         $slot->id,
@@ -59,7 +64,9 @@ class Delete extends Command {
       ));
       return;
     }
-    $output->writeln('<error>Cannot delete slot, either does not exist or has been sent to back end.</error>');
+    if ($confirm !== FALSE) {
+      $output->writeln('<error>Cannot delete slot, either does not exist or has been sent to back end.</error>');
+    }
   }
 
 }
