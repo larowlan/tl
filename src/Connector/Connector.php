@@ -40,4 +40,15 @@ interface Connector {
    */
   public function sendEntry($entry);
 
+  /**
+   * Gets the URL for the given ticket ID.
+   *
+   * @param mixed $id
+   *   Ticket ID.
+   *
+   * @return string
+   *   The URL.
+   */
+  public function ticketUrl($id);
+
 }
