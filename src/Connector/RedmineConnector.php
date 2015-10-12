@@ -174,4 +174,11 @@ class RedmineConnector implements Connector {
     return $xml;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function ticketUrl($id) {
+    return $this->url . '/issues/' . $id;
+  }
+
 }
