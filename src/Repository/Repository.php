@@ -13,9 +13,9 @@ interface Repository {
 
   public function stop($slot_id = NULL);
 
-  public function start($ticket_id);
+  public function start($ticket_id, $comment = '');
 
-  public function insert($slot);
+  public function insert($slot, $params = []);
 
   public function status($date = NULL);
 
@@ -34,5 +34,9 @@ interface Repository {
   public function frequent();
   public function slot($slot_id);
   public function delete($slot_id);
+
+  public function addAlias($ticket_id, $alias);
+  public function removeAlias($ticket_id, $alias);
+  public function loadAlias($alias);
 
 }

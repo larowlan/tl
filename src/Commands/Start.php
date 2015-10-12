@@ -41,7 +41,10 @@ class Start extends Command {
       ->setName('start')
       ->setDescription('Starts a time entry')
       ->setHelp('Starts a new entry, closes existing one. <comment>Usage:</comment> <info>tl start [ticket number]</info>')
-      ->addArgument('issue_number', InputArgument::REQUIRED, 'Issue number to start work on');
+      ->addArgument('issue_number', InputArgument::REQUIRED, 'Issue number to start work on')
+      ->addArgument('comment', InputArgument::OPTIONAL, 'Comment to start with')
+      ->addUsage('tl start 12355')
+      ->addUsage('tl start 12355 "Doin stuff"');
   }
 
   /**
@@ -49,6 +52,9 @@ class Start extends Command {
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
     $ticket_id = $input->getArgument('issue_number');
+    if ($alias = $this->repository->loadAlias($ticket_id)) {
+      $ticket_id = $alias;
+    }
     if ($title = $this->connector->ticketDetails($ticket_id)) {
       if ($stop = $this->repository->stop()) {
         $stopped = $this->connector->ticketDetails($stop->tid);
@@ -60,7 +66,7 @@ class Start extends Command {
         ));
       }
       try {
-        list($slot_id, $continued) = $this->repository->start($ticket_id);
+        list($slot_id, $continued) = $this->repository->start($ticket_id, $input->getArgument('comment'));
         $output->writeln(sprintf('<bg=blue;fg=white;options=bold>[%s]</> <comment>%s</comment> entry for <info>%d</info>: %s [slot:<comment>%d</comment>]',
           (new \DateTime())->format('h:i'),
           $continued ? 'Continued' : 'Started new',

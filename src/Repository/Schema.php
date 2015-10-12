@@ -10,7 +10,7 @@ use Doctrine\DBAL\Schema\Schema as DoctrineSchema;
 
 class Schema {
 
-  const version = 1;
+  const version = 2;
 
   /**
    * @return DoctrineSchema;
@@ -31,6 +31,12 @@ class Schema {
     $slots->addIndex(['end']);
     $slots->addIndex(['tid']);
     $slots->addIndex(['teid']);
+
+    $aliases = $schema->createTable('aliases');
+    $aliases->addColumn('tid', 'bigint', ['unsigned' => TRUE]);
+    $aliases->addColumn('alias', 'string', ['length' => 255]);
+    $aliases->addIndex(['alias']);
+    $aliases->addIndex(['tid']);
     return $schema;
   }
 }
