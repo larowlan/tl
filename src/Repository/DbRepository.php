@@ -207,8 +207,7 @@ class DbRepository implements Repository {
   public function tag($tag_id, $slot_id = NULL) {
     $query = $this->qb()->update('slots')
       ->set('category', ':tag')
-      ->setParameter(':tag', $tag_id)
-      ->where('category IS NULL');
+      ->setParameter(':tag', $tag_id);
     if ($slot_id) {
       $query->andWhere('id = :id')
         ->setParameter(':id', $slot_id);
