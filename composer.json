@@ -20,6 +20,11 @@
             "Larowlan\\Tl\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Larowlan\\Tl\\Tests\\": "tests/"
+        }
+    },
     "authors": [
         {
             "name": "Lee Rowlands",

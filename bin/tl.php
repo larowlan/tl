@@ -11,7 +11,7 @@ use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\Yaml\Yaml;
 
 $container = new ContainerBuilder();
-$loader = new YamlFileLoader($container, new FileLocator(__DIR__));
+$loader = new YamlFileLoader($container, new FileLocator(dirname(__DIR__)));
 $loader->load('services.yml');
 $home = $_SERVER['HOME'];
 $container->setParameter('directory', $home);
