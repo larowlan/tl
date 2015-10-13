@@ -68,4 +68,29 @@ class StartTest extends TlTestBase {
     $this->assertEquals('1234', $closed->tid);
   }
 
+  /**
+   * @covers ::execute
+   */
+  public function testStartWithComment() {
+    $this->getMockConnector()->expects($this->any())
+      ->method('ticketDetails')
+      ->with(1234)
+      ->willReturn(['title' => 'Running tests']);
+    $output = $this->executeCommand('start', [
+      'issue_number' => 1234,
+      'comment' => 'Doing stuff',
+    ]);
+    $this->assertRegExp('/Started new entry for 1234: Running tests/', $output->getDisplay());
+    /** @var Repository $repository */
+    $repository = $this->container->get('repository');
+    $active = $repository->getActive();
+    $this->assertEquals('1234', $active->tid);
+    $this->assertEquals('Doing stuff', $active->comment);
+    $this->assertNull($active->end);
+    $this->assertNull($active->category);
+    $this->assertNull($active->teid);
+    return $active->id;
+  }
+
+
 }
