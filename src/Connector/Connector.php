@@ -51,4 +51,12 @@ interface Connector {
    */
   public function ticketUrl($id);
 
+  /**
+   * Gets assigned tickets.
+   *
+   * @return array
+   *   Array of tickets titles keyed by ticket ID.
+   */
+  public function assigned();
+
 }
