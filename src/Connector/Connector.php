@@ -84,4 +84,17 @@ interface Connector {
    */
   public function assign($ticket_id);
 
+  /**
+   * Sets a ticket as paused.
+   *
+   * @param mixed $ticket_id
+   *   Ticket ID to set as paused.
+   * @param string $comment
+   *   Comment. Defaults to 'pausing for moment'
+   *
+   * @return bool
+   *   TRUE if success.
+   */
+  public function pause($ticket_id, $comment);
+
 }

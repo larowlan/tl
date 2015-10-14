@@ -206,19 +206,19 @@ class RedmineConnector implements Connector {
     }
     $updates = ['status_id' => $states['In progress']];
     if ($assign) {
-      $updates['assigned_to_id'] = 'me';
+      $updates['assigned_to_id'] = $this->getUserId();
     }
     return $this->putUpdate($ticket_id, $updates);
   }
 
   public function assign($ticket_id) {
-    return $this->putUpdate($ticket_id, ['assigned_to_id' => 'me']);
+    return $this->putUpdate($ticket_id, ['assigned_to_id' => $this->getUserId()]);
   }
 
-  protected function putUpdate($ticket_id, array $updates) {
+  protected function putUpdate($ticket_id, array $updates, $comment = 'Working on this') {
     $url = $this->url . '/issues/' . $ticket_id . '.xml';
     $xml = new \SimpleXMLElement('<?xml version="1.0"?><issue></issue>');
-    $updates += ['notes' => 'Working on this.'];
+    $updates += ['notes' => $comment];
     foreach ($updates as $key => $value) {
       $xml->addChild($key, $value);
     }
@@ -252,11 +252,36 @@ class RedmineConnector implements Connector {
       foreach ($xml->issue_status as $node) {
         $states[(string) $node->name] = (string) $node->id;
       }
-      $this->cache->save($this->version . ':' . $cid, $states, static::LIFETIME);
+      // These don't change regularly - use a longer cache - six months.
+      $this->cache->save($this->version . ':' . $cid, $states, static::LIFETIME * 26);
       return $states;
     }
     return FALSE;
 
+  }
+
+  protected function getUserId() {
+    $url = $this->url . '/users/current.xml';
+    $cid = 'userid';
+    if (($uid = $this->cache->fetch($this->version . ':' . $cid))) {
+      return $uid;
+    }
+    if ($xml = $this->fetch($url, $this->apiKey)) {
+      // Cache permanent.
+      $uid = (int)$xml->id;
+      $this->cache->save($this->version . ':' . $cid, $uid, 0);
+      return $uid;
+    }
+    throw new \Exception('Could not determine your user ID');
+  }
+
+  public function pause($ticket_id, $comment) {
+    $states = $this->getStates();
+    if (!isset($states['Paused'])) {
+      throw new \Exception('There is no "Paused" status');
+    }
+    $updates = ['status_id' => $states['Paused']];
+    return $this->putUpdate($ticket_id, $updates, $comment ?: 'Pausing for moment');
   }
 
 }
