@@ -186,11 +186,15 @@ class RedmineConnector implements Connector {
     $tickets = [];
     if ($xml = $this->fetch($url, $this->apiKey)) {
       foreach ($xml->issue as $node) {
-        $tickets[(string) $node->id] = (string) $node->subject . ' <comment>' . (string) $node->project['name'] . '</comment>';
+        $project = (string) $node->project['name'];
+        if (!isset($tickets[$project])) {
+          $tickets[$project] = [];
+        }
+        $tickets[(string) $node->project['name']][(string) $node->id] = (string) $node->subject;
       }
     }
     if ((int) $xml['total_count'] > (int) $xml['limit']) {
-      $tickets['...'] = sprintf('Showing <info>%s</info> of <info>%s</info>', $xml['total_count'], $xml['limit']);
+      $tickets['...']['...'] = sprintf('Showing <info>%s</info> of <info>%s</info>', $xml['total_count'], $xml['limit']);
     }
     return $tickets;
   }

@@ -12,6 +12,7 @@ use Larowlan\Tl\Formatter;
 use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -52,11 +53,20 @@ class Assigned extends Command {
       $table = new Table($output);
       $table->setHeaders(['JobId', 'Title']);
       $rows = [];
-      foreach ($data as $id => $title) {
-        $rows[] = [
-          $id,
-          $title,
-        ];
+      $first = TRUE;
+      foreach ($data as $project => $tickets) {
+        if (!$first) {
+          $rows[] = new TableSeparator();
+        }
+        $rows[] = ['', '<comment>' . $project . '</comment>'];
+        $rows[] = new TableSeparator();
+        foreach ($tickets as $id => $title) {
+          $rows[] = [
+            $id,
+            $title,
+          ];
+        }
+        $first = FALSE;
       }
       $table->setRows($rows);
       $table->render();
