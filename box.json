@@ -6,7 +6,7 @@
     "files": [
         "LICENSE",
         "Readme.md",
-        "bin/services.yml",
+        "services.yml",
         "manifest.json",
         "vendor/herrera-io/phar-update/res/schema.json"
     ],

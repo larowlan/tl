@@ -1,0 +1,141 @@
+parameters:
+  db_name: ".tldb.sq3"
+  directory: ''
+  # This is set in Application::checkConfig
+  config: []
+  version: ''
+
+services:
+  config.processor:
+    class: Symfony\Component\Config\Definition\Processor
+  config.configuration:
+    class: Larowlan\Tl\Configuration\LoggerConfiguration
+  connection:
+    class: Doctrine\DBAL\Connection
+    factory: [Larowlan\Tl\Repository\ConnectionFactory, createConnection]
+    arguments: ['%directory%', '%db_name%']
+  schema:
+    class: Larowlan\Tl\Repository\Schema
+  http_client:
+    class: GuzzleHttp\Client
+  cache:
+    class: Doctrine\Common\Cache\FileSystemCache
+    factory: [Larowlan\Tl\CacheFactory, create]
+  repository:
+    class: Larowlan\Tl\Repository\DbRepository
+    arguments: ["@connection"]
+  connector:
+    class: Larowlan\Tl\Connector\RedmineConnector
+    arguments: ['@http_client', '@cache', '%config%', '%version%']
+  reviewer:
+    class: Larowlan\Tl\Reviewer
+    arguments: ["@connector", "@repository"]
+  #commands
+  app.command.update:
+    class: Larowlan\Tl\Commands\Update
+    tags:
+      -  { name: command }
+  app.command.start:
+    class: Larowlan\Tl\Commands\Start
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.assigned:
+    class: Larowlan\Tl\Commands\Assigned
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.cache:
+    class: Larowlan\Tl\Commands\CacheClear
+    arguments: ["@cache"]
+    tags:
+      -  { name: command }
+  app.command.open:
+    class: Larowlan\Tl\Commands\Open
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.visit:
+    class: Larowlan\Tl\Commands\Visit
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.alias:
+    class: Larowlan\Tl\Commands\Alias
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.edit:
+    class: Larowlan\Tl\Commands\Edit
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.comment:
+    class: Larowlan\Tl\Commands\Comment
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.tag:
+    class: Larowlan\Tl\Commands\Tag
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.tag_all:
+    class: Larowlan\Tl\Commands\TagAll
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.send:
+    class: Larowlan\Tl\Commands\Send
+    arguments: ["@connector", "@repository", "@reviewer"]
+    tags:
+      -  { name: command }
+  app.command.review:
+    class: Larowlan\Tl\Commands\Review
+    arguments: ["@reviewer"]
+    tags:
+      -  { name: command }
+  app.command.total:
+    class: Larowlan\Tl\Commands\Total
+    arguments: ["@reviewer"]
+    tags:
+      -  { name: command }
+  app.command.stop:
+    class: Larowlan\Tl\Commands\Stop
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.status:
+    class: Larowlan\Tl\Commands\Status
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.install:
+    class: Larowlan\Tl\Commands\Install
+    arguments: ["@connection", '%directory%', "@schema"]
+    tags:
+      -  { name: command }
+  app.command.configure:
+    class: Larowlan\Tl\Commands\Configure
+    arguments: ["%directory%"]
+    tags:
+      -  { name: command }
+  app.command.frequent:
+    class: Larowlan\Tl\Commands\MostFrequentlyUsed
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.combine:
+    class: Larowlan\Tl\Commands\Combine
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.delete:
+    class: Larowlan\Tl\Commands\Delete
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.completion:
+    class: Stecman\Component\Symfony\Console\BashCompletion\CompletionCommand
+    tags:
+      -  { name: command }

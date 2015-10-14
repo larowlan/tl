@@ -13,6 +13,7 @@ use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class Stop extends Command {
@@ -40,6 +41,11 @@ class Stop extends Command {
     $this
       ->setName('stop')
       ->setDescription('Stops the active time entry')
+      ->addOption('pause', 'p', InputOption::VALUE_NONE, 'Set status to paused')
+      ->addOption('comment', 'c', InputOption::VALUE_OPTIONAL, 'Set status to paused and leave comment')
+      ->addUsage('tl stop')
+      ->addUsage('tl stop -p')
+      ->addUsage('tl stop -c "Pausing for now"')
       ->setHelp('Stops the exiting entry. <comment>Usage:</comment> <info>tl stop</info>');
   }
 
@@ -56,6 +62,14 @@ class Stop extends Command {
         $stopped['title'],
         Formatter::formatDuration($stop->duration)
       ));
+      if (($comment = $input->getOption('comment')) || $input->getOption('pause')) {
+        if ($this->connector->pause($stop->tid, $comment)) {
+          $output->writeln(sprintf('Ticket <comment>%s</comment> set to paused.', $stop->tid));
+        }
+        else {
+          $output->writeln('<error>Could not update ticket status</error>');
+        }
+      }
       return;
     }
     $output->writeln('<error>No active slot</error>');

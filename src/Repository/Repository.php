@@ -38,5 +38,5 @@ interface Repository {
   public function addAlias($ticket_id, $alias);
   public function removeAlias($ticket_id, $alias);
   public function loadAlias($alias);
-
+  public function listAliases($filter = '');
 }

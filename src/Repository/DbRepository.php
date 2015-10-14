@@ -117,8 +117,9 @@ class DbRepository implements Repository {
     }
     $return = $this->qb()->select('id', 'tid', 'end - start AS duration', 'CASE WHEN id = :id THEN 1 ELSE 0 END AS active')
       ->from('slots')
-      ->where('start > :stamp')
-      ->setParameter(':stamp', $stamp)
+      ->where('start > :start AND start < :end')
+      ->setParameter(':start', $stamp)
+      ->setParameter(':end', $stamp + (60 * 60 * 24))
       ->setParameter(':id', isset($stop->id) ? $stop->id : 0)
       ->execute()
       ->fetchAll(\PDO::FETCH_OBJ);
@@ -207,8 +208,7 @@ class DbRepository implements Repository {
   public function tag($tag_id, $slot_id = NULL) {
     $query = $this->qb()->update('slots')
       ->set('category', ':tag')
-      ->setParameter(':tag', $tag_id)
-      ->where('category IS NULL');
+      ->setParameter(':tag', $tag_id);
     if ($slot_id) {
       $query->andWhere('id = :id')
         ->setParameter(':id', $slot_id);
@@ -286,6 +286,19 @@ class DbRepository implements Repository {
       ->setParameter(':alias', $alias)
       ->execute()
       ->fetchColumn();
+  }
+
+  public function listAliases($filter = '') {
+    $query = $this->qb()->select('alias')
+      ->from('aliases');
+    if (!empty($filter)) {
+      $query
+        ->where('alias LIKE :filter')
+        ->setParameter(':filter', $filter . '%');
+    }
+    return $query
+      ->execute()
+      ->fetchAll(\PDO::FETCH_OBJ);
   }
 
 }

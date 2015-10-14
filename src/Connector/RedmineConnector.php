@@ -181,4 +181,107 @@ class RedmineConnector implements Connector {
     return $this->url . '/issues/' . $id;
   }
 
+  public function assigned() {
+    $url = $this->url . '/issues.xml?assigned_to_id=me';
+    $tickets = [];
+    if ($xml = $this->fetch($url, $this->apiKey)) {
+      foreach ($xml->issue as $node) {
+        $project = (string) $node->project['name'];
+        if (!isset($tickets[$project])) {
+          $tickets[$project] = [];
+        }
+        $tickets[(string) $node->project['name']][(string) $node->id] = (string) $node->subject;
+      }
+    }
+    if ((int) $xml['total_count'] > (int) $xml['limit']) {
+      $tickets['...']['...'] = sprintf('Showing <info>%s</info> of <info>%s</info>', $xml['total_count'], $xml['limit']);
+    }
+    return $tickets;
+  }
+
+  public function setInProgress($ticket_id, $assign = FALSE) {
+    $states = $this->getStates();
+    if (!isset($states['In progress'])) {
+      throw new \Exception('There is no "In progress" status');
+    }
+    $updates = ['status_id' => $states['In progress']];
+    if ($assign) {
+      $updates['assigned_to_id'] = $this->getUserId();
+    }
+    return $this->putUpdate($ticket_id, $updates);
+  }
+
+  public function assign($ticket_id) {
+    return $this->putUpdate($ticket_id, ['assigned_to_id' => $this->getUserId()]);
+  }
+
+  protected function putUpdate($ticket_id, array $updates, $comment = 'Working on this') {
+    $url = $this->url . '/issues/' . $ticket_id . '.xml';
+    $xml = new \SimpleXMLElement('<?xml version="1.0"?><issue></issue>');
+    $updates += ['notes' => $comment];
+    foreach ($updates as $key => $value) {
+      $xml->addChild($key, $value);
+    }
+    try {
+      $response = $this->httpClient->request('PUT', $url, [
+        'headers' => [
+          'Content-Type' => 'application/xml',
+          'X-Redmine-API-Key' => $this->apiKey,
+        ],
+        'body' => $xml->asXml(),
+      ]);
+    }
+    catch (ConnectException $e) {
+      throw new \Exception('You appear to be offline, please retry later.');
+    }
+    if (in_array(substr($response->getStatusCode(), 0, 1), [2, 3])) {
+      return TRUE;
+    }
+    // Try again.
+    return FALSE;
+  }
+
+  protected function getStates() {
+    $cid = 'redmine-states';
+    if (($details = $this->cache->fetch($this->version . ':' . $cid))) {
+      return $details;
+    }
+    $url = $this->url . '/issue_statuses.xml';
+    if ($xml = $this->fetch($url, $this->apiKey)) {
+      $states = array();
+      foreach ($xml->issue_status as $node) {
+        $states[(string) $node->name] = (string) $node->id;
+      }
+      // These don't change regularly - use a longer cache - six months.
+      $this->cache->save($this->version . ':' . $cid, $states, static::LIFETIME * 26);
+      return $states;
+    }
+    return FALSE;
+
+  }
+
+  protected function getUserId() {
+    $url = $this->url . '/users/current.xml';
+    $cid = 'userid';
+    if (($uid = $this->cache->fetch($this->version . ':' . $cid))) {
+      return $uid;
+    }
+    if ($xml = $this->fetch($url, $this->apiKey)) {
+      // Cache permanent.
+      $uid = (int)$xml->id;
+      $this->cache->save($this->version . ':' . $cid, $uid, 0);
+      return $uid;
+    }
+    throw new \Exception('Could not determine your user ID');
+  }
+
+  public function pause($ticket_id, $comment) {
+    $states = $this->getStates();
+    if (!isset($states['Paused'])) {
+      throw new \Exception('There is no "Paused" status');
+    }
+    $updates = ['status_id' => $states['Paused']];
+    return $this->putUpdate($ticket_id, $updates, $comment ?: 'Pausing for moment');
+  }
+
 }

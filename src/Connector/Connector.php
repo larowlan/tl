@@ -51,4 +51,50 @@ interface Connector {
    */
   public function ticketUrl($id);
 
+  /**
+   * Gets assigned tickets.
+   *
+   * @return array
+   *   Array of tickets grouped by project, containting titles keyed by ticket
+   *   ID.
+   */
+  public function assigned();
+
+  /**
+   * Sets a ticket as in progress.
+   *
+   * @param mixed $ticket_id
+   *   Ticket ID to set in progres.
+   * @param bool $assign
+   *   TRUE to assign as well.
+   *
+   * @return bool
+   *   TRUE if success.
+   */
+  public function setInProgress($ticket_id, $assign = FALSE);
+
+  /**
+   * Assigns a ticket.
+   *
+   * @param mixed $ticket_id
+   *   Ticket ID to assign
+   *
+   * @return bool
+   *   TRUE if success
+   */
+  public function assign($ticket_id);
+
+  /**
+   * Sets a ticket as paused.
+   *
+   * @param mixed $ticket_id
+   *   Ticket ID to set as paused.
+   * @param string $comment
+   *   Comment. Defaults to 'pausing for moment'
+   *
+   * @return bool
+   *   TRUE if success.
+   */
+  public function pause($ticket_id, $comment);
+
 }
