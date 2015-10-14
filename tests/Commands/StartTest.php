@@ -127,7 +127,7 @@ class StartTest extends TlTestBase {
       '--assign' => TRUE,
     ]);
     $this->assertRegExp('/Started new entry for 1234: Running tests/', $output->getDisplay());
-    $this->assertRegExp('/Ticket 1234 already assigned to you/', $output->getDisplay());
+    $this->assertRegExp('/Could not assign ticket/', $output->getDisplay());
     $this->assertTicketIsOpen(1234);
   }
 
@@ -149,6 +149,50 @@ class StartTest extends TlTestBase {
     ]);
     $this->assertRegExp('/Started new entry for 1234: Running tests/', $output->getDisplay());
     $this->assertRegExp('/Ticket 1234 set to in-progress/', $output->getDisplay());
+    $this->assertTicketIsOpen(1234);
+  }
+
+  /**
+   * @covers ::execute
+   */
+  public function testStatusAndAssign() {
+    $this->getMockConnector()->expects($this->any())
+      ->method('ticketDetails')
+      ->with(1234)
+      ->willReturn(['title' => 'Running tests']);
+    $this->getMockConnector()->expects($this->once())
+      ->method('setInProgress')
+      ->with(1234, TRUE)
+      ->willReturn(TRUE);
+    $output = $this->executeCommand('start', [
+      'issue_number' => 1234,
+      '--status' => TRUE,
+      '-a' => TRUE,
+    ]);
+    $this->assertRegExp('/Started new entry for 1234: Running tests/', $output->getDisplay());
+    $this->assertRegExp('/Ticket 1234 set to in-progress/', $output->getDisplay());
+    $this->assertRegExp('/Ticket 1234 assigned to you/', $output->getDisplay());
+    $this->assertTicketIsOpen(1234);
+  }
+
+  /**
+   * @covers ::execute
+   */
+  public function testStatusAlreadyInProgress() {
+    $this->getMockConnector()->expects($this->any())
+      ->method('ticketDetails')
+      ->with(1234)
+      ->willReturn(['title' => 'Running tests']);
+    $this->getMockConnector()->expects($this->once())
+      ->method('setInProgress')
+      ->with(1234)
+      ->willReturn(FALSE);
+    $output = $this->executeCommand('start', [
+      'issue_number' => 1234,
+      '-s' => TRUE
+    ]);
+    $this->assertRegExp('/Started new entry for 1234: Running tests/', $output->getDisplay());
+    $this->assertRegExp('/Could not update ticket status/', $output->getDisplay());
     $this->assertTicketIsOpen(1234);
   }
 

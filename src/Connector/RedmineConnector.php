@@ -199,5 +199,64 @@ class RedmineConnector implements Connector {
     return $tickets;
   }
 
+  public function setInProgress($ticket_id, $assign = FALSE) {
+    $states = $this->getStates();
+    if (!isset($states['In progress'])) {
+      throw new \Exception('There is no "In progress" status');
+    }
+    $updates = ['status_id' => $states['In progress']];
+    if ($assign) {
+      $updates['assigned_to_id'] = 'me';
+    }
+    return $this->putUpdate($ticket_id, $updates);
+  }
+
+  public function assign($ticket_id) {
+    return $this->putUpdate($ticket_id, ['assigned_to_id' => 'me']);
+  }
+
+  protected function putUpdate($ticket_id, array $updates) {
+    $url = $this->url . '/issues/' . $ticket_id . '.xml';
+    $xml = new \SimpleXMLElement('<?xml version="1.0"?><issue></issue>');
+    $updates += ['notes' => 'Working on this.'];
+    foreach ($updates as $key => $value) {
+      $xml->addChild($key, $value);
+    }
+    try {
+      $response = $this->httpClient->request('PUT', $url, [
+        'headers' => [
+          'Content-Type' => 'application/xml',
+          'X-Redmine-API-Key' => $this->apiKey,
+        ],
+        'body' => $xml->asXml(),
+      ]);
+    }
+    catch (ConnectException $e) {
+      throw new \Exception('You appear to be offline, please retry later.');
+    }
+    if (in_array(substr($response->getStatusCode(), 0, 1), [2, 3])) {
+      return TRUE;
+    }
+    // Try again.
+    return FALSE;
+  }
+
+  protected function getStates() {
+    $cid = 'redmine-states';
+    if (($details = $this->cache->fetch($this->version . ':' . $cid))) {
+      return $details;
+    }
+    $url = $this->url . '/issue_statuses.xml';
+    if ($xml = $this->fetch($url, $this->apiKey)) {
+      $states = array();
+      foreach ($xml->issue_status as $node) {
+        $states[(string) $node->name] = (string) $node->id;
+      }
+      $this->cache->save($this->version . ':' . $cid, $states, static::LIFETIME);
+      return $states;
+    }
+    return FALSE;
+
+  }
 
 }

@@ -60,4 +60,28 @@ interface Connector {
    */
   public function assigned();
 
+  /**
+   * Sets a ticket as in progress.
+   *
+   * @param mixed $ticket_id
+   *   Ticket ID to set in progres.
+   * @param bool $assign
+   *   TRUE to assign as well.
+   *
+   * @return bool
+   *   TRUE if success.
+   */
+  public function setInProgress($ticket_id, $assign = FALSE);
+
+  /**
+   * Assigns a ticket.
+   *
+   * @param mixed $ticket_id
+   *   Ticket ID to assign
+   *
+   * @return bool
+   *   TRUE if success
+   */
+  public function assign($ticket_id);
+
 }
