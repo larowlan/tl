@@ -20,14 +20,31 @@ class StatusTest extends TlTestBase {
    * Test the basic functionality of the status command.
    */
   public function testStatusCommand() {
+    $repository = $this->getRepository();
     // One entry for today.
     $start = time();
-    $this->getRepository()
-      ->insert(['tid' => 4, 'start' => $start, 'end' => $start + 3600 * 7]);
+    $repository->insert(['tid' => 1, 'start' => $start, 'end' => $start + 3600 * 7]);
+
+    // Two entries for yesterday.
+    $start = time() - 86400;
+    $repository->insert(['tid' => 1, 'start' => $start, 'end' => $start + 3600]);
+    $repository->insert(['tid' => 2, 'start' => $start, 'end' => $start + 3600 * 3]);
+
+    // One entries for day before yesterday.
+    $start = time() - (86400 * 2);
+    $repository->insert(['tid' => 3, 'start' => $start, 'end' => $start + 3600]);
 
     // Today should have 7hrs.
     $result = $this->executeCommand('status');
     $this->assertContains('7:00:00', $result->getDisplay());
+
+    // Yesterday should be 4hrs.
+    $result = $this->executeCommand('status', ['date' => '_1']);
+    $this->assertContains('4:00:00', $result->getDisplay());
+
+    // Day before yesterday, 1hr.
+    $result = $this->executeCommand('status', ['date' => '_2']);
+    $this->assertContains('1:00:00', $result->getDisplay());
   }
 
   /**

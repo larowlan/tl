@@ -50,7 +50,13 @@ class Status extends Command {
    * {@inheritdoc}
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
-    $data = $this->repository->status($input->getArgument('date'));
+    // Allow special date param in the form of _1 for back one day, _2 for two
+    // days etc.
+    $date = $input->getArgument('date');
+    if (preg_match('/_(\d+)/', $date, $matches)) {
+      $date = date('Y-m-d', time() - 86400 * $matches[1]);
+    }
+    $data = $this->repository->status($date);
     $table = new Table($output);
     $table->setHeaders(['Slot', 'JobId', 'Time', 'Title']);
     $rows = [];
