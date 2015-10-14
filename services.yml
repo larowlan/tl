@@ -40,6 +40,11 @@ services:
     arguments: ["@connector", "@repository"]
     tags:
       -  { name: command }
+  app.command.assigned:
+    class: Larowlan\Tl\Commands\Assigned
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
   app.command.cache:
     class: Larowlan\Tl\Commands\CacheClear
     arguments: ["@cache"]
