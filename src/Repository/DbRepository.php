@@ -117,8 +117,9 @@ class DbRepository implements Repository {
     }
     $return = $this->qb()->select('id', 'tid', 'end - start AS duration', 'CASE WHEN id = :id THEN 1 ELSE 0 END AS active')
       ->from('slots')
-      ->where('start > :stamp AND :stamp < end')
-      ->setParameter(':stamp', $stamp)
+      ->where('start > :start AND start < :end')
+      ->setParameter(':start', $stamp)
+      ->setParameter(':end', $stamp + (60 * 60 * 24))
       ->setParameter(':id', isset($stop->id) ? $stop->id : 0)
       ->execute()
       ->fetchAll(\PDO::FETCH_OBJ);

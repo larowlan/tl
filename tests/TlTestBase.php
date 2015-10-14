@@ -90,6 +90,16 @@ abstract class TlTestBase extends \PHPUnit_Framework_TestCase {
   }
 
   /**
+   * Gets the db repository.
+   *
+   * @return \Larowlan\Tl\Repository\Repository
+   *   The DB repository.
+   */
+  protected function getRepository() {
+    return $this->container->get('repository');
+  }
+
+  /**
    * Executes a console command.
    *
    * @param string $name
@@ -108,7 +118,7 @@ abstract class TlTestBase extends \PHPUnit_Framework_TestCase {
    * @return \Symfony\Component\Console\Tester\CommandTester
    *   Command tester. Use ::getDisplay() to return the output.
    */
-  protected function executeCommand($name, array $input) {
+  protected function executeCommand($name, array $input = []) {
     $command = $this->container->get('app.command.' . $name);
     $command->setApplication($this->application);
     $command_tester = new CommandTester($command);
