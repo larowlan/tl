@@ -287,4 +287,17 @@ class DbRepository implements Repository {
       ->fetchColumn();
   }
 
+  public function listAliases($filter = '') {
+    $query = $this->qb()->select('alias')
+      ->from('aliases');
+    if (!empty($filter)) {
+      $query
+        ->where('alias LIKE :filter')
+        ->setParameter(':filter', $filter . '%');
+    }
+    return $query
+      ->execute()
+      ->fetchAll(\PDO::FETCH_OBJ);
+  }
+
 }
