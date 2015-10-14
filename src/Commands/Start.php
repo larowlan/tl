@@ -10,12 +10,14 @@ use Doctrine\DBAL\Driver\Connection;
 use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\Formatter;
 use Larowlan\Tl\Repository\Repository;
+use Stecman\Component\Symfony\Console\BashCompletion\Completion\CompletionAwareInterface;
+use Stecman\Component\Symfony\Console\BashCompletion\CompletionContext;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class Start extends Command {
+class Start extends Command implements CompletionAwareInterface {
 
   /**
    * @var \Larowlan\Tl\Connector\Connector
@@ -82,6 +84,28 @@ class Start extends Command {
     else {
       $output->writeln('<error>Error: no such ticket id or access denied</error>');
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function completeOptionValues($optionName, CompletionContext $context) {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function completeArgumentValues($argumentName, CompletionContext $context) {
+    $aliases = [];
+    if ($argumentName === 'issue_number') {
+      // Get all the aliases that are similar to our current search.
+      $results = $this->repository->listAliases($context->getWordAtIndex(2));
+      foreach ($results as $alias) {
+        $aliases[] = $alias->alias;
+      }
+    }
+    return $aliases;
   }
 
 }
