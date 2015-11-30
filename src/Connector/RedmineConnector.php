@@ -109,7 +109,6 @@ class RedmineConnector implements Connector {
     ];
     $xml = new \SimpleXMLElement('<?xml version="1.0"?><time_entry></time_entry>');
     foreach ($data as $key => $value) {
-      $xml->addChild($key, $value);
       $xml->$key = $value;
     }
     try {
