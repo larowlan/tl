@@ -36,6 +36,7 @@ class FormatterTest extends \PHPUnit_Framework_TestCase {
       '< an hour' => [1449693579, 1449693579 + 3599, '59:59 m'],
       '< an hour, leading seconds' => [1449693579, 1449693579 + 3549, '59:09 m'],
       '< an hour, leading minutes' => [1449693579, 1449693579 + 549, '09:09 m'],
+      '< an hour, trailing minutes' => [1449693579, 1449693579 + 1800, '30:00 m'],
       '< a minute' => [1449693579, 1449693579 + 59, '59 secs'],
       '< a minute, leading seconds' => [1449693579, 1449693579 + 9, '09 secs'],
     ];
