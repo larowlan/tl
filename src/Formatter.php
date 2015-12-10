@@ -24,7 +24,7 @@ class Formatter {
       // Over one hour.
       $hours = floor($duration / 3600);
       $minutes = str_pad(floor((($duration - ($hours * 3600)) / 60)), 2, '0', STR_PAD_LEFT);
-      $seconds = str_pad(($duration - ($hours * 3600) - (trim($minutes, 0) * 60)), 2, '0', STR_PAD_LEFT);
+      $seconds = str_pad(($duration - ($hours * 3600) - ($minutes * 60)), 2, '0', STR_PAD_LEFT);
       return "$hours:$minutes:$seconds";
     }
   }
