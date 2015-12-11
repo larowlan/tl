@@ -394,14 +394,9 @@ class RedmineConnector implements Connector, ConfigurableService {
   }
 
   /**
-   * Gets project names.
-   *
-   * @return array
-   *   Project names keyed by ID.
-   *
-   * @throws \Exception
+   * {@inheritdoc}
    */
-  protected function projectNames() {
+  public function projectNames() {
     $cid = 'redmine-projects';
     if (($details = $this->cache->fetch($this->version . ':' . $cid))) {
       // return $details;

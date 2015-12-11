@@ -51,6 +51,7 @@ class Billable extends Command {
       ->setHelp('Shows billable percentage for a given date range. <comment>Usage:</comment> <info>tl billable [day|week|month]</info>')
       ->addArgument('period', InputArgument::OPTIONAL, 'One of day|week|month', static::WEEK)
       ->addOption('start', 's', InputOption::VALUE_OPTIONAL, 'A date offset', NULL)
+      ->addOption('project', 'p', InputOption::VALUE_NONE, 'Group by project', NULL)
       ->addUsage('tl billable day')
       ->addUsage('tl billable day -s Jul-31')
       ->addUsage('tl billable week')
@@ -65,6 +66,7 @@ class Billable extends Command {
   protected function execute(InputInterface $input, OutputInterface $output) {
     $period = $input->getArgument('period');
     $start = $input->getOption('start');
+    $project = $input->getOption('project');
     $start = $start ? new \DateTime($start) : NULL;
     if (!in_array($period, [
       static::MONTH,
@@ -99,14 +101,24 @@ class Billable extends Command {
     $non_billable = 0;
     $unknown = 0;
     $unknowns = [];
+    $projects = [];
+    $billable_projects = [];
+    $non_billable_projects = [];
     foreach ($this->repository->totalByTicket($date->getTimestamp(), $end->getTimestamp()) as $tid => $duration) {
       $details = $this->connector->ticketDetails($tid);
       if ($details) {
+        if (!isset($projects[$details->getProjectId()])) {
+          $projects[$details->getProjectId()] = 0;
+        }
         if ($details->isBillable()) {
           $billable += $duration;
+          $projects[$details->getProjectId()] += $duration;
+          $billable_projects[$details->getProjectId()] = $details->getProjectId();
         }
         else {
           $non_billable += $duration;
+          $projects[$details->getProjectId()] += $duration;
+          $non_billable_projects[$details->getProjectId()] = $details->getProjectId();
         }
       }
       else {
@@ -115,21 +127,72 @@ class Billable extends Command {
       }
     }
     $table = new Table($output);
-    $table->setHeaders(['Type', 'Hours', 'Percent']);
+    if (!$project) {
+      $table->setHeaders(['Type', 'Hours', 'Percent']);
+    }
+    else {
+      $table->setHeaders(['Type', 'Project', 'Hours', 'Percent']);
+    }
     $total = $billable + $non_billable + $unknown;
     $tag = 'info';
     // @todo make this configurable.
     if ($billable / $total < 0.8) {
       $tag = 'error';
     }
-    $rows[] = ['Billable', Formatter::formatDuration($billable), "<$tag>" . round(100 * $billable / $total, 2) . "%</$tag>"];
-    $rows[] = ['Non-billable', Formatter::formatDuration($non_billable), round(100 * $non_billable / $total, 2) . '%'];
-    if ($unknown) {
-      $rows[] = ['Unknown<comment>*</comment>', Formatter::formatDuration($unknown), round(100 * $unknown / $total, 2) . '%'];
-      $rows[] = ['<comment>* Deleted or access denied tickets:</comment> ' . implode(',', $unknowns), '', ''];
+    if ($project) {
+      $project_names = $this->connector->projectNames();
+      $rows[] = new TableSeparator();
+      $rows[] = ['Billable', '', '', ''];
+      foreach ($billable_projects as $project_id) {
+        $project_name = isset($project_names[$project_id]) ? $project_names[$project_id] : "Project ID $project_id";
+        $rows[] = ['', $project_name, Formatter::formatDuration($projects[$project_id]), ''];
+      }
+      $rows[] = new TableSeparator();
+      $rows[] = [
+        'Billable',
+        Formatter::formatDuration($billable),
+        "<$tag>" . round(100 * $billable / $total, 2) . "%</$tag>"
+      ];
+      $rows[] = new TableSeparator();
+      $rows[] = ['Non-Billable', '', '', ''];
+      foreach ($non_billable_projects as $project_id) {
+        $project_name = isset($project_names[$project_id]) ? $project_names[$project_id] : "Project ID $project_id";
+        $rows[] = ['', $project_name, Formatter::formatDuration($projects[$project_id]), ''];
+      }
+      $rows[] = new TableSeparator();
+      $rows[] = [
+        'Non-billable',
+        Formatter::formatDuration($non_billable),
+        round(100 * $non_billable / $total, 2) . '%'
+      ];
+      if ($unknown) {
+        $rows[] = new TableSeparator();
+        $rows[] = ['Unknown', '', '', ''];
+        $rows[] = ['', 'Unknown<comment>*</comment>', Formatter::formatDuration($unknown), round(100 * $unknown / $total, 2) . '%'];
+        $rows[] = ['', '<comment>* Deleted or access denied tickets:</comment> ' . implode(',', $unknowns), '', ''];
+      }
+      $rows[] = new TableSeparator();
+      $rows[] = ['', 'Total', Formatter::formatDuration($total), '100%'];
     }
-    $rows[] = new TableSeparator();
-    $rows[] = ['Total', Formatter::formatDuration($total), '100%'];
+    else {
+      $rows[] = [
+        'Billable',
+        Formatter::formatDuration($billable),
+        "<$tag>" . round(100 * $billable / $total, 2) . "%</$tag>"
+      ];
+      $rows[] = [
+        'Non-billable',
+        Formatter::formatDuration($non_billable),
+        round(100 * $non_billable / $total, 2) . '%'
+      ];
+      if ($unknown) {
+        $rows[] = ['Unknown<comment>*</comment>', Formatter::formatDuration($unknown), round(100 * $unknown / $total, 2) . '%'];
+        $rows[] = ['<comment>* Deleted or access denied tickets:</comment> ' . implode(',', $unknowns), '', ''];
+      }
+      $rows[] = new TableSeparator();
+      $rows[] = ['Total', Formatter::formatDuration($total), '100%'];
+    }
+
     $table->setRows($rows);
     $table->render();
   }

@@ -99,4 +99,14 @@ interface Connector {
    */
   public function pause($ticket_id, $comment);
 
+  /**
+   * Gets project names.
+   *
+   * @return array
+   *   Project names keyed by ID.
+   *
+   * @throws \Exception
+   */
+  public function projectNames();
+
 }
