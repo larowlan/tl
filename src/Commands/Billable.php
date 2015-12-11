@@ -97,18 +97,26 @@ class Billable extends Command {
     }
     $billable = 0;
     $non_billable = 0;
+    $unknown = 0;
+    $unknowns = [];
     foreach ($this->repository->totalByTicket($date->getTimestamp(), $end->getTimestamp()) as $tid => $duration) {
       $details = $this->connector->ticketDetails($tid);
-      if ($details->isBillable()) {
-        $billable += $duration;
+      if ($details) {
+        if ($details->isBillable()) {
+          $billable += $duration;
+        }
+        else {
+          $non_billable += $duration;
+        }
       }
       else {
-        $non_billable += $duration;
+        $unknown += $duration;
+        $unknowns[] = $tid;
       }
     }
     $table = new Table($output);
     $table->setHeaders(['Type', 'Hours', 'Percent']);
-    $total = $billable + $non_billable;
+    $total = $billable + $non_billable + $unknown;
     $tag = 'info';
     // @todo make this configurable.
     if ($billable / $total < 0.8) {
@@ -116,6 +124,10 @@ class Billable extends Command {
     }
     $rows[] = ['Billable', Formatter::formatDuration($billable), "<$tag>" . round(100 * $billable / $total, 2) . "%</$tag>"];
     $rows[] = ['Non-billable', Formatter::formatDuration($non_billable), round(100 * $non_billable / $total, 2) . '%'];
+    if ($unknown) {
+      $rows[] = ['Unknown<comment>*</comment>', Formatter::formatDuration($unknown), round(100 * $unknown / $total, 2) . '%'];
+      $rows[] = ['<comment>* Deleted or access denied tickets:</comment> ' . implode(',', $unknowns), '', ''];
+    }
     $rows[] = new TableSeparator();
     $rows[] = ['Total', Formatter::formatDuration($total), '100%'];
     $table->setRows($rows);
