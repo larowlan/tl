@@ -108,6 +108,11 @@ services:
     arguments: ["@connector", "@repository"]
     tags:
       -  { name: command }
+  app.command.billable:
+      class: Larowlan\Tl\Commands\Billable
+      arguments: ["@connector", "@repository"]
+      tags:
+        -  { name: command }
   app.command.status:
     class: Larowlan\Tl\Commands\Status
     arguments: ["@connector", "@repository"]

@@ -26,7 +26,7 @@ class RedmineConnector implements Connector, ConfigurableService {
   protected $cache;
   protected $url;
   protected $apiKey;
-  protected $billableProjects = [];
+  protected $nonBillableProjects = [];
   // 7 days cache.
   const LIFETIME = 604800;
 
@@ -47,7 +47,7 @@ class RedmineConnector implements Connector, ConfigurableService {
     $this->cache = $cache;
     $this->url = $config['url'];
     $this->apiKey = $config['api_key'];
-    $this->billableProjects = isset($config['non_billable_projects']) ? $config['non_billable_projects'] : [];
+    $this->nonBillableProjects = isset($config['non_billable_projects']) ? $config['non_billable_projects'] : [];
     $this->version = $version;
   }
 
@@ -309,7 +309,7 @@ class RedmineConnector implements Connector, ConfigurableService {
    *   TRUE if billable.
    */
   protected function isBillable($project_id) {
-    return in_array($project_id, $this->billableProjects, TRUE);
+    return !in_array($project_id, $this->nonBillableProjects, TRUE);
   }
 
   /**
@@ -366,7 +366,7 @@ class RedmineConnector implements Connector, ConfigurableService {
     }
     catch (ConnectException $e) {
       $output->writeln('<error>Could not connect to backend, please check your API key and that you are online</error>');
-      return;
+      return $config;
     }
     catch (\Exception $e) {
       $output->writeln('<error>An error occured trying to connect to the backend, please check your API key and that you are online</error>');

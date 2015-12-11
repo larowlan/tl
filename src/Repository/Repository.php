@@ -39,4 +39,5 @@ interface Repository {
   public function removeAlias($ticket_id, $alias);
   public function loadAlias($alias);
   public function listAliases($filter = '');
+  public function totalByTicket($start_timestamp, $end_timestamp = NULL);
 }
