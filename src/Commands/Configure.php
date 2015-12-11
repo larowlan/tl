@@ -6,21 +6,30 @@
  */
 namespace Larowlan\Tl\Commands;
 
+use Larowlan\Tl\Configuration\ConfigurableService;
+use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\Question;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Yaml\Yaml;
 
 /**
  * Defines a class for configuring the app.
  */
-class Configure extends Command implements PreinstallCommand {
+class Configure extends Command implements ContainerAwareCommand {
 
+  /**
+   * @var ContainerBuilder
+   */
+  protected $container;
   protected $directory;
+  protected $configurableServiceIds;
 
-  public function __construct($directory) {
+  public function __construct($directory, array $configurable_service_ids) {
     $this->directory = $directory;
+    $this->configurableServiceIds = $configurable_service_ids;
     parent::__construct();
   }
 
@@ -45,21 +54,31 @@ class Configure extends Command implements PreinstallCommand {
     }
     else {
       $output->writeln('<info>Creating new file</info>');
-      $config = ['url' => '', 'api_key' => ''];
+      $config = [];
     }
-    $default_url = isset($config['url']) ? $config['url'] : 'https://redmine.previousnext.com.au';
-    $default_key = isset($config['api_key']) ? $config['api_key'] : '';
-    // Reset.
-    $config = [];
-    $question = new Question(sprintf('Enter your redmine URL: <comment>[%s]</comment>', $default_url), $default_url);
-    $config['url'] = $helper->ask($input, $output, $question) ?: $default_url;
-    if (strpos($config['url'], 'https') !== 0) {
-      $output->writeln('<comment>It is recommended to use https, POSTING over http is not supported</comment>');
+    foreach ($this->configurableServiceIds as $service_id) {
+      $service_definition = $this->container->getDefinition($service_id);
+      /** @var ConfigurableService $service_class */
+      $service_class = $service_definition->getClass();
+      $config = $service_class::getDefaults($config);
+      $config = $service_class::askPreBootQuestions($helper, $input, $output, $config);
     }
-    $question = new Question(sprintf('Enter your redmine API Key: <comment>[%s]</comment>', $default_key), $default_key);
-    $config['api_key'] = $helper->ask($input, $output, $question) ?: $default_key;
+    $this->container->setParameter('config', $config);
+    // Now we can attempt boot.
+    foreach ($this->configurableServiceIds as $service_id) {
+      /** @var ConfigurableService $service */
+      $service = $this->container->get($service_id);
+      $config = $service->askPostBootQuestions($helper, $input, $output, $config);
+    }
+    $this->container->setParameter('config', $config);
     file_put_contents($file, Yaml::dump($config));
     $output->writeln(sprintf('<info>Wrote configuration to file %s</info>', $file));
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function setContainerBuilder(ContainerBuilder $container) {
+    $this->container = $container;
+  }
 }

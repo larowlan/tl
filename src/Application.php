@@ -9,7 +9,10 @@ namespace Larowlan\Tl;
 use Doctrine\DBAL\Exception\TableNotFoundException;
 use Doctrine\DBAL\Schema\Comparator;
 use Doctrine\DBAL\Schema\Schema;
+use Larowlan\Tl\Commands\ContainerAwareCommand;
 use Larowlan\Tl\Commands\PreinstallCommand;
+use Larowlan\Tl\Configuration\ConfigurationCollector;
+use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Console\Application as BaseApplication;
 use Symfony\Component\Console\Input\InputInterface;
@@ -58,6 +61,7 @@ class Application extends BaseApplication {
     parent::__construct($name, $version);
     $this->container = $container;
     $this->container->setParameter('version', $this->getVersion());
+    $this->container->setParameter('configurable_service_ids', array_keys($this->container->findTaggedServiceIds('configurable')));
   }
 
   /**
@@ -83,7 +87,13 @@ class Application extends BaseApplication {
     foreach ($this->container->findTaggedServiceIds('command') as $service_id => $tags) {
       if (!$installing || in_array(PreinstallCommand::class, class_implements($this->container->getDefinition($service_id)->getClass()), TRUE)) {
         // Don't add any commands until install is complete.
-        $this->add($this->container->get($service_id));
+        $service = $this->container->get($service_id);
+        if ($service instanceof ContainerAwareCommand) {
+          // Some pre-install commands need the container to find configurable
+          // services.
+          $service->setContainerBuilder($this->container);
+        }
+        $this->add($service);
       }
     }
     return parent::doRun($input, $output);
@@ -143,7 +153,14 @@ class Application extends BaseApplication {
   private function checkConfig(OutputInterface $output) {
     try {
       $processor = $this->container->get('config.processor');
+      /** @var ConfigurationCollector|ConfigurationInterface $configuration */
       $configuration = $this->container->get('config.configuration');
+      $needs_config_ids = $this->container->getParameter('configurable_service_ids');
+      $needs_config = [];
+      foreach ($needs_config_ids as $id) {
+        $needs_config[$id] = $this->container->getDefinition($id)->getClass();
+      }
+      $configuration->setConfigurableServices($needs_config);
       $home = $this->container->getParameter('directory');
       $file = $home . '/.tl.yml';
       if (!file_exists($file)) {
