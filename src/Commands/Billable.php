@@ -141,7 +141,6 @@ class Billable extends Command {
     }
     if ($project) {
       $project_names = $this->connector->projectNames();
-      $rows[] = new TableSeparator();
       $rows[] = ['Billable', '', '', ''];
       foreach ($billable_projects as $project_id) {
         $project_name = isset($project_names[$project_id]) ? $project_names[$project_id] : "Project ID $project_id";
