@@ -42,42 +42,6 @@ class Ticket implements TicketInterface {
 
   /**
    * {@inheritdoc}
-   *
-   * @deprecated
-   */
-  public function offsetExists($offset) {
-    return in_array($offset, ['title', 'projectId', 'isBillable']);
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * @deprecated
-   */
-  public function offsetGet($offset) {
-    return $this->{$offset};
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * @deprecated
-   */
-  public function offsetSet($offset, $value) {
-    $this->{$offset} = $value;
-  }
-
-  /**
-   * {@inheritdoc}
-   *
-   * @deprecated
-   */
-  public function offsetUnset($offset) {
-    unset($this->{$offset});
-  }
-
-  /**
-   * {@inheritdoc}
    */
   public function getTitle() {
     return $this->title;

@@ -9,7 +9,7 @@ namespace Larowlan\Tl;
 /**
  * Defines an interface for tickets.
  */
-interface TicketInterface extends \ArrayAccess {
+interface TicketInterface {
 
   /**
    * Gets the ticket title.
