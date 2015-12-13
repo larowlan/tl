@@ -50,7 +50,7 @@ class Open extends Command {
     if ($data = $this->repository->getActive()) {
       $details = $this->connector->ticketDetails($data->tid);
       $output->writeLn(sprintf('%s [<info>%d</info>] - <comment>%s</comment> [slot: <comment>%d</comment>]',
-        $details['title'],
+        $details->getTitle(),
         $data->tid,
         Formatter::formatDuration(time() - $data->start),
         $data->id

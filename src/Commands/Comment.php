@@ -67,7 +67,7 @@ class Comment extends Command {
         sprintf('Enter comment for slot <comment>%d</comment> [<info>%d</info>]: %s [<info>%s h</info>] [%s]',
           $entry->id,
           $entry->tid,
-          $title['title'],
+          $title->getTitle(),
           $entry->duration,
           $last ?: static::DEFAULT_COMMENT
         ),

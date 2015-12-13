@@ -116,7 +116,7 @@ class RedmineConnector implements Connector, ConfigurableService {
     $details = $this->ticketDetails($entry->tid);
     $data = [
       'issue_id'    => $entry->tid,
-      'project_id'  => $details['project'],
+      'project_id'  => $details->getProjectId(),
       'spent_on'    => date('Y-m-d', $entry->start),
       'hours'       => $entry->duration,
       'activity_id' => $entry->category,

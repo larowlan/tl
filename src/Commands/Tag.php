@@ -93,7 +93,7 @@ class Tag extends Command {
         sprintf('Enter tag for slot <comment>%d</comment> [<info>%d</info>]: %s [<info>%s h</info>] [%s]',
           $entry->id,
           $entry->tid,
-          $title['title'],
+          $title->getTitle(),
           $entry->duration,
           $last ?: static::DEFAULT_TAG
         ),
@@ -132,7 +132,7 @@ class Tag extends Command {
         sprintf('Enter tag for slot <comment>%d</comment> [<info>%d</info>]: %s [<info>%s h</info>] [%s]',
           $entry->id,
           $entry->tid,
-          $title['title'],
+          $title->getTitle(),
           Formatter::formatDuration($entry->end - $entry->start),
           static::DEFAULT_TAG
         ),

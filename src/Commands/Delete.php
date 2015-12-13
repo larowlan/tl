@@ -59,7 +59,7 @@ class Delete extends Command {
       $output->writeln(sprintf('Deleted slot <comment>%d</comment> against ticket <info>%d</info>: %s, duration <info>%s</info>',
         $slot->id,
         $slot->tid,
-        $deleted['title'],
+        $deleted->getTitle(),
         Formatter::formatDuration($slot->end - $slot->start)
       ));
       return;
