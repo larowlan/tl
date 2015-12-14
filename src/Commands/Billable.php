@@ -149,6 +149,7 @@ class Billable extends Command {
       $rows[] = new TableSeparator();
       $rows[] = [
         'Billable',
+        '',
         Formatter::formatDuration($billable),
         "<$tag>" . round(100 * $billable / $total, 2) . "%</$tag>"
       ];
@@ -161,6 +162,7 @@ class Billable extends Command {
       $rows[] = new TableSeparator();
       $rows[] = [
         'Non-billable',
+        '',
         Formatter::formatDuration($non_billable),
         round(100 * $non_billable / $total, 2) . '%'
       ];
