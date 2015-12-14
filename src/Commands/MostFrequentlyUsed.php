@@ -60,7 +60,7 @@ class MostFrequentlyUsed extends Command {
       $rows = [];
       foreach ($entries as $entry) {
         $details = $this->connector->ticketDetails($entry->tid);
-        $rows[] = [$entry->tid, $details['title']];
+        $rows[] = [$entry->tid, $details->getTitle()];
       }
       $table->setRows($rows);
       $table->render();

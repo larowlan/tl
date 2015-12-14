@@ -9,12 +9,23 @@ namespace Larowlan\Tl\Tests\Commands;
 use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\Repository\Repository;
 use Larowlan\Tl\Tests\TlTestBase;
+use Larowlan\Tl\Ticket;
 
 /**
  * @coversDefaultClass \Larowlan\Tl\Commands\StatusTest
  * @group Commands
  */
 class StatusTest extends TlTestBase {
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp() {
+    parent::setUp();
+    $this->getMockConnector()->expects($this->any())
+      ->method('ticketDetails')
+      ->willReturn(new Ticket('Running tests', 123));
+  }
 
   /**
    * Test the basic functionality of the status command.

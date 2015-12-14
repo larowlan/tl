@@ -73,7 +73,7 @@ class Start extends Command implements CompletionAwareInterface {
         $output->writeln(sprintf('Closed slot <comment>%d</comment> against ticket <info>%d</info>: %s, duration <info>%s</info>',
           $stop->id,
           $stop->tid,
-          $stopped['title'],
+          $stopped->getTitle(),
           Formatter::formatDuration($stop->duration)
         ));
       }
@@ -83,7 +83,7 @@ class Start extends Command implements CompletionAwareInterface {
           (new \DateTime())->format('h:i'),
           $continued ? 'Continued' : 'Started new',
           $ticket_id,
-          $title['title'],
+          $title->getTitle(),
           $slot_id
         ));
         if ($input->getOption('status')) {

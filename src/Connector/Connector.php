@@ -7,6 +7,8 @@
 
 namespace Larowlan\Tl\Connector;
 
+use Larowlan\Tl\TicketInterface;
+
 interface Connector {
 
   /**
@@ -15,8 +17,8 @@ interface Connector {
    * @param int $id
    *   The ticket id from the remote system.
    *
-   * @return array
-   *   Array with keys project and title.
+   * @return TicketInterface
+   *   Ticket object.
    */
   public function ticketDetails($id);
 
@@ -96,5 +98,15 @@ interface Connector {
    *   TRUE if success.
    */
   public function pause($ticket_id, $comment);
+
+  /**
+   * Gets project names.
+   *
+   * @return array
+   *   Project names keyed by ID.
+   *
+   * @throws \Exception
+   */
+  public function projectNames();
 
 }

@@ -1,5 +1,6 @@
 parameters:
   db_name: ".tldb.sq3"
+  configurable_service_ids: []
   directory: ''
   # This is set in Application::checkConfig
   config: []
@@ -27,6 +28,8 @@ services:
   connector:
     class: Larowlan\Tl\Connector\RedmineConnector
     arguments: ['@http_client', '@cache', '%config%', '%version%']
+    tags:
+      -  { name: configurable }
   reviewer:
     class: Larowlan\Tl\Reviewer
     arguments: ["@connector", "@repository"]
@@ -105,6 +108,11 @@ services:
     arguments: ["@connector", "@repository"]
     tags:
       -  { name: command }
+  app.command.billable:
+      class: Larowlan\Tl\Commands\Billable
+      arguments: ["@connector", "@repository"]
+      tags:
+        -  { name: command }
   app.command.status:
     class: Larowlan\Tl\Commands\Status
     arguments: ["@connector", "@repository"]
@@ -117,7 +125,7 @@ services:
       -  { name: command }
   app.command.configure:
     class: Larowlan\Tl\Commands\Configure
-    arguments: ["%directory%"]
+    arguments: ["%directory%", '%configurable_service_ids%']
     tags:
       -  { name: command }
   app.command.frequent:
