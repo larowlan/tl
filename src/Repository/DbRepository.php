@@ -301,4 +301,36 @@ class DbRepository implements Repository {
       ->fetchAll(\PDO::FETCH_OBJ);
   }
 
+  public function totalByTicket($start, $end = NULL) {
+    $stop = $this->stop();
+    if (!$end) {
+      // Some time in the future.
+      $end = time() + 86400;
+    }
+    $return = $this->qb()->select('tid', 'end - start AS duration')
+      ->from('slots')
+      ->where('start > :start AND start < :end')
+      ->setParameter(':start', $start)
+      ->setParameter(':end', $end)
+      ->execute()
+      ->fetchAll(\PDO::FETCH_OBJ);
+    $totals = [];
+    foreach ($return as $row) {
+      $row->duration = round($row->duration / 900) * 900;
+      if (!isset($totals[$row->tid])) {
+        $totals[$row->tid] = 0;
+      }
+      $totals[$row->tid] += $row->duration;
+    }
+    if ($stop) {
+      $this->qb()->update('slots')
+        ->set('end', ':end')
+        ->setParameter(':end', NULL)
+        ->where('id = :id')
+        ->setParameter(':id', $stop->id)
+        ->execute();
+    }
+    return $totals;
+  }
+
 }

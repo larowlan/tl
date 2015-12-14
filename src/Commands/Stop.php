@@ -59,7 +59,7 @@ class Stop extends Command {
         (new \DateTime())->format('h:i'),
         $stop->id,
         $stop->tid,
-        $stopped['title'],
+        $stopped->getTitle(),
         Formatter::formatDuration($stop->duration)
       ));
       if (($comment = $input->getOption('comment')) || $input->getOption('pause')) {

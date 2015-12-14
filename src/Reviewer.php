@@ -74,7 +74,7 @@ class Reviewer {
         $record->id,
         $record->tid,
         $record->duration,
-        substr($details['title'], 0, 25) . '...',
+        substr($details->getTitle(), 0, 25) . '...',
         $category,
         $record->comment,
       ];

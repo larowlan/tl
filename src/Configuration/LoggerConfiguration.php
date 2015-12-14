@@ -9,24 +9,31 @@ namespace Larowlan\Tl\Configuration;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
-class LoggerConfiguration implements ConfigurationInterface {
+class LoggerConfiguration implements ConfigurationInterface, ConfigurationCollector {
+
+  /**
+   * Array of services to request configuration from.
+   *
+   * @var ConfigurableService[]
+   */
+  protected $services = [];
 
   /**
    * {@inheritdoc}
    */
   public function getConfigTreeBuilder() {
     $tree = new TreeBuilder();
-    $root = $tree->root('redmine');
-    $root->children()
-      ->scalarNode('api_key')
-        ->isRequired()
-      ->end()
-      ->scalarNode('url')
-        ->defaultValue('https://redmine.previousnext.com.au')
-        ->isRequired()
-      ->end()
-    ->end();
+    foreach ($this->services as $service) {
+      $service::getConfiguration($tree);
+    }
     return $tree;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setConfigurableServices(array $class_names) {
+    $this->services = $class_names;
   }
 
 }

@@ -102,7 +102,7 @@ class Combine extends Command {
       $output->writeln(sprintf('Closed slot <comment>%d</comment> against ticket <info>%d</info>: %s, duration <info>%s</info>',
         $stop->id,
         $stop->tid,
-        $stopped['title'],
+        $stopped->getTitle(),
         Formatter::formatDuration($stop->duration)
       ));
     }
