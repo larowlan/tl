@@ -10,6 +10,8 @@ use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\Repository\Repository;
 use Larowlan\Tl\Tests\TlTestBase;
 use Larowlan\Tl\Ticket;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\StreamOutput;
 
 /**
  * @coversDefaultClass \Larowlan\Tl\Commands\Start
@@ -28,6 +30,30 @@ class StartTest extends TlTestBase {
     $output = $this->executeCommand('start', ['issue_number' => 1234]);
     $this->assertRegExp('/Started new entry for 1234: Running tests/', $output->getDisplay());
     $this->assertTicketIsOpen(1234);
+  }
+
+  /**
+   * @covers \Larowlan\Tl\Application::doRun
+   */
+  public function testStartLogging() {
+    $this->getMockConnector()->expects($this->any())
+      ->method('ticketDetails')
+      ->with(1234)
+      ->willReturn(new Ticket('Running tests', 123));
+    $output =  new StreamOutput(fopen('php://memory', 'w', false));
+    $command = $this->container->get('app.command.start');
+    $command->setApplication($this->application);
+    $this->application->setAutoExit(FALSE);
+    $this->application->run(new ArrayInput([
+      'command' => 'start',
+      'issue_number' => 1234,
+    ]), $output);
+    rewind($output->getStream());
+    $display = stream_get_contents($output->getStream());
+    $this->assertRegExp('/Started new entry for 1234: Running tests/', $display);
+    $this->assertTicketIsOpen(1234);
+    $logged = file_get_contents($this->container->getParameter('directory') . '/.tl.log');
+    $this->assertRegExp('/Started new entry for 1234: Running tests/', $logged);
   }
 
   /**
