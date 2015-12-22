@@ -29,18 +29,24 @@ class Reviewer {
     $this->repository = $repository;
   }
 
-  public static function headers() {
-    return [
+  public static function headers($exact = FALSE) {
+    $headers = [
       'SlotID',
       'JobID',
       'Tallied',
+    ];
+    if ($exact) {
+      $headers[] = 'Exact';
+    }
+    $headers = array_merge($headers, [
       'Title',
       'Tag',
       'Comment',
-    ];
+    ]);
+    return $headers;
   }
 
-  public function getSummary($date = 19780101, $check = FALSE) {
+  public function getSummary($date = 19780101, $check = FALSE, $exact = FALSE) {
     $data = $this->repository->review($date, $check);
     if (count($data) == 0 && !$check) {
       throw new \Exception('All entries stored in remote system');
@@ -54,6 +60,7 @@ class Reviewer {
     catch (ConnectException $e) {
       $offline = TRUE;
     }
+    $exact_total = 0;
     foreach ($data as $record) {
       $total += $record->duration;
       $details = $this->connector->ticketDetails($record->tid);
@@ -70,17 +77,44 @@ class Reviewer {
           $category = 'Unknown';
         }
       }
-      $rows[] = [
+      $row = [
         $record->id,
         $record->tid,
         $record->duration,
+      ];
+      if ($exact) {
+        $row[] = Formatter::formatDuration($record->end - $record->start);
+        $exact_total += ($record->end - $record->start);
+      }
+      $row = array_merge($row, [
         substr($details->getTitle(), 0, 25) . '...',
         $category,
         $record->comment,
-      ];
+      ]);
+      $rows[] = $row;
     }
     $rows[] = new TableSeparator();
-    $rows[] = ['', '<comment>Total</comment>', '<info>' . $total . ' h</info>', '', '', ''];
+    if ($exact) {
+      $rows[] = [
+        '',
+        '<comment>Total</comment>',
+        '<info>' . $total . ' h</info>',
+        '<info>' . Formatter::formatDuration($exact_total) . ' h</info>',
+        '',
+        '',
+        ''
+      ];
+    }
+    else {
+      $rows[] = [
+        '',
+        '<comment>Total</comment>',
+        '<info>' . $total . ' h</info>',
+        '',
+        '',
+        ''
+      ];
+    }
     return $rows;
   }
 }
