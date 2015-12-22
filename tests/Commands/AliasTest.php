@@ -58,4 +58,40 @@ class AliasTest extends TlTestBase {
     $this->assertRegExp('/Removed alias/', $output->getDisplay());
   }
 
+  /**
+   * @covers ::execute
+   */
+  public function testList() {
+    $this->getMockConnector()->expects($this->any())
+      ->method('ticketDetails')
+      ->with(1234)
+      ->willReturn(new Ticket('Running tests', 123));
+    $aliases = [
+      'some',
+      'drunk',
+      'pony',
+    ];
+    $output = $this->executeCommand('alias', [
+      'ticket_id' => 1234,
+    ]);
+    $this->assertRegExp('/Missing alias/', $output->getDisplay());
+    $output = $this->executeCommand('alias', [
+      'alias' => 1234,
+    ]);
+    $this->assertRegExp('/Missing ticket number/', $output->getDisplay());
+    foreach ($aliases as $alias) {
+      $output = $this->executeCommand('alias', [
+        'ticket_id' => 1234,
+        'alias' => $alias,
+      ]);
+      $this->assertRegExp('/Created new alias/', $output->getDisplay());
+    }
+    $output = $this->executeCommand('alias', [
+      '--list' => TRUE,
+    ]);
+    foreach ($aliases as $alias) {
+      $this->assertRegExp('/' . $alias . '/', $output->getDisplay());
+    }
+  }
+
 }
