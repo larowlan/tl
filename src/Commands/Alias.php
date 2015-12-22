@@ -11,6 +11,7 @@ use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\Formatter;
 use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -43,15 +44,33 @@ class Alias extends Command {
       ->setDescription('Creates an alias')
       ->setHelp('Creates an alias')
       ->addOption('delete', NULL, InputOption::VALUE_NONE, 'Delete the given combination')
-      ->addArgument('ticket_id', InputArgument::REQUIRED, 'Ticket ID to add an alias for')
-      ->addArgument('alias', InputArgument::REQUIRED, 'Alias to use')
-      ->addUsage('tl alias 12345 "foobar"');
+      ->addOption('list', NULL, InputOption::VALUE_NONE, 'List aliases')
+      ->addArgument('ticket_id', InputArgument::OPTIONAL, 'Ticket ID to add an alias for')
+      ->addArgument('alias', InputArgument::OPTIONAL, 'Alias to use')
+      ->addUsage('tl alias 12345 "foobar"')
+      ->addUsage('tl alias --list')
+      ->addUsage('tl alias 12345 "foobar" --delete');
   }
 
   /**
    * {@inheritdoc}
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
+    if ($input->getOption('list')) {
+      $table = new Table($output);
+      $table->setHeaders(['Alias', 'Issue number']);
+      $list = $this->repository->listAliases();
+      $rows = [];
+      foreach ($list as $alias) {
+        $rows[] = [
+          $alias->alias,
+          $alias->tid,
+        ];
+      }
+      $table->setRows($rows);
+      $table->render();
+      return;
+    }
     $alias = $input->getArgument('alias');
     $tid = $input->getArgument('ticket_id');
     if ($input->getOption('delete')) {
@@ -63,6 +82,14 @@ class Alias extends Command {
       }
     }
     else {
+      if (!$alias) {
+        $output->writeln('<error>Missing alias</error>');
+        return;
+      }
+      if (!$tid) {
+        $output->writeln('<error>Missing ticket number</error>');
+        return;
+      }
       if ($this->repository->addAlias($tid, $alias)) {
         $output->writeln('Created new alias');
       }
