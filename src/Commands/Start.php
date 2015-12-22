@@ -18,7 +18,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class Start extends Command implements CompletionAwareInterface {
+class Start extends Command implements CompletionAwareInterface, LogAwareCommand {
 
   /**
    * @var \Larowlan\Tl\Connector\Connector

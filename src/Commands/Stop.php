@@ -16,7 +16,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class Stop extends Command {
+class Stop extends Command implements LogAwareCommand {
 
   /**
    * @var \Larowlan\Tl\Connector\Connector
