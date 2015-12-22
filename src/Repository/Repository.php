@@ -11,9 +11,11 @@ interface Repository {
 
   public function getActive();
 
+  public function latest();
+
   public function stop($slot_id = NULL);
 
-  public function start($ticket_id, $comment = '');
+  public function start($ticket_id, $comment = '', $force_continue = FALSE);
 
   public function insert($slot, $params = []);
 

@@ -118,6 +118,11 @@ services:
     arguments: ["@connector", "@repository"]
     tags:
       -  { name: command }
+  app.command.continue:
+    class: Larowlan\Tl\Commands\Continues
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
   app.command.install:
     class: Larowlan\Tl\Commands\Install
     arguments: ["@connection", '%directory%', "@schema"]
