@@ -128,6 +128,11 @@ services:
     arguments: ["%directory%", '%configurable_service_ids%']
     tags:
       -  { name: command }
+  app.command.log:
+    class: Larowlan\Tl\Commands\Log
+    arguments: ["%directory%"]
+    tags:
+      -  { name: command }
   app.command.frequent:
     class: Larowlan\Tl\Commands\MostFrequentlyUsed
     arguments: ["@connector", "@repository"]
