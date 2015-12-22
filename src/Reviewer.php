@@ -99,7 +99,7 @@ class Reviewer {
         '',
         '<comment>Total</comment>',
         '<info>' . $total . ' h</info>',
-        '<info>' . Formatter::formatDuration($exact_total) . ' h</info>',
+        '<info>' . Formatter::formatDuration($exact_total) . '</info>',
         '',
         '',
         ''
