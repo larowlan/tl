@@ -289,7 +289,7 @@ class DbRepository implements Repository {
   }
 
   public function listAliases($filter = '') {
-    $query = $this->qb()->select('alias')
+    $query = $this->qb()->select('alias', 'tid')
       ->from('aliases');
     if (!empty($filter)) {
       $query
