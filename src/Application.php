@@ -6,12 +6,14 @@
 
 namespace Larowlan\Tl;
 
-use Doctrine\DBAL\Exception\TableNotFoundException;
 use Doctrine\DBAL\Schema\Comparator;
 use Doctrine\DBAL\Schema\Schema;
 use Larowlan\Tl\Commands\ContainerAwareCommand;
+use Larowlan\Tl\Commands\LogAwareCommand;
 use Larowlan\Tl\Commands\PreinstallCommand;
 use Larowlan\Tl\Configuration\ConfigurationCollector;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Console\Application as BaseApplication;
@@ -62,6 +64,11 @@ class Application extends BaseApplication {
     $this->container = $container;
     $this->container->setParameter('version', $this->getVersion());
     $this->container->setParameter('configurable_service_ids', array_keys($this->container->findTaggedServiceIds('configurable')));
+    // Logger.
+    $log = new Logger('tl');
+    $logger_file = $this->container->getParameter('directory') . '/.tl.log';
+    $log->pushHandler(new StreamHandler($logger_file, Logger::INFO));
+    $this->container->set('logger', $log);
   }
 
   /**
@@ -95,6 +102,11 @@ class Application extends BaseApplication {
         }
         $this->add($service);
       }
+    }
+    $command = $this->find($name);
+    if ($command instanceof LogAwareCommand) {
+      // Use the log aware output handler.
+      $output = new LogAwareOutput($output, $this->container->get('logger'));
     }
     return parent::doRun($input, $output);
   }
