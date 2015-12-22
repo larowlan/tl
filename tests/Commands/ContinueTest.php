@@ -45,11 +45,17 @@ class ContinueTest extends TlTestBase {
       'start' => $start,
       'end' => $start + 3600
     ]);
-    // 3 hrs.
+    // 9 hrs.
     $this->slotId3 = $repository->insert([
       'tid' => 3,
       'start' => $start,
       'end' => $start + 3600 * 9
+    ]);
+    // Yesterday.
+    $repository->insert([
+      'tid' => 3,
+      'start' => $start - 86400,
+      'end' => $start - 86400 + 3600 * 9
     ]);
   }
 
