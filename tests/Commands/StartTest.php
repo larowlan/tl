@@ -224,19 +224,4 @@ class StartTest extends TlTestBase {
     $this->assertTicketIsOpen(1234);
   }
 
-  /**
-   * @return mixed
-   */
-  protected function assertTicketIsOpen($ticket_id, $comment = NULL) {
-    /** @var Repository $repository */
-    $repository = $this->getRepository();
-    $active = $repository->getActive();
-    $this->assertEquals($ticket_id, $active->tid);
-    $this->assertEquals($comment, $active->comment);
-    $this->assertNull($active->end);
-    $this->assertNull($active->category);
-    $this->assertNull($active->teid);
-    return $active;
-  }
-
 }
