@@ -10,6 +10,9 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\Yaml\Yaml;
 
+if (!ini_get('date.timezone')) {
+    date_default_timezone_set('Australia/Brisbane');
+}
 $container = new ContainerBuilder();
 $loader = new YamlFileLoader($container, new FileLocator(dirname(__DIR__)));
 $loader->load('services.yml');

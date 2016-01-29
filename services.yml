@@ -123,6 +123,11 @@ services:
     arguments: ["@connector", "@repository"]
     tags:
       -  { name: command }
+  app.command.bitbar:
+    class: Larowlan\Tl\Commands\Bitbar
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
   app.command.install:
     class: Larowlan\Tl\Commands\Install
     arguments: ["@connection", '%directory%', "@schema"]
