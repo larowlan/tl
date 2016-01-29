@@ -24,6 +24,7 @@ class Billable extends Command {
   const WEEK = 'week';
   const DAY = 'day';
   const MONTH = 'month';
+  const FORTNIGHT = 'fortnight';
 
   /**
    * @var \Larowlan\Tl\Connector\Connector
@@ -48,13 +49,14 @@ class Billable extends Command {
     $this
       ->setName('billable')
       ->setDescription('Shows billable breakdown for a given date')
-      ->setHelp('Shows billable percentage for a given date range. <comment>Usage:</comment> <info>tl billable [day|week|month]</info>')
-      ->addArgument('period', InputArgument::OPTIONAL, 'One of day|week|month', static::WEEK)
+      ->setHelp('Shows billable percentage for a given date range. <comment>Usage:</comment> <info>tl billable [day|week|month|fortnight]</info>')
+      ->addArgument('period', InputArgument::OPTIONAL, 'One of day|week|month|fortnight', static::WEEK)
       ->addOption('start', 's', InputOption::VALUE_OPTIONAL, 'A date offset', NULL)
       ->addOption('project', 'p', InputOption::VALUE_NONE, 'Group by project', NULL)
       ->addUsage('tl billable day')
       ->addUsage('tl billable day -s Jul-31')
       ->addUsage('tl billable week')
+      ->addUsage('tl billable fortnight')
       ->addUsage('tl billable week --start=Jul-31')
       ->addUsage('tl billable month')
       ->addUsage('tl billable month -s Aug');
@@ -71,9 +73,10 @@ class Billable extends Command {
     if (!in_array($period, [
       static::MONTH,
       static::DAY,
-      static::WEEK
+      static::WEEK,
+      static::FORTNIGHT,
     ], TRUE)) {
-      $output->writeln('<error>Period must be one of day|week|month</error>');
+      $output->writeln('<error>Period must be one of day|week|month|fortnight</error>');
       $output->writeln('E.g. <comment>tl billable week</comment>');
       return;
     }
@@ -90,6 +93,13 @@ class Billable extends Command {
         $end->modify('+1 month');
         $end = DateHelper::startOfMonth($end);
         $end->modify('-1 second');
+        break;
+
+      case static::FORTNIGHT:
+        $date = DateHelper::startOfWeek($start);
+        $date->modify('-7 days');
+        $end = clone $date;
+        $end->modify('+14 days');
         break;
 
       default:

@@ -8,6 +8,7 @@ namespace Larowlan\Tl\Tests;
 
 use Larowlan\Tl\Application;
 use Larowlan\Tl\Connector\Connector;
+use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Console\Input\ArrayInput;
@@ -124,6 +125,21 @@ abstract class TlTestBase extends \PHPUnit_Framework_TestCase {
     $command_tester = new CommandTester($command);
     $command_tester->execute(['command' => $command->getName()] +  $input);
     return $command_tester;
+  }
+
+  /**
+   * @return mixed
+   */
+  protected function assertTicketIsOpen($ticket_id, $comment = NULL) {
+    /** @var Repository $repository */
+    $repository = $this->getRepository();
+    $active = $repository->getActive();
+    $this->assertEquals($ticket_id, $active->tid);
+    $this->assertEquals($comment, $active->comment);
+    $this->assertNull($active->end);
+    $this->assertNull($active->category);
+    $this->assertNull($active->teid);
+    return $active;
   }
 
 }

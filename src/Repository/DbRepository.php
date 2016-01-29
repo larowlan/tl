@@ -66,15 +66,34 @@ class DbRepository implements Repository {
     return FALSE;
   }
 
-  public function start($ticket_id, $comment = '') {
-    if (!$comment && $continue = $this->qb()->select('*')
+  public function latest() {
+    $q = $this->qb()->select('*')
       ->from('slots', 's')
-      ->where('s.tid = :tid')
-      ->andWhere('s.comment IS NULL')
-      ->andWhere('s.category IS NULL')
-      ->setParameter('tid', $ticket_id)
+      ->orderBy('s.end', 'DESC');
+    if ($open = $q
       ->execute()
       ->fetch(\PDO::FETCH_OBJ)) {
+      return $open;
+    }
+    return FALSE;
+  }
+
+  public function start($ticket_id, $comment = '', $force_continue = FALSE) {
+    $continue_query = $continue = $this->qb()->select('*')
+      ->from('slots', 's')
+      ->where('s.tid = :tid');
+    if (!$force_continue) {
+      $continue_query->andWhere('s.comment IS NULL')
+        ->andWhere('s.category IS NULL');
+    }
+    else {
+      $continue_query->andWhere('s.id = :id')
+        ->setParameter('id', $force_continue);
+    }
+    $continue = $continue_query->setParameter('tid', $ticket_id)
+      ->execute()
+      ->fetch(\PDO::FETCH_OBJ);
+    if ((!$comment || $force_continue) && $continue) {
       $this->qb()->update('slots')
         ->where('id = :id')
         ->setParameter('id', $continue->id)
@@ -289,7 +308,7 @@ class DbRepository implements Repository {
   }
 
   public function listAliases($filter = '') {
-    $query = $this->qb()->select('alias')
+    $query = $this->qb()->select('alias', 'tid')
       ->from('aliases');
     if (!empty($filter)) {
       $query

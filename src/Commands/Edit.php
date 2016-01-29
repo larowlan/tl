@@ -15,7 +15,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class Edit extends Command {
+class Edit extends Command implements LogAwareCommand {
 
   /**
    * @var \Larowlan\Tl\Connector\Connector
@@ -52,7 +52,7 @@ class Edit extends Command {
     $slot_id = $input->getArgument('slot_id');
     $duration = $input->getArgument('duration');
     $this->repository->edit($slot_id, $duration);
-    $output->writeln(sprintf('Updated 1 slot to <info>%s h</info>', $duration));
+    $output->writeln(sprintf('Updated slot %s to <info>%s h</info>', $slot_id, $duration));
   }
 
 }

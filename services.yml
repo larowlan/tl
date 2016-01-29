@@ -118,6 +118,16 @@ services:
     arguments: ["@connector", "@repository"]
     tags:
       -  { name: command }
+  app.command.continue:
+    class: Larowlan\Tl\Commands\Continues
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.bitbar:
+    class: Larowlan\Tl\Commands\Bitbar
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
   app.command.install:
     class: Larowlan\Tl\Commands\Install
     arguments: ["@connection", '%directory%', "@schema"]
@@ -126,6 +136,11 @@ services:
   app.command.configure:
     class: Larowlan\Tl\Commands\Configure
     arguments: ["%directory%", '%configurable_service_ids%']
+    tags:
+      -  { name: command }
+  app.command.log:
+    class: Larowlan\Tl\Commands\Log
+    arguments: ["%directory%"]
     tags:
       -  { name: command }
   app.command.frequent:
