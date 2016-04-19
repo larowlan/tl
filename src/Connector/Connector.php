@@ -56,11 +56,14 @@ interface Connector {
   /**
    * Gets assigned tickets.
    *
+   * @param string $user
+   *   The user for which you want the assigned issues.
+   *
    * @return array
    *   Array of tickets grouped by project, containting titles keyed by ticket
    *   ID.
    */
-  public function assigned();
+  public function assigned($user);
 
   /**
    * Sets a ticket as in progress.

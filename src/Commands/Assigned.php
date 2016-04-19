@@ -15,6 +15,7 @@ use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class Assigned extends Command {
@@ -41,6 +42,7 @@ class Assigned extends Command {
   protected function configure() {
     $this
       ->setName('assigned')
+      ->addOption('user', 'u', InputOption::VALUE_OPTIONAL, 'Specify the user Id for which to retrieve the assigned tickets')
       ->setDescription('Shows asssigned stories')
       ->setHelp('Shows assigned stories. <comment>Usage:</comment> <info>tl assigned</info>');
   }
@@ -49,7 +51,7 @@ class Assigned extends Command {
    * {@inheritdoc}
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
-    if ($data = $this->connector->assigned()) {
+    if ($data = $this->connector->assigned($input->getOption('user') ?: 'me')) {
       $table = new Table($output);
       $table->setHeaders(['JobId', 'Title']);
       $rows = [];
