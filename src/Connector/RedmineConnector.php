@@ -196,8 +196,8 @@ class RedmineConnector implements Connector, ConfigurableService {
     return $this->url . '/issues/' . $id;
   }
 
-  public function assigned() {
-    $url = $this->url . '/issues.xml?assigned_to_id=me';
+  public function assigned($user = 'me') {
+    $url = $this->url . '/issues.xml?assigned_to_id=' . $user;
     $tickets = [];
     if ($xml = $this->fetch($url, $this->apiKey)) {
       foreach ($xml->issue as $node) {
