@@ -55,7 +55,7 @@ class Comment extends Command {
    * {@inheritdoc}
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
-    $entries = $this->repository->review(Review::ALL, TRUE);
+    $entries = $this->repository->review(Review::ALL, !$input->getOption('recomment'));
     $helper = $this->getHelper('question');
     $last = FALSE;
     foreach ($entries as $entry) {
