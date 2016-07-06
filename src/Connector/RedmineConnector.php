@@ -399,10 +399,10 @@ class RedmineConnector implements Connector, ConfigurableService {
   public function projectNames() {
     $cid = 'redmine-projects';
     if (($details = $this->cache->fetch($this->version . ':' . $cid))) {
-      // return $details;
+       return $details;
     }
-    $options = [];
 
+    $options = [];
     $limit = 100;
     $offset = 0;
     while ($projects = $this->retrieveProjects($limit, $offset)) {
