@@ -406,7 +406,7 @@ class RedmineConnector implements Connector, ConfigurableService {
     $limit = 100;
     $offset = 0;
     while ($projects = $this->retrieveProjects($limit, $offset)) {
-      $options = array_merge($options, $projects);
+      $options += $projects;
       $offset += $limit;
     }
     $this->cache->save($this->version . ':' . $cid, $options, static::LIFETIME * 4);
