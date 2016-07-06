@@ -399,19 +399,32 @@ class RedmineConnector implements Connector, ConfigurableService {
   public function projectNames() {
     $cid = 'redmine-projects';
     if (($details = $this->cache->fetch($this->version . ':' . $cid))) {
-      // return $details;
+       return $details;
     }
+
     $options = [];
-    $url = $this->url . '/projects.xml?limit=100&status=1';
+    $limit = 100;
+    $offset = 0;
+    while ($projects = $this->retrieveProjects($limit, $offset)) {
+      $options += $projects;
+      $offset += $limit;
+    }
+    $this->cache->save($this->version . ':' . $cid, $options, static::LIFETIME * 4);
+    return $options;
+  }
+
+  /**
+   * Fetch the projects.
+   */
+  protected function retrieveProjects($limit, $offset) {
+    $options = [];
+    $url = sprintf($this->url . '/projects.xml?limit=%s&status=1&offset=%s', $limit, $offset);
     if ($xml = $this->fetch($url, $this->apiKey)) {
       foreach ($xml->project as $node) {
         $options[(int) $node->id] = (string) $node->name . '::' . (string) $node->id;
       }
-      // These don't change regularly - use a longer cache - 28 days.
-      $this->cache->save($this->version . ':' . $cid, $options, static::LIFETIME * 4);
-      return $options;
     }
-    return FALSE;
+    return $options;
   }
 
 }
