@@ -26,6 +26,10 @@ class Billable extends Command {
   const MONTH = 'month';
   const FORTNIGHT = 'fortnight';
 
+  // @todo make this configurable.
+  const BILLABLE_PERCENTAGE = 0.8;
+  const HOURS_PER_DAY = 8;
+
   /**
    * @var \Larowlan\Tl\Connector\Connector
    */
@@ -53,6 +57,7 @@ class Billable extends Command {
       ->addArgument('period', InputArgument::OPTIONAL, 'One of day|week|month|fortnight', static::WEEK)
       ->addOption('start', 's', InputOption::VALUE_OPTIONAL, 'A date offset', NULL)
       ->addOption('project', 'p', InputOption::VALUE_NONE, 'Group by project', NULL)
+      ->addOption('stats', NULL, InputOption::VALUE_NONE, 'Show additional stats', NULL)
       ->addUsage('tl billable day')
       ->addUsage('tl billable day -s Jul-31')
       ->addUsage('tl billable week')
@@ -145,8 +150,7 @@ class Billable extends Command {
     }
     $total = $billable + $non_billable + $unknown;
     $tag = 'info';
-    // @todo make this configurable.
-    if ($billable / $total < 0.8) {
+    if ($billable / $total < static::BILLABLE_PERCENTAGE) {
       $tag = 'error';
     }
     if ($project) {
@@ -204,8 +208,51 @@ class Billable extends Command {
       $rows[] = ['Total', Formatter::formatDuration($total), '100%'];
     }
 
+    if ($period === static::MONTH && $input->getOption('stats')) {
+      $rows[] = new TableSeparator();
+      $rows[] = ['', 'STATS', ''];
+      $rows[] = new TableSeparator();
+      $no_weekdays_in_month = $this->getWeekdaysInMonth(date('m'), date('Y'));
+      $days_passed = $this->getWeekdaysPassedThisMonth();
+
+      $hrs_per_day = static::HOURS_PER_DAY;
+      $total_hrs = $no_weekdays_in_month * $hrs_per_day;
+      $total_billable_hrs = $total_hrs * static::BILLABLE_PERCENTAGE;
+      $billable_hrs = $billable / 60 / 60;
+      $non_billable_hrs = $non_billable / 60 / 60;
+      $completed_hrs = $billable_hrs + $non_billable_hrs;
+
+      $rows[] = ['No. Days', "$days_passed/$no_weekdays_in_month", round(100 * $days_passed / $no_weekdays_in_month, 2) . '%'];
+      $rows[] = ['Billable Hrs', "$billable_hrs/$total_billable_hrs", round(100 * $billable_hrs / $total_billable_hrs, 2)];
+      $rows[] = ['Total Hrs', "$completed_hrs/$total_hrs", round(100 * $completed_hrs / $total_hrs, 2)];
+    }
+
     $table->setRows($rows);
     $table->render();
+  }
+
+  protected function getWeekdaysInMonth($m, $y) {
+    $lastday = date("t", mktime(0, 0, 0, $m, 1, $y));
+    $weekdays = 0;
+    for ($d = 29; $d <= $lastday; $d++) {
+      $wd = date("w", mktime(0, 0, 0, $m, $d, $y));
+      if ($wd > 0 && $wd < 6) {
+        $weekdays++;
+      }
+    }
+    return $weekdays + 20;
+  }
+
+  protected function getWeekdaysPassedThisMonth() {
+    $days_passed = date('d');
+    $weekends_passed = $days_passed / 7;
+    $days_passed -= ($weekends_passed * 2);
+
+    // Don't include the current day before 3pm?
+    if (date('G') < 15) {
+      $days_passed -= 1;
+    }
+    return $days_passed;
   }
 
 }
