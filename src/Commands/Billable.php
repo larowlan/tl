@@ -26,10 +26,6 @@ class Billable extends Command {
   const MONTH = 'month';
   const FORTNIGHT = 'fortnight';
 
-  // @todo make this configurable.
-  const BILLABLE_PERCENTAGE = 0.8;
-  const HOURS_PER_DAY = 8;
-
   /**
    * @var \Larowlan\Tl\Connector\Connector
    */
@@ -40,9 +36,25 @@ class Billable extends Command {
    */
   protected $repository;
 
-  public function __construct(Connector $connector, Repository $repository) {
+  /**
+   * The percentage of billable hours required.
+   *
+   * @var float
+   */
+  protected $billablePercentage;
+
+  /**
+   * The number of hours you work per day.
+   *
+   * @var int
+   */
+  protected $hoursPerDay;
+
+  public function __construct(Connector $connector, Repository $repository, array $config) {
     $this->connector = $connector;
     $this->repository = $repository;
+    $this->billablePercentage = $config['billable_percentage'];
+    $this->hoursPerDay = $config['hours_per_day'];
     parent::__construct();
   }
 
@@ -57,7 +69,6 @@ class Billable extends Command {
       ->addArgument('period', InputArgument::OPTIONAL, 'One of day|week|month|fortnight', static::WEEK)
       ->addOption('start', 's', InputOption::VALUE_OPTIONAL, 'A date offset', NULL)
       ->addOption('project', 'p', InputOption::VALUE_NONE, 'Group by project', NULL)
-      ->addOption('stats', NULL, InputOption::VALUE_NONE, 'Show additional stats', NULL)
       ->addUsage('tl billable day')
       ->addUsage('tl billable day -s Jul-31')
       ->addUsage('tl billable week')
@@ -150,7 +161,7 @@ class Billable extends Command {
     }
     $total = $billable + $non_billable + $unknown;
     $tag = 'info';
-    if ($billable / $total < static::BILLABLE_PERCENTAGE) {
+    if ($billable / $total < $this->billablePercentage) {
       $tag = 'error';
     }
     if ($project) {
@@ -208,23 +219,23 @@ class Billable extends Command {
       $rows[] = ['Total', Formatter::formatDuration($total), '100%'];
     }
 
-    if ($period === static::MONTH && $input->getOption('stats')) {
+    if ($period === static::MONTH) {
       $rows[] = new TableSeparator();
       $rows[] = ['', 'STATS', ''];
       $rows[] = new TableSeparator();
       $no_weekdays_in_month = $this->getWeekdaysInMonth(date('m'), date('Y'));
       $days_passed = $this->getWeekdaysPassedThisMonth();
 
-      $hrs_per_day = static::HOURS_PER_DAY;
+      $hrs_per_day = $this->hoursPerDay;
       $total_hrs = $no_weekdays_in_month * $hrs_per_day;
-      $total_billable_hrs = $total_hrs * static::BILLABLE_PERCENTAGE;
+      $total_billable_hrs = $total_hrs * $this->billablePercentage;
       $billable_hrs = $billable / 60 / 60;
       $non_billable_hrs = $non_billable / 60 / 60;
       $completed_hrs = $billable_hrs + $non_billable_hrs;
 
       $rows[] = ['No. Days', "$days_passed/$no_weekdays_in_month", round(100 * $days_passed / $no_weekdays_in_month, 2) . '%'];
-      $rows[] = ['Billable Hrs', "$billable_hrs/$total_billable_hrs", round(100 * $billable_hrs / $total_billable_hrs, 2)];
-      $rows[] = ['Total Hrs', "$completed_hrs/$total_hrs", round(100 * $completed_hrs / $total_hrs, 2)];
+      $rows[] = ['Billable Hrs', "$billable_hrs/$total_billable_hrs", round(100 * $billable_hrs / $total_billable_hrs, 2) . '%'];
+      $rows[] = ['Total Hrs', "$completed_hrs/$total_hrs", round(100 * $completed_hrs / $total_hrs, 2) . '%'];
     }
 
     $table->setRows($rows);
