@@ -53,8 +53,8 @@ class Billable extends Command {
   public function __construct(Connector $connector, Repository $repository, array $config) {
     $this->connector = $connector;
     $this->repository = $repository;
-    $this->billablePercentage = $config['billable_percentage'];
-    $this->hoursPerDay = $config['hours_per_day'];
+    $this->billablePercentage = !empty($config['billable_percentage']) ? $config['billable_percentage'] : .8;
+    $this->hoursPerDay = !empty($config['hours_per_day']) ? $config['hours_per_day'] : 8;
     parent::__construct();
   }
 
@@ -256,7 +256,7 @@ class Billable extends Command {
 
   protected function getWeekdaysPassedThisMonth() {
     $days_passed = date('d');
-    $weekends_passed = $days_passed / 7;
+    $weekends_passed = round($days_passed / 7);
     $days_passed -= ($weekends_passed * 2);
 
     // Don't include the current day before 3pm?
