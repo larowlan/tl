@@ -7,11 +7,14 @@
 namespace Larowlan\Tl\Commands;
 
 use Doctrine\DBAL\Driver\Connection;
+use Larowlan\Tl\Configuration\ConfigurableService;
 use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\DateHelper;
 use Larowlan\Tl\Formatter;
 use Larowlan\Tl\Repository\Repository;
+use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputArgument;
@@ -19,7 +22,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class Billable extends Command {
+class Billable extends Command implements ConfigurableService {
 
   const WEEK = 'week';
   const DAY = 'day';
@@ -53,8 +56,9 @@ class Billable extends Command {
   public function __construct(Connector $connector, Repository $repository, array $config) {
     $this->connector = $connector;
     $this->repository = $repository;
-    $this->billablePercentage = !empty($config['billable_percentage']) ? $config['billable_percentage'] : .8;
-    $this->hoursPerDay = !empty($config['hours_per_day']) ? $config['hours_per_day'] : 8;
+    $config = static::getDefaults($config);
+    $this->billablePercentage = $config['billable_percentage'];
+    $this->hoursPerDay = $config['hours_per_day'];
     parent::__construct();
   }
 
@@ -264,6 +268,46 @@ class Billable extends Command {
       $days_passed -= 1;
     }
     return $days_passed;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getConfiguration(TreeBuilder $tree_builder) {
+    $root = $tree_builder->root('redmine');
+    $root->children()
+        ->scalarNode('billable_percentage')
+        ->defaultValue(0.8)
+        ->end()
+        ->scalarNode('hours_per_day')
+        ->defaultValue(8)
+        ->end()
+      ->end();
+    return $root;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function askPreBootQuestions(QuestionHelper $helper, InputInterface $input, OutputInterface $output, array $config) {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function askPostBootQuestions(QuestionHelper $helper, InputInterface $input, OutputInterface $output, array $config) {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getDefaults($config) {
+    return $config + [
+      'billable_percentage' => 0.8,
+      'hours_per_day' => 8,
+    ];
   }
 
 }

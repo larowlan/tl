@@ -333,12 +333,6 @@ class RedmineConnector implements Connector, ConfigurableService {
         ->defaultValue('https://redmine.previousnext.com.au')
         ->isRequired()
         ->end()
-        ->scalarNode('billable_percentage')
-        ->defaultValue(0.8)
-        ->end()
-        ->scalarNode('hours_per_day')
-        ->defaultValue(8)
-        ->end()
       ->end();
   }
 
