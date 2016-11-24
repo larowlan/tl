@@ -23,8 +23,9 @@ class LoggerConfiguration implements ConfigurationInterface, ConfigurationCollec
    */
   public function getConfigTreeBuilder() {
     $tree = new TreeBuilder();
+    $root = $tree->root('tl');
     foreach ($this->services as $service) {
-      $service::getConfiguration($tree);
+      $service::getConfiguration($root);
     }
     return $tree;
   }
