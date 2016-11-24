@@ -6,13 +6,12 @@
 
 namespace Larowlan\Tl\Commands;
 
-use Doctrine\DBAL\Driver\Connection;
 use Larowlan\Tl\Configuration\ConfigurableService;
 use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\DateHelper;
 use Larowlan\Tl\Formatter;
 use Larowlan\Tl\Repository\Repository;
-use Symfony\Component\Config\Definition\Builder\TreeBuilder;
+use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Helper\Table;
@@ -21,6 +20,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\Question;
 
 class Billable extends Command implements ConfigurableService {
 
@@ -273,9 +273,8 @@ class Billable extends Command implements ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  public static function getConfiguration(TreeBuilder $tree_builder) {
-    $root = $tree_builder->root('redmine');
-    $root->children()
+  public static function getConfiguration(NodeDefinition $root_node) {
+    $root_node->children()
         ->scalarNode('billable_percentage')
         ->defaultValue(0.8)
         ->end()
@@ -283,21 +282,28 @@ class Billable extends Command implements ConfigurableService {
         ->defaultValue(8)
         ->end()
       ->end();
-    return $root;
+    return $root_node;
   }
 
   /**
    * {@inheritdoc}
    */
   public static function askPreBootQuestions(QuestionHelper $helper, InputInterface $input, OutputInterface $output, array $config) {
-    return [];
+    $default_percentage = isset($config['billable_percentage']) ? $config['billable_percentage'] : 0.8;
+    $default_hours_per_day = isset($config['hours_per_day']) ? $config['hours_per_day'] : 8;
+    $config = ['billable_percentage' => '', 'hours_per_day' => ''] + $config;
+    $question = new Question(sprintf('Target billable percentage: <comment>[%s]</comment>', $default_percentage), $default_percentage);
+    $config['billable_percentage'] = $helper->ask($input, $output, $question) ?: $default_percentage;
+    $question = new Question(sprintf('Target hours per day: <comment>[%s]</comment>', $default_hours_per_day), $default_hours_per_day);
+    $config['hours_per_day'] = $helper->ask($input, $output, $question) ?: $default_key;
+    return $config;
   }
 
   /**
    * {@inheritdoc}
    */
   public function askPostBootQuestions(QuestionHelper $helper, InputInterface $input, OutputInterface $output, array $config) {
-    return [];
+    return $config;
   }
 
   /**

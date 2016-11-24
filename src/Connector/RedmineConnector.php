@@ -13,6 +13,7 @@ use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ConnectException;
 use Larowlan\Tl\Configuration\ConfigurableService;
 use Larowlan\Tl\Ticket;
+use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
@@ -313,13 +314,10 @@ class RedmineConnector implements Connector, ConfigurableService {
   }
 
   /**
-   * Gets configuration for the service.
-   *
-   * @param \Symfony\Component\Config\Definition\Builder\TreeBuilder $tree_builder
+   * {@inheritdoc}
    */
-  public static function getConfiguration(TreeBuilder $tree_builder) {
-    $root = $tree_builder->root('redmine');
-    $root->children()
+  public static function getConfiguration(NodeDefinition $root_node) {
+    $root_node->children()
         ->arrayNode('non_billable_projects')
         ->requiresAtLeastOneElement()
           ->prototype('scalar')
