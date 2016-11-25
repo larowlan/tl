@@ -28,6 +28,8 @@ class Billable extends Command implements ConfigurableService {
   const DAY = 'day';
   const MONTH = 'month';
   const FORTNIGHT = 'fortnight';
+  const SATURDAY = 6;
+  const SUNDAY = 0;
 
   /**
    * @var \Larowlan\Tl\Connector\Connector
@@ -260,14 +262,20 @@ class Billable extends Command implements ConfigurableService {
 
   protected function getWeekdaysPassedThisMonth() {
     $days_passed = date('d');
-    $weekends_passed = round($days_passed / 7);
-    $days_passed -= ($weekends_passed * 2);
-
+    $weekdays = 0;
+    for ($i = 0; $i < $days_passed; $i++) {
+      $day_of_week = DateHelper::startOfMonth()
+        ->modify(sprintf('+%d days', $i))
+        ->format('w');
+      if ($day_of_week != self::SUNDAY && $day_of_week != self::SATURDAY) {
+        $weekdays++;
+      }
+    }
     // Don't include the current day before 3pm?
     if (date('G') < 15) {
-      $days_passed -= 1;
+      $weekdays -= 1;
     }
-    return $days_passed;
+    return $weekdays;
   }
 
   /**
