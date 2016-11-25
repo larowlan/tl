@@ -6,6 +6,7 @@
 
 namespace Larowlan\Tl\Commands;
 
+use GuzzleHttp\Exception\ClientException;
 use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\Repository\Repository;
 use Larowlan\Tl\Reviewer;
@@ -67,10 +68,15 @@ class Send extends Command {
     }
     $entry_ids = $return = [];
     foreach ($this->repository->send() as $entry) {
-      $entry_ids[$entry->tid] = $this->connector->sendEntry($entry);
-      if ($entry_ids[$entry->tid]) {
-        // A real entry, give some output.
-        $output->writeln(sprintf('Stored entry for <info>%d</info>, remote id <comment>%d</comment>', $entry->tid, $entry_ids[$entry->tid]));
+      try {
+        if ($saved = $this->connector->sendEntry($entry)) {
+          $entry_ids[$entry->tid] = $saved;
+          // A real entry, give some output.
+          $output->writeln(sprintf('Stored entry for <info>%d</info>, remote id <comment>%d</comment>', $entry->tid, $entry_ids[$entry->tid]));
+        }
+      }
+      catch (ClientException $e) {
+        $output->writeln('<error>' . $e->getMessage() . '</error>');
       }
     }
     $this->repository->store($entry_ids);

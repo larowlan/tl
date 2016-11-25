@@ -6,7 +6,7 @@
 
 namespace Larowlan\Tl\Configuration;
 
-use Symfony\Component\Config\Definition\Builder\TreeBuilder;
+use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -19,9 +19,9 @@ interface ConfigurableService {
   /**
    * Gets configuration for the service.
    *
-   * @param \Symfony\Component\Config\Definition\Builder\TreeBuilder $tree_builder
+   * @param \Symfony\Component\Config\Definition\Builder\NodeDefinition $root_node
    */
-  public static function getConfiguration(TreeBuilder $tree_builder);
+  public static function getConfiguration(NodeDefinition $root_node);
 
   public static function askPreBootQuestions(QuestionHelper $helper, InputInterface $input, OutputInterface $output, array $config);
 

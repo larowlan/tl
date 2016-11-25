@@ -13,6 +13,7 @@ use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ConnectException;
 use Larowlan\Tl\Configuration\ConfigurableService;
 use Larowlan\Tl\Ticket;
+use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
@@ -196,8 +197,8 @@ class RedmineConnector implements Connector, ConfigurableService {
     return $this->url . '/issues/' . $id;
   }
 
-  public function assigned() {
-    $url = $this->url . '/issues.xml?assigned_to_id=me';
+  public function assigned($user = 'me') {
+    $url = $this->url . '/issues.xml?assigned_to_id=' . $user;
     $tickets = [];
     if ($xml = $this->fetch($url, $this->apiKey)) {
       foreach ($xml->issue as $node) {
@@ -313,13 +314,10 @@ class RedmineConnector implements Connector, ConfigurableService {
   }
 
   /**
-   * Gets configuration for the service.
-   *
-   * @param \Symfony\Component\Config\Definition\Builder\TreeBuilder $tree_builder
+   * {@inheritdoc}
    */
-  public static function getConfiguration(TreeBuilder $tree_builder) {
-    $root = $tree_builder->root('redmine');
-    $root->children()
+  public static function getConfiguration(NodeDefinition $root_node) {
+    $root_node->children()
         ->arrayNode('non_billable_projects')
         ->requiresAtLeastOneElement()
           ->prototype('scalar')
@@ -399,19 +397,32 @@ class RedmineConnector implements Connector, ConfigurableService {
   public function projectNames() {
     $cid = 'redmine-projects';
     if (($details = $this->cache->fetch($this->version . ':' . $cid))) {
-      // return $details;
+       return $details;
     }
+
     $options = [];
-    $url = $this->url . '/projects.xml?limit=100&status=1';
+    $limit = 100;
+    $offset = 0;
+    while ($projects = $this->retrieveProjects($limit, $offset)) {
+      $options += $projects;
+      $offset += $limit;
+    }
+    $this->cache->save($this->version . ':' . $cid, $options, static::LIFETIME * 4);
+    return $options;
+  }
+
+  /**
+   * Fetch the projects.
+   */
+  protected function retrieveProjects($limit, $offset) {
+    $options = [];
+    $url = sprintf($this->url . '/projects.xml?limit=%s&status=1&offset=%s', $limit, $offset);
     if ($xml = $this->fetch($url, $this->apiKey)) {
       foreach ($xml->project as $node) {
         $options[(int) $node->id] = (string) $node->name . '::' . (string) $node->id;
       }
-      // These don't change regularly - use a longer cache - 28 days.
-      $this->cache->save($this->version . ':' . $cid, $options, static::LIFETIME * 4);
-      return $options;
     }
-    return FALSE;
+    return $options;
   }
 
 }

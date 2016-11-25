@@ -1,3 +1,4 @@
+![Build status](https://travis-ci.org/larowlan/tl.svg?branch=master)
 ## Command line time-logger
 
 * Entries stored in sqlite in your home directory

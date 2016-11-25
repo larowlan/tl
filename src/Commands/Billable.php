@@ -6,20 +6,23 @@
 
 namespace Larowlan\Tl\Commands;
 
-use Doctrine\DBAL\Driver\Connection;
+use Larowlan\Tl\Configuration\ConfigurableService;
 use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\DateHelper;
 use Larowlan\Tl\Formatter;
 use Larowlan\Tl\Repository\Repository;
+use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\Question;
 
-class Billable extends Command {
+class Billable extends Command implements ConfigurableService {
 
   const WEEK = 'week';
   const DAY = 'day';
@@ -36,9 +39,26 @@ class Billable extends Command {
    */
   protected $repository;
 
-  public function __construct(Connector $connector, Repository $repository) {
+  /**
+   * The percentage of billable hours required.
+   *
+   * @var float
+   */
+  protected $billablePercentage;
+
+  /**
+   * The number of hours you work per day.
+   *
+   * @var int
+   */
+  protected $hoursPerDay;
+
+  public function __construct(Connector $connector, Repository $repository, array $config) {
     $this->connector = $connector;
     $this->repository = $repository;
+    $config = static::getDefaults($config);
+    $this->billablePercentage = $config['billable_percentage'];
+    $this->hoursPerDay = $config['hours_per_day'];
     parent::__construct();
   }
 
@@ -145,8 +165,7 @@ class Billable extends Command {
     }
     $total = $billable + $non_billable + $unknown;
     $tag = 'info';
-    // @todo make this configurable.
-    if ($billable / $total < 0.8) {
+    if ($billable / $total < $this->billablePercentage) {
       $tag = 'error';
     }
     if ($project) {
@@ -204,8 +223,97 @@ class Billable extends Command {
       $rows[] = ['Total', Formatter::formatDuration($total), '100%'];
     }
 
+    if ($period === static::MONTH) {
+      $rows[] = new TableSeparator();
+      $rows[] = ['', 'STATS', ''];
+      $rows[] = new TableSeparator();
+      $no_weekdays_in_month = $this->getWeekdaysInMonth(date('m'), date('Y'));
+      $days_passed = $this->getWeekdaysPassedThisMonth();
+
+      $hrs_per_day = $this->hoursPerDay;
+      $total_hrs = $no_weekdays_in_month * $hrs_per_day;
+      $total_billable_hrs = $total_hrs * $this->billablePercentage;
+      $billable_hrs = $billable / 60 / 60;
+      $non_billable_hrs = $non_billable / 60 / 60;
+      $completed_hrs = $billable_hrs + $non_billable_hrs;
+
+      $rows[] = ['No. Days', "$days_passed/$no_weekdays_in_month", round(100 * $days_passed / $no_weekdays_in_month, 2) . '%'];
+      $rows[] = ['Billable Hrs', "$billable_hrs/$total_billable_hrs", round(100 * $billable_hrs / $total_billable_hrs, 2) . '%'];
+      $rows[] = ['Total Hrs', "$completed_hrs/$total_hrs", round(100 * $completed_hrs / $total_hrs, 2) . '%'];
+    }
+
     $table->setRows($rows);
     $table->render();
+  }
+
+  protected function getWeekdaysInMonth($m, $y) {
+    $lastday = date("t", mktime(0, 0, 0, $m, 1, $y));
+    $weekdays = 0;
+    for ($d = 29; $d <= $lastday; $d++) {
+      $wd = date("w", mktime(0, 0, 0, $m, $d, $y));
+      if ($wd > 0 && $wd < 6) {
+        $weekdays++;
+      }
+    }
+    return $weekdays + 20;
+  }
+
+  protected function getWeekdaysPassedThisMonth() {
+    $days_passed = date('d');
+    $weekends_passed = round($days_passed / 7);
+    $days_passed -= ($weekends_passed * 2);
+
+    // Don't include the current day before 3pm?
+    if (date('G') < 15) {
+      $days_passed -= 1;
+    }
+    return $days_passed;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getConfiguration(NodeDefinition $root_node) {
+    $root_node->children()
+        ->scalarNode('billable_percentage')
+        ->defaultValue(0.8)
+        ->end()
+        ->scalarNode('hours_per_day')
+        ->defaultValue(8)
+        ->end()
+      ->end();
+    return $root_node;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function askPreBootQuestions(QuestionHelper $helper, InputInterface $input, OutputInterface $output, array $config) {
+    $default_percentage = isset($config['billable_percentage']) ? $config['billable_percentage'] : 0.8;
+    $default_hours_per_day = isset($config['hours_per_day']) ? $config['hours_per_day'] : 8;
+    $config = ['billable_percentage' => '', 'hours_per_day' => ''] + $config;
+    $question = new Question(sprintf('Target billable percentage: <comment>[%s]</comment>', $default_percentage), $default_percentage);
+    $config['billable_percentage'] = $helper->ask($input, $output, $question) ?: $default_percentage;
+    $question = new Question(sprintf('Target hours per day: <comment>[%s]</comment>', $default_hours_per_day), $default_hours_per_day);
+    $config['hours_per_day'] = $helper->ask($input, $output, $question) ?: $default_key;
+    return $config;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function askPostBootQuestions(QuestionHelper $helper, InputInterface $input, OutputInterface $output, array $config) {
+    return $config;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getDefaults($config) {
+    return $config + [
+      'billable_percentage' => 0.8,
+      'hours_per_day' => 8,
+    ];
   }
 
 }

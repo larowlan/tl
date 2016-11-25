@@ -1,8 +1,19 @@
 language: php
+sudo: false
 
 php:
   - 5.6
   - 5.5
+  - 7
+
+matrix:
+  # Don't wait for the allowed failures to build.
+  fast_finish: true
+
+# Cache Composer directorye.
+cache:
+  directories:
+    - $HOME/.composer/cache
 
 script:
  - composer install
