@@ -167,7 +167,7 @@ class Billable extends Command implements ConfigurableService {
     }
     $total = $billable + $non_billable + $unknown;
     $tag = 'info';
-    if ($billable / $total < $this->billablePercentage) {
+    if (($total == 0) || ($billable / $total < $this->billablePercentage)) {
       $tag = 'error';
     }
     if ($project) {
