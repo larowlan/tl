@@ -21,6 +21,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\Question;
+use Symfony\Component\Yaml\Yaml;
 
 class Billable extends Command implements ConfigurableService {
 
@@ -55,12 +56,28 @@ class Billable extends Command implements ConfigurableService {
    */
   protected $hoursPerDay;
 
-  public function __construct(Connector $connector, Repository $repository, array $config) {
+  /**
+   * Array of targets, keyed by Y-m
+   *
+   * @var int[]
+   */
+  protected $targets;
+
+  /**
+   * Config directory.
+   *
+   * @var string
+   */
+  protected $directory;
+
+  public function __construct(Connector $connector, Repository $repository, array $config, $directory) {
     $this->connector = $connector;
     $this->repository = $repository;
     $config = static::getDefaults($config);
     $this->billablePercentage = $config['billable_percentage'];
     $this->hoursPerDay = $config['hours_per_day'];
+    $this->targets = $config['days_per_month'];
+    $this->directory = $directory;
     parent::__construct();
   }
 
@@ -75,12 +92,14 @@ class Billable extends Command implements ConfigurableService {
       ->addArgument('period', InputArgument::OPTIONAL, 'One of day|week|month|fortnight', static::WEEK)
       ->addOption('start', 's', InputOption::VALUE_OPTIONAL, 'A date offset', NULL)
       ->addOption('project', 'p', InputOption::VALUE_NONE, 'Group by project', NULL)
+      ->addOption('set-target-days', 't', InputOption::VALUE_OPTIONAL, 'Set target days for month', NULL)
       ->addUsage('tl billable day')
       ->addUsage('tl billable day -s Jul-31')
       ->addUsage('tl billable week')
       ->addUsage('tl billable fortnight')
       ->addUsage('tl billable week --start=Jul-31')
       ->addUsage('tl billable month')
+      ->addUsage('tl billable month --set-target-days=12 # Sets target to 12 days in month.')
       ->addUsage('tl billable month -s Aug');
   }
 
@@ -91,7 +110,11 @@ class Billable extends Command implements ConfigurableService {
     $period = $input->getArgument('period');
     $start = $input->getOption('start');
     $project = $input->getOption('project');
+    $target = $input->getOption('set-target-days');
     $start = $start ? new \DateTime($start) : NULL;
+    if ($target) {
+      $target = $this->writeTarget($target, $output, $start);
+    }
     if (!in_array($period, [
       static::MONTH,
       static::DAY,
@@ -167,7 +190,7 @@ class Billable extends Command implements ConfigurableService {
     }
     $total = $billable + $non_billable + $unknown;
     $tag = 'info';
-    if ($billable / $total < $this->billablePercentage) {
+    if (($total == 0) || ($billable / $total < $this->billablePercentage)) {
       $tag = 'error';
     }
     if ($project) {
@@ -229,7 +252,7 @@ class Billable extends Command implements ConfigurableService {
       $rows[] = new TableSeparator();
       $rows[] = ['', 'STATS', ''];
       $rows[] = new TableSeparator();
-      $no_weekdays_in_month = $this->getWeekdaysInMonth(date('m'), date('Y'));
+      $no_weekdays_in_month = $target ?: $this->getWeekdaysInMonth(date('m'), date('Y'));
       $days_passed = $this->getWeekdaysPassedThisMonth();
 
       $hrs_per_day = $this->hoursPerDay;
@@ -249,6 +272,10 @@ class Billable extends Command implements ConfigurableService {
   }
 
   protected function getWeekdaysInMonth($m, $y) {
+    $target_key = sprintf('%s_%s', $y, $m);
+    if (isset($this->targets[$target_key])) {
+      return $this->targets[$target_key];
+    }
     $lastday = date("t", mktime(0, 0, 0, $m, 1, $y));
     $weekdays = 0;
     for ($d = 29; $d <= $lastday; $d++) {
@@ -289,6 +316,9 @@ class Billable extends Command implements ConfigurableService {
         ->scalarNode('hours_per_day')
         ->defaultValue(8)
         ->end()
+        ->arrayNode('days_per_month')
+        ->prototype('scalar')
+        ->end()
       ->end();
     return $root_node;
   }
@@ -303,7 +333,8 @@ class Billable extends Command implements ConfigurableService {
     $question = new Question(sprintf('Target billable percentage: <comment>[%s]</comment>', $default_percentage), $default_percentage);
     $config['billable_percentage'] = $helper->ask($input, $output, $question) ?: $default_percentage;
     $question = new Question(sprintf('Target hours per day: <comment>[%s]</comment>', $default_hours_per_day), $default_hours_per_day);
-    $config['hours_per_day'] = $helper->ask($input, $output, $question) ?: $default_key;
+    $config['hours_per_day'] = $helper->ask($input, $output, $question) ?: $default_hours_per_day;
+    $config['days_per_month'] = isset($config['days_per_month']) ? $config['days_per_month'] : [];
     return $config;
   }
 
@@ -321,7 +352,37 @@ class Billable extends Command implements ConfigurableService {
     return $config + [
       'billable_percentage' => 0.8,
       'hours_per_day' => 8,
+      'days_per_month' => [],
     ];
+  }
+
+  /**
+   * Write number of target days for month.
+   *
+   * @param int $target
+   *   Target days.
+   * @param \Symfony\Component\Console\Output\OutputInterface $output
+   *   Output.
+   * @param \DateTime $date
+   *   (optional) Date to use as reference.
+   *
+   * @return null|int
+   *   The target or NULL if it was invalid.
+   */
+  protected function writeTarget($target, OutputInterface $output, \DateTime $date = NULL) {
+    if (!is_numeric($target)) {
+      $output->writeln('<error>You must use a number for the target</error>');
+      return NULL;
+    }
+    $file = $this->directory . '/.tl.yml';
+    if (file_exists($file)) {
+      $date = $date ?: new \DateTime();
+      $config = Yaml::parse(file_get_contents($file));
+      $output->writeln(sprintf('<info>Wrote target for month: %s</info>', $target));
+      $config['days_per_month'][$date->format('Y-m')] = $target;
+      file_put_contents($file, Yaml::dump($config));
+    }
+    return $target;
   }
 
 }
