@@ -100,6 +100,8 @@ class Billable extends Command implements ConfigurableService {
       ->addUsage('tl billable week --start=Jul-31')
       ->addUsage('tl billable month')
       ->addUsage('tl billable month --set-target-days=12 # Sets target to 12 days in month.')
+      ->addUsage('tl billable month -t 12 # Sets target to 12 days in month.')
+      ->addUsage('tl billable month -t 1,2,3,4,5,8,9,10 # Set target (working) days of month.')
       ->addUsage('tl billable month -s Aug');
   }
 
@@ -252,8 +254,8 @@ class Billable extends Command implements ConfigurableService {
       $rows[] = new TableSeparator();
       $rows[] = ['', 'STATS', ''];
       $rows[] = new TableSeparator();
-      $no_weekdays_in_month = $target ?: $this->getWeekdaysInMonth(date('m'), date('Y'));
-      $days_passed = $this->getWeekdaysPassedThisMonth();
+      $no_weekdays_in_month = $this->getWeekdaysInMonth(date('m'), date('Y'));
+      $days_passed = $this->getWeekdaysPassedThisMonth($output);
 
       $hrs_per_day = $this->hoursPerDay;
       $total_hrs = $no_weekdays_in_month * $hrs_per_day;
@@ -274,7 +276,11 @@ class Billable extends Command implements ConfigurableService {
   protected function getWeekdaysInMonth($m, $y) {
     $target_key = sprintf('%s_%s', $y, $m);
     if (isset($this->targets[$target_key])) {
-      return $this->targets[$target_key];
+      $target = $this->targets[$target_key];
+      if (strpos($target, ',') !== FALSE) {
+        return count(explode(',', $target));
+      }
+      return $target;
     }
     $lastday = date("t", mktime(0, 0, 0, $m, 1, $y));
     $weekdays = 0;
@@ -287,15 +293,27 @@ class Billable extends Command implements ConfigurableService {
     return $weekdays + 20;
   }
 
-  protected function getWeekdaysPassedThisMonth() {
+  protected function getWeekdaysPassedThisMonth($output) {
     $days_passed = date('d');
     $weekdays = 0;
-    for ($i = 0; $i < $days_passed; $i++) {
-      $day_of_week = DateHelper::startOfMonth()
-        ->modify(sprintf('+%d days', $i))
-        ->format('w');
-      if ($day_of_week != self::SUNDAY && $day_of_week != self::SATURDAY) {
-        $weekdays++;
+    $target_key = sprintf('%s_%s', date('Y'), date('m'));
+    if (isset($this->targets[$target_key])) {
+      $target = $this->targets[$target_key];
+      if (strpos($target, ',') !== FALSE) {
+        $passed = array_filter(explode(',', $target), function ($item) use ($days_passed) {
+          return $item <= $days_passed;
+        });
+        $weekdays = count($passed);
+      }
+    }
+    if (!$weekdays) {
+      for ($i = 0; $i < $days_passed; $i++) {
+        $day_of_week = DateHelper::startOfMonth()
+          ->modify(sprintf('+%d days', $i))
+          ->format('w');
+        if ($day_of_week != self::SUNDAY && $day_of_week != self::SATURDAY) {
+          $weekdays++;
+        }
       }
     }
     // Don't include the current day before 3pm?
@@ -370,7 +388,17 @@ class Billable extends Command implements ConfigurableService {
    *   The target or NULL if it was invalid.
    */
   protected function writeTarget($target, OutputInterface $output, \DateTime $date = NULL) {
-    if (!is_numeric($target)) {
+    if (strpos($target, ',') !== FALSE) {
+      $days = explode(',', $target);
+      $invalid = array_filter($days, function ($item) {
+        return !is_numeric($item);
+      });
+      if ($invalid) {
+        $output->writeln('<error>You must use a number for each target</error>');
+        return NULL;
+      }
+    }
+    elseif (!is_numeric($target)) {
       $output->writeln('<error>You must use a number for the target</error>');
       return NULL;
     }
