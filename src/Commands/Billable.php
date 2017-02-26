@@ -207,7 +207,7 @@ class Billable extends Command implements ConfigurableService {
         'Billable',
         '',
         Formatter::formatDuration($billable),
-        "<$tag>" . round(100 * $billable / $total, 2) . "%</$tag>"
+        "<$tag>" . ($total ? round(100 * $billable / $total, 2) : 0) . "%</$tag>"
       ];
       $rows[] = new TableSeparator();
       $rows[] = ['Non-Billable', '', '', ''];
@@ -235,12 +235,12 @@ class Billable extends Command implements ConfigurableService {
       $rows[] = [
         'Billable',
         Formatter::formatDuration($billable),
-        "<$tag>" . round(100 * $billable / $total, 2) . "%</$tag>"
+        "<$tag>" . ($total ? round(100 * $billable / $total, 2) : 0) . "%</$tag>"
       ];
       $rows[] = [
         'Non-billable',
         Formatter::formatDuration($non_billable),
-        round(100 * $non_billable / $total, 2) . '%'
+        ($total ? round(100 * $non_billable / $total, 2) : 0) . '%'
       ];
       if ($unknown) {
         $rows[] = ['Unknown<comment>*</comment>', Formatter::formatDuration($unknown), round(100 * $unknown / $total, 2) . '%'];
