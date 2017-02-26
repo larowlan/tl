@@ -206,12 +206,25 @@ class RedmineConnector implements Connector, ConfigurableService {
         if (!isset($tickets[$project])) {
           $tickets[$project] = [];
         }
-        $tickets[(string) $node->project['name']][(string) $node->id] = (string) $node->subject;
+        $tickets[(string) $node->project['name']][(string) $node->id] = [
+          'title' => (string) $node->subject,
+          'status' => (string) $node->status['name'],
+        ];
       }
+
+      // Sort by status.
+      foreach ($tickets as $project => &$project_issues) {
+        uasort($project_issues, function($a, $b) {
+          return strcmp($a['status'], $b['status']);
+        });
+      }
+
     }
     if ((int) $xml['total_count'] > (int) $xml['limit']) {
       $tickets['...']['...'] = sprintf('Showing <info>%s</info> of <info>%s</info>', $xml['total_count'], $xml['limit']);
     }
+
+
     return $tickets;
   }
 

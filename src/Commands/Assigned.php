@@ -53,7 +53,7 @@ class Assigned extends Command {
   protected function execute(InputInterface $input, OutputInterface $output) {
     if ($data = $this->connector->assigned($input->getOption('user') ?: 'me')) {
       $table = new Table($output);
-      $table->setHeaders(['JobId', 'Title']);
+      $table->setHeaders(['JobId', 'Title', 'Status']);
       $rows = [];
       $first = TRUE;
       foreach ($data as $project => $tickets) {
@@ -62,10 +62,11 @@ class Assigned extends Command {
         }
         $rows[] = ['', '<comment>' . $project . '</comment>'];
         $rows[] = new TableSeparator();
-        foreach ($tickets as $id => $title) {
+        foreach ($tickets as $id => $ticket_info) {
           $rows[] = [
             $id,
-            $title,
+            $ticket_info['title'],
+            $ticket_info['status'],
           ];
         }
         $first = FALSE;
