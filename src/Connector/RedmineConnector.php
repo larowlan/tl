@@ -221,7 +221,10 @@ class RedmineConnector implements Connector, ConfigurableService {
 
     }
     if ((int) $xml['total_count'] > (int) $xml['limit']) {
-      $tickets['...']['...'] = sprintf('Showing <info>%s</info> of <info>%s</info>', $xml['total_count'], $xml['limit']);
+      $tickets['...']['...'] = [
+        'title' => sprintf('Showing <info>%s</info> of <info>%s</info>', $xml['limit'], $xml['total_count']),
+        'status' => 'Too many Issues!'
+      ];
     }
 
 
