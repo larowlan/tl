@@ -207,7 +207,7 @@ class Billable extends Command implements ConfigurableService {
         'Billable',
         '',
         Formatter::formatDuration($billable),
-        "<$tag>" . round(100 * $billable / $total, 2) . "%</$tag>"
+        "<$tag>" . ($total ? round(100 * $billable / $total, 2) : 0) . "%</$tag>"
       ];
       $rows[] = new TableSeparator();
       $rows[] = ['Non-Billable', '', '', ''];
@@ -235,12 +235,12 @@ class Billable extends Command implements ConfigurableService {
       $rows[] = [
         'Billable',
         Formatter::formatDuration($billable),
-        "<$tag>" . round(100 * $billable / $total, 2) . "%</$tag>"
+        "<$tag>" . ($total ? round(100 * $billable / $total, 2) : 0) . "%</$tag>"
       ];
       $rows[] = [
         'Non-billable',
         Formatter::formatDuration($non_billable),
-        round(100 * $non_billable / $total, 2) . '%'
+        ($total ? round(100 * $non_billable / $total, 2) : 0) . '%'
       ];
       if ($unknown) {
         $rows[] = ['Unknown<comment>*</comment>', Formatter::formatDuration($unknown), round(100 * $unknown / $total, 2) . '%'];
@@ -260,17 +260,43 @@ class Billable extends Command implements ConfigurableService {
       $hrs_per_day = $this->hoursPerDay;
       $total_hrs = $no_weekdays_in_month * $hrs_per_day;
       $total_billable_hrs = $total_hrs * $this->billablePercentage;
+      $total_non_billable_hrs = $total_hrs - $total_billable_hrs;
       $billable_hrs = $billable / 60 / 60;
       $non_billable_hrs = $non_billable / 60 / 60;
       $completed_hrs = $billable_hrs + $non_billable_hrs;
 
-      $rows[] = ['No. Days', "$days_passed/$no_weekdays_in_month", round(100 * $days_passed / $no_weekdays_in_month, 2) . '%'];
-      $rows[] = ['Billable Hrs', "$billable_hrs/$total_billable_hrs", round(100 * $billable_hrs / $total_billable_hrs, 2) . '%'];
-      $rows[] = ['Total Hrs', "$completed_hrs/$total_hrs", round(100 * $completed_hrs / $total_hrs, 2) . '%'];
+      $rows[] = $this->formatProgressRow('No. Days', $days_passed, $no_weekdays_in_month);
+      $rows[] = $this->formatProgressRow('Billable Hrs', $billable_hrs, $total_billable_hrs);
+      $rows[] = $this->formatProgressRow('Non-billable Hrs', $non_billable_hrs, $total_non_billable_hrs);
+      $rows[] = $this->formatProgressRow('Total Hrs', $completed_hrs, $total_hrs);
     }
 
     $table->setRows($rows);
     $table->render();
+  }
+
+  /**
+   * Generates a progress row based on numerator, denominator and caption.
+   *
+   * @param string $caption
+   *   Row caption.
+   * @param float $numerator
+   *   Numerator for progress.
+   * @param float $denominator
+   *   Denominator for progress.
+   *
+   * @return array
+   *   Formatted row.
+   */
+  protected function formatProgressRow($caption, $numerator, $denominator) {
+    if ($denominator < 0) {
+      return [$caption, "$numerator/$denominator", '0%'];
+    }
+    $difference = sprintf('-%s', $denominator - $numerator);
+    if ($numerator > $denominator) {
+      $difference = sprintf('-%s', $numerator - $denominator);
+    }
+    return [$caption, "$numerator/$denominator ($difference)", round(100 * $numerator / $denominator, 2) . '%'];
   }
 
   protected function getWeekdaysInMonth($m, $y) {
