@@ -226,6 +226,12 @@ class RedmineConnector implements Connector, ConfigurableService {
         'status' => 'Too many Issues!'
       ];
     }
+    else {
+      $tickets['...'][''] = [
+        'title' => sprintf('Showing <info>%s</info> issues', $xml['total_count']),
+        'status' => ''
+      ];
+    }
 
 
     return $tickets;
