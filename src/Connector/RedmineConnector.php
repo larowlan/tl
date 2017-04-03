@@ -74,10 +74,11 @@ class RedmineConnector implements Connector, ConfigurableService {
       }
     }
     catch (ConnectException $e) {
-      return [
-        'title' => 'Offline: please try again later',
-        'project' => 'Offline',
-      ];
+      return new Ticket(
+        'Offline: please try again later',
+        'Offline',
+        TRUE
+      );
     }
     return FALSE;
   }
