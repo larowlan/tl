@@ -102,6 +102,7 @@ class Billable extends Command implements ConfigurableService {
       ->addUsage('tl billable month --set-target-days=12 # Sets target to 12 days in month.')
       ->addUsage('tl billable month -t 12 # Sets target to 12 days in month.')
       ->addUsage('tl billable month -t 1,2,3,4,5,8,9,10 # Set target (working) days of month.')
+      ->addUsage('tl billable month -t 1,2:6,8:4,9,10 # Set target (working) days of month including custom hours per day using a ":".')
       ->addUsage('tl billable month -s Aug');
   }
 
