@@ -256,9 +256,8 @@ class Billable extends Command implements ConfigurableService {
       $rows[] = new TableSeparator();
       $no_weekdays_in_month = $this->getWeekdaysInMonth(date('m'), date('Y'));
       $days_passed = $this->getWeekdaysPassedThisMonth($output);
+      $total_hrs = $this->getTotalMonthHours(date('m'), date('Y'));
 
-      $hrs_per_day = $this->hoursPerDay;
-      $total_hrs = $no_weekdays_in_month * $hrs_per_day;
       $total_billable_hrs = $total_hrs * $this->billablePercentage;
       $total_non_billable_hrs = $total_hrs - $total_billable_hrs;
       $billable_hrs = $billable / 60 / 60;
@@ -273,6 +272,33 @@ class Billable extends Command implements ConfigurableService {
 
     $table->setRows($rows);
     $table->render();
+  }
+
+  protected function getTotalMonthHours($m, $y) {
+    $target_key = sprintf('%s_%s', $y, $m);
+    // If we have no customisations it's just number of days times hours per
+    // day.
+    if (!isset($this->targets[$target_key])) {
+      return $this->getWeekdaysInMonth($m, $y) * $this->hoursPerDay;
+    }
+
+    // You can also specify 1 number for how many days you work that month.
+    if (strpos($this->targets[$target_key], ',') === FALSE) {
+      return $this->targets[$target_key] * $this->hoursPerDay;
+    }
+
+    // We have a custom target.
+    $total_hrs = 0;
+    foreach (explode(',', $this->targets[$target_key]) as $day) {
+      if (strpos($day, ':') !== FALSE) {
+        list(, $hrs_per_day) = explode(':', $day);
+      }
+      else {
+        $hrs_per_day = $this->hoursPerDay;
+      }
+      $total_hrs += $hrs_per_day;
+    }
+    return $total_hrs;
   }
 
   /**
