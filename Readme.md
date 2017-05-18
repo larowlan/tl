@@ -79,8 +79,14 @@ tl review
 tl comment
 # tag entries before sending
 tl tag
+# delete entry before sending
+tl del 3546
 # send entries to redmine
 tl send
+# show all available commands
+tl list
+# show help for any command
+tl help [command]
 ```
 Rinse and repeat the next day
 
