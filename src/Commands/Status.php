@@ -67,7 +67,8 @@ class Status extends Command {
       if (!empty($record->active)) {
         $record->tid .= ' *';
       }
-      $rows[] = [$record->id, $record->tid, Formatter::formatDuration($record->duration), $details->getTitle()];
+      $duration = sprintf('<fg=%s>%s</>', $details->isBillable() ? 'default' : 'yellow', Formatter::formatDuration($record->duration));
+      $rows[] = [$record->id, $record->tid, $duration, $details->getTitle()];
     }
     $rows[] = new TableSeparator();
     $rows[] = ['', '<comment>Total</comment>', '<info>' . Formatter::formatDuration($total) . '</info>', ''];
