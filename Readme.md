@@ -110,7 +110,7 @@ a container!
 Add the following to your `~/.bashrc` file.
 
 ```bash
-alias tl='docker run -v $HOME:/root -it larowlan/tl'
+alias tl='docker run -v $HOME:/root -it --rm larowlan/tl'
 ```
 
 **Run**
