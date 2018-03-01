@@ -167,6 +167,7 @@ class DbRepository implements Repository {
     $return = $query->where($where)->execute()->fetchAll(\PDO::FETCH_OBJ);
     foreach ($return as &$row) {
       $row->duration = round((($row->end ?: time()) - $row->start) / 900) * 900 / 3600;
+      $row->active = empty($row->end);
     }
     return $return;
   }

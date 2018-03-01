@@ -80,7 +80,7 @@ class Reviewer {
       $duration = sprintf('<fg=%s>%s</>', $details->isBillable() ? 'default' : 'yellow', $record->duration);
       $row = [
         $record->id,
-        $record->tid,
+        sprintf('<fg=%s>%s</>', $record->active ? 'green' : 'default', $record->tid),
         $duration,
       ];
       if ($exact) {
