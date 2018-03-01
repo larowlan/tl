@@ -74,10 +74,11 @@ class RedmineConnector implements Connector, ConfigurableService {
       }
     }
     catch (ConnectException $e) {
-      return [
-        'title' => 'Offline: please try again later',
-        'project' => 'Offline',
-      ];
+      return new Ticket(
+        'Offline: please try again later',
+        'Offline',
+        TRUE
+      );
     }
     return FALSE;
   }
@@ -224,6 +225,12 @@ class RedmineConnector implements Connector, ConfigurableService {
       $tickets['...']['...'] = [
         'title' => sprintf('Showing <info>%s</info> of <info>%s</info>', $xml['limit'], $xml['total_count']),
         'status' => 'Too many Issues!'
+      ];
+    }
+    else {
+      $tickets['...'][''] = [
+        'title' => sprintf('Showing <info>%s</info> issues', $xml['total_count']),
+        'status' => ''
       ];
     }
 

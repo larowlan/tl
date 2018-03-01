@@ -90,12 +90,13 @@ class Tag extends Command {
       }
       $title = $this->connector->ticketDetails($entry->tid);
       $question = new ChoiceQuestion(
-        sprintf('Enter tag for slot <comment>%d</comment> [<info>%d</info>]: %s [<info>%s h</info>] [%s]',
+        sprintf('Enter tag for slot <comment>%d</comment> [<info>%d</info>]: %s [<info>%s h</info>] [%s] %s',
           $entry->id,
           $entry->tid,
           $title->getTitle(),
           $entry->duration,
-          $last ?: static::DEFAULT_TAG
+          $last ?: static::DEFAULT_TAG,
+          $entry->comment ? '- "' . $entry->comment . '"': ''
         ),
         $categories,
         $last ?: static::DEFAULT_TAG
@@ -129,12 +130,13 @@ class Tag extends Command {
         return;
       }
       $question = new ChoiceQuestion(
-        sprintf('Enter tag for slot <comment>%d</comment> [<info>%d</info>]: %s [<info>%s h</info>] [%s]',
+        sprintf('Enter tag for slot <comment>%d</comment> [<info>%d</info>]: %s [<info>%s h</info>] [%s] %s',
           $entry->id,
           $entry->tid,
           $title->getTitle(),
           Formatter::formatDuration($entry->end - $entry->start),
-          static::DEFAULT_TAG
+          static::DEFAULT_TAG,
+          $entry->comment ? '- "' . $entry->comment . '"': ''
         ),
         $categories,
         static::DEFAULT_TAG

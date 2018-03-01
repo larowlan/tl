@@ -51,6 +51,11 @@ class Edit extends Command implements LogAwareCommand {
   protected function execute(InputInterface $input, OutputInterface $output) {
     $slot_id = $input->getArgument('slot_id');
     $duration = $input->getArgument('duration');
+    $slot = $this->repository->slot($slot_id);
+    if (isset($slot->teid)) {
+      $output->writeln('<error>You cannot edit a slot that has been sent to the backend</error>');
+      return 1;
+    }
     $this->repository->edit($slot_id, $duration);
     $output->writeln(sprintf('Updated slot %s to <info>%s h</info>', $slot_id, $duration));
   }

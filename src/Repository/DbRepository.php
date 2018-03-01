@@ -127,34 +127,23 @@ class DbRepository implements Repository {
   }
 
   public function status($date = NULL) {
-    $stop = $this->stop();
     if (!$date) {
       $stamp = mktime('0', '0');
     }
     else {
       $stamp = strtotime($date);
     }
-    $return = $this->qb()->select('id', 'tid', 'end - start AS duration', 'CASE WHEN id = :id THEN 1 ELSE 0 END AS active')
+    $return = $this->qb()->select('id', 'tid', 'end', 'start')
       ->from('slots')
       ->where('start > :start AND start < :end')
       ->setParameter(':start', $stamp)
       ->setParameter(':end', $stamp + (60 * 60 * 24))
-      ->setParameter(':id', isset($stop->id) ? $stop->id : 0)
       ->execute()
       ->fetchAll(\PDO::FETCH_OBJ);
-    if ($stop) {
-      $this->qb()->update('slots')
-        ->set('end', ':end')
-        ->setParameter(':end', NULL)
-        ->where('id = :id')
-        ->setParameter(':id', $stop->id)
-        ->execute();
-    }
     return $return;
   }
 
   public function review($date = NULL, $check = FALSE) {
-    $stop = $this->stop();
     if (!$date) {
       $stamp = mktime('0', '0');
     }
@@ -176,16 +165,9 @@ class DbRepository implements Repository {
       ));
     }
     $return = $query->where($where)->execute()->fetchAll(\PDO::FETCH_OBJ);
-    if ($stop) {
-      $this->qb()->update('slots')
-        ->set('end', ':end')
-        ->setParameter(':end', NULL)
-        ->where('id = :id')
-        ->setParameter(':id', $stop->id)
-        ->execute();
-    }
     foreach ($return as &$row) {
-      $row->duration = round(($row->end - $row->start) / 900) * 900 / 3600;
+      $row->duration = round((($row->end ?: time()) - $row->start) / 900) * 900 / 3600;
+      $row->active = empty($row->end);
     }
     return $return;
   }
@@ -321,12 +303,11 @@ class DbRepository implements Repository {
   }
 
   public function totalByTicket($start, $end = NULL) {
-    $stop = $this->stop();
     if (!$end) {
       // Some time in the future.
       $end = time() + 86400;
     }
-    $return = $this->qb()->select('tid', 'end - start AS duration')
+    $return = $this->qb()->select('tid', 'end', 'start')
       ->from('slots')
       ->where('start > :start AND start < :end')
       ->setParameter(':start', $start)
@@ -335,19 +316,11 @@ class DbRepository implements Repository {
       ->fetchAll(\PDO::FETCH_OBJ);
     $totals = [];
     foreach ($return as $row) {
-      $row->duration = round($row->duration / 900) * 900;
+      $row->duration = round((($row->end ?: time()) - $row->start) / 900) * 900;
       if (!isset($totals[$row->tid])) {
         $totals[$row->tid] = 0;
       }
       $totals[$row->tid] += $row->duration;
-    }
-    if ($stop) {
-      $this->qb()->update('slots')
-        ->set('end', ':end')
-        ->setParameter(':end', NULL)
-        ->where('id = :id')
-        ->setParameter(':id', $stop->id)
-        ->execute();
     }
     return $totals;
   }

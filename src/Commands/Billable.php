@@ -102,6 +102,7 @@ class Billable extends Command implements ConfigurableService {
       ->addUsage('tl billable month --set-target-days=12 # Sets target to 12 days in month.')
       ->addUsage('tl billable month -t 12 # Sets target to 12 days in month.')
       ->addUsage('tl billable month -t 1,2,3,4,5,8,9,10 # Set target (working) days of month.')
+      ->addUsage('tl billable month -t 1,2:6,8:4,9,10 # Set target (working) days of month including custom hours per day using a ":".')
       ->addUsage('tl billable month -s Aug');
   }
 
@@ -254,11 +255,11 @@ class Billable extends Command implements ConfigurableService {
       $rows[] = new TableSeparator();
       $rows[] = ['', 'STATS', ''];
       $rows[] = new TableSeparator();
-      $no_weekdays_in_month = $this->getWeekdaysInMonth(date('m'), date('Y'));
-      $days_passed = $this->getWeekdaysPassedThisMonth($output);
+      $reference_point = $start ?: new \DateTime();
+      $no_weekdays_in_month = $this->getWeekdaysInMonth($reference_point->format('m'), $reference_point->format('Y'));
+      $days_passed = $this->getWeekdaysPassedThisMonth($output, $reference_point);
+      $total_hrs = $this->getTotalMonthHours($reference_point->format('m'), $reference_point->format('Y'));
 
-      $hrs_per_day = $this->hoursPerDay;
-      $total_hrs = $no_weekdays_in_month * $hrs_per_day;
       $total_billable_hrs = $total_hrs * $this->billablePercentage;
       $total_non_billable_hrs = $total_hrs - $total_billable_hrs;
       $billable_hrs = $billable / 60 / 60;
@@ -273,6 +274,33 @@ class Billable extends Command implements ConfigurableService {
 
     $table->setRows($rows);
     $table->render();
+  }
+
+  protected function getTotalMonthHours($m, $y) {
+    $target_key = sprintf('%s_%s', $y, $m);
+    // If we have no customisations it's just number of days times hours per
+    // day.
+    if (!isset($this->targets[$target_key])) {
+      return $this->getWeekdaysInMonth($m, $y) * $this->hoursPerDay;
+    }
+
+    // You can also specify 1 number for how many days you work that month.
+    if (strpos($this->targets[$target_key], ',') === FALSE) {
+      return $this->targets[$target_key] * $this->hoursPerDay;
+    }
+
+    // We have a custom target.
+    $total_hrs = 0;
+    foreach (explode(',', $this->targets[$target_key]) as $day) {
+      if (strpos($day, ':') !== FALSE) {
+        list(, $hrs_per_day) = explode(':', $day);
+      }
+      else {
+        $hrs_per_day = $this->hoursPerDay;
+      }
+      $total_hrs += $hrs_per_day;
+    }
+    return $total_hrs;
   }
 
   /**
@@ -319,10 +347,14 @@ class Billable extends Command implements ConfigurableService {
     return $weekdays + 20;
   }
 
-  protected function getWeekdaysPassedThisMonth($output) {
-    $days_passed = date('d');
+  protected function getWeekdaysPassedThisMonth($output, \DateTime $reference_point) {
+    $days_passed = $reference_point->format('d');
+    if ($reference_point->format('Y-m-t') < date('Y-m-d')) {
+      // Past month.
+      $days_passed = $reference_point->format('t');
+    }
     $weekdays = 0;
-    $target_key = sprintf('%s_%s', date('Y'), date('m'));
+    $target_key = sprintf('%s_%s', $reference_point->format('Y'), $reference_point->format('m'));
     if (isset($this->targets[$target_key])) {
       $target = $this->targets[$target_key];
       if (strpos($target, ',') !== FALSE) {
@@ -334,7 +366,7 @@ class Billable extends Command implements ConfigurableService {
     }
     if (!$weekdays) {
       for ($i = 0; $i < $days_passed; $i++) {
-        $day_of_week = DateHelper::startOfMonth()
+        $day_of_week = DateHelper::startOfMonth($reference_point)
           ->modify(sprintf('+%d days', $i))
           ->format('w');
         if ($day_of_week != self::SUNDAY && $day_of_week != self::SATURDAY) {
@@ -343,7 +375,7 @@ class Billable extends Command implements ConfigurableService {
       }
     }
     // Don't include the current day before 3pm?
-    if (date('G') < 15) {
+    if (date('G') < 15 && $reference_point->format('Y-m-t') > date('Y-m-d')) {
       $weekdays -= 1;
     }
     return $weekdays;

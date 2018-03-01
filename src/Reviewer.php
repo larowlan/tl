@@ -77,10 +77,11 @@ class Reviewer {
           $category = 'Unknown';
         }
       }
+      $duration = sprintf('<fg=%s>%s</>', $details->isBillable() ? 'default' : 'yellow', $record->duration);
       $row = [
         $record->id,
-        $record->tid,
-        $record->duration,
+        sprintf('<fg=%s>%s</>', $record->active ? 'green' : 'default', $record->tid),
+        $duration,
       ];
       if ($exact) {
         $row[] = Formatter::formatDuration($record->end - $record->start);
