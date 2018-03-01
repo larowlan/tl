@@ -255,9 +255,10 @@ class Billable extends Command implements ConfigurableService {
       $rows[] = new TableSeparator();
       $rows[] = ['', 'STATS', ''];
       $rows[] = new TableSeparator();
-      $no_weekdays_in_month = $this->getWeekdaysInMonth(date('m'), date('Y'));
+      $reference_point = $start ?: new \DateTime();
+      $no_weekdays_in_month = $this->getWeekdaysInMonth($reference_point->format('m'), $reference_point->format('Y'));
       $days_passed = $this->getWeekdaysPassedThisMonth($output);
-      $total_hrs = $this->getTotalMonthHours(date('m'), date('Y'));
+      $total_hrs = $this->getTotalMonthHours($reference_point->format('m'), $reference_point->format('Y'));
 
       $total_billable_hrs = $total_hrs * $this->billablePercentage;
       $total_non_billable_hrs = $total_hrs - $total_billable_hrs;
