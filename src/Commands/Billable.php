@@ -255,9 +255,10 @@ class Billable extends Command implements ConfigurableService {
       $rows[] = new TableSeparator();
       $rows[] = ['', 'STATS', ''];
       $rows[] = new TableSeparator();
-      $no_weekdays_in_month = $this->getWeekdaysInMonth(date('m'), date('Y'));
-      $days_passed = $this->getWeekdaysPassedThisMonth($output);
-      $total_hrs = $this->getTotalMonthHours(date('m'), date('Y'));
+      $reference_point = $start ?: new \DateTime();
+      $no_weekdays_in_month = $this->getWeekdaysInMonth($reference_point->format('m'), $reference_point->format('Y'));
+      $days_passed = $this->getWeekdaysPassedThisMonth($output, $reference_point);
+      $total_hrs = $this->getTotalMonthHours($reference_point->format('m'), $reference_point->format('Y'));
 
       $total_billable_hrs = $total_hrs * $this->billablePercentage;
       $total_non_billable_hrs = $total_hrs - $total_billable_hrs;
@@ -346,10 +347,14 @@ class Billable extends Command implements ConfigurableService {
     return $weekdays + 20;
   }
 
-  protected function getWeekdaysPassedThisMonth($output) {
-    $days_passed = date('d');
+  protected function getWeekdaysPassedThisMonth($output, \DateTime $reference_point) {
+    $days_passed = $reference_point->format('d');
+    if ($reference_point->format('Y-m-t') < date('Y-m-d')) {
+      // Past month.
+      $days_passed = $reference_point->format('t');
+    }
     $weekdays = 0;
-    $target_key = sprintf('%s_%s', date('Y'), date('m'));
+    $target_key = sprintf('%s_%s', $reference_point->format('Y'), $reference_point->format('m'));
     if (isset($this->targets[$target_key])) {
       $target = $this->targets[$target_key];
       if (strpos($target, ',') !== FALSE) {
@@ -361,7 +366,7 @@ class Billable extends Command implements ConfigurableService {
     }
     if (!$weekdays) {
       for ($i = 0; $i < $days_passed; $i++) {
-        $day_of_week = DateHelper::startOfMonth()
+        $day_of_week = DateHelper::startOfMonth($reference_point)
           ->modify(sprintf('+%d days', $i))
           ->format('w');
         if ($day_of_week != self::SUNDAY && $day_of_week != self::SATURDAY) {
@@ -370,7 +375,7 @@ class Billable extends Command implements ConfigurableService {
       }
     }
     // Don't include the current day before 3pm?
-    if (date('G') < 15) {
+    if (date('G') < 15 && $reference_point->format('Y-m-t') > date('Y-m-d')) {
       $weekdays -= 1;
     }
     return $weekdays;

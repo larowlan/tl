@@ -12,6 +12,7 @@ use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 
@@ -42,6 +43,8 @@ class Delete extends Command {
       ->setDescription('Deletes an entry')
       ->setHelp('Deletes an entry. <comment>Usage:</comment> <info>tl delete [slot id]</info>')
       ->addUsage('tl delete 6')
+      ->addUsage('tl delete 6 -y')
+      ->addOption('confirm', 'y', InputOption::VALUE_NONE, 'Confirm deletion')
       ->addArgument('slot_id', InputArgument::REQUIRED, 'Slot to delete');
   }
 
@@ -54,7 +57,7 @@ class Delete extends Command {
     $question = new ConfirmationQuestion('Are you sure?', false);
 
     $confirm = NULL;
-    if (($slot = $this->repository->slot($slot_id)) && ($confirm = $helper->ask($input, $output, $question)) && $this->repository->delete($slot_id)) {
+    if (($slot = $this->repository->slot($slot_id)) && ($confirm = ($input->hasOption('confirm') || $helper->ask($input, $output, $question))) && $this->repository->delete($slot_id)) {
       $deleted = $this->connector->ticketDetails($slot->tid);
       $output->writeln(sprintf('Deleted slot <comment>%d</comment> against ticket <info>%d</info>: %s, duration <info>%s</info>',
         $slot->id,
