@@ -62,9 +62,10 @@ class Status extends Command {
     $rows = [];
     $total = 0;
     foreach ($data as $record) {
+      $record->duration = ($record->end ?: time()) - $record->start;
       $total += $record->duration;
       $details = $this->connector->ticketDetails($record->tid);
-      if (!empty($record->active)) {
+      if (empty($record->end)) {
         $record->tid .= ' *';
       }
       $duration = sprintf('<fg=%s>%s</>', $details->isBillable() ? 'default' : 'yellow', Formatter::formatDuration($record->duration));
