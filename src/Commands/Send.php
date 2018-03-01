@@ -69,6 +69,11 @@ class Send extends Command {
     $entry_ids = $return = [];
     foreach ($this->repository->send() as $entry) {
       try {
+        if ((float) $entry->duration == 0) {
+          // Nothing to send, but mark sent so it doesn't show up tomorrow.
+          $this->repository->store([$entry->tid => 0]);
+          continue;
+        }
         if ($saved = $this->connector->sendEntry($entry)) {
           $entry_ids[$entry->tid] = $saved;
           // A real entry, give some output.
