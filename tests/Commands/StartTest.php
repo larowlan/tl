@@ -206,6 +206,30 @@ class StartTest extends TlTestBase {
   /**
    * @covers ::execute
    */
+  public function testStatusAssignAndComment() {
+    $this->getMockConnector()->expects($this->any())
+      ->method('ticketDetails')
+      ->with(1234)
+      ->willReturn(new Ticket('Running tests', 123));
+    $this->getMockConnector()->expects($this->once())
+      ->method('setInProgress')
+      ->with(1234, TRUE, "I will look on friday")
+      ->willReturn(TRUE);
+    $output = $this->executeCommand('start', [
+      'issue_number' => 1234,
+      '--status' => TRUE,
+      '-a' => TRUE,
+      '-r' => "I will look on friday"
+    ]);
+    $this->assertRegExp('/Started new entry for 1234: Running tests/', $output->getDisplay());
+    $this->assertRegExp('/Ticket 1234 set to in-progress/', $output->getDisplay());
+    $this->assertRegExp('/Ticket 1234 assigned to you/', $output->getDisplay());
+    $this->assertTicketIsOpen(1234);
+  }
+
+  /**
+   * @covers ::execute
+   */
   public function testStatusAlreadyInProgress() {
     $this->getMockConnector()->expects($this->any())
       ->method('ticketDetails')
