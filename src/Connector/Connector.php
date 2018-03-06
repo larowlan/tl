@@ -72,22 +72,26 @@ interface Connector {
    *   Ticket ID to set in progres.
    * @param bool $assign
    *   TRUE to assign as well.
+   * @param string $comment
+   *   Comment to use.
    *
    * @return bool
    *   TRUE if success.
    */
-  public function setInProgress($ticket_id, $assign = FALSE);
+  public function setInProgress($ticket_id, $assign = FALSE, $comment = 'Working on this');
 
   /**
    * Assigns a ticket.
    *
    * @param mixed $ticket_id
    *   Ticket ID to assign
+   * @param string $comment
+   *   Comment to use.
    *
    * @return bool
    *   TRUE if success
    */
-  public function assign($ticket_id);
+  public function assign($ticket_id, $comment = 'Working on this');
 
   /**
    * Sets a ticket as paused.

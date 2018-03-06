@@ -48,11 +48,14 @@ class Start extends Command implements CompletionAwareInterface, LogAwareCommand
       ->addArgument('comment', InputArgument::OPTIONAL, 'Comment to start with')
       ->addOption('status', 's', InputOption::VALUE_NONE, 'Set issue to in progress')
       ->addOption('assign', 'a', InputOption::VALUE_NONE, 'Assign issue to you')
+      ->addOption('redmine-comment', 'r', InputOption::VALUE_REQUIRED, 'Redmine comment')
       ->addUsage('tl start 12355')
       ->addUsage('tl start 12355 "Doin stuff"')
       ->addUsage('tl start 12345 -a')
       ->addUsage('tl start 12345 --assign')
       ->addUsage('tl start 12345 -a -s')
+      ->addUsage('tl start 12345 -a -r "Taking a look"')
+      ->addUsage('tl start 12345 -a --redmine-comment "Taking a looksie"')
       ->addUsage('tl start 12345 --assign --status')
       ->addUsage('tl start 12345 --status')
       ->addUsage('tl start 12345 -s');
@@ -87,7 +90,7 @@ class Start extends Command implements CompletionAwareInterface, LogAwareCommand
           $slot_id
         ));
         if ($input->getOption('status')) {
-          if ($this->connector->setInProgress($ticket_id, $assign = $input->getOption('assign'))) {
+          if ($this->connector->setInProgress($ticket_id, $assign = $input->getOption('assign'), $input->getOption('redmine-comment') ?: 'Working on this')) {
             $output->writeln(sprintf('Ticket <comment>%s</comment> set to in-progress.', $ticket_id));
             if ($assign) {
               $output->writeln(sprintf('Ticket <comment>%s</comment> assigned to you.', $ticket_id));
@@ -101,13 +104,17 @@ class Start extends Command implements CompletionAwareInterface, LogAwareCommand
           }
         }
         elseif ($input->getOption('assign')) {
-          if ($this->connector->assign($ticket_id)) {
+          if ($this->connector->assign($ticket_id, $input->getOption('redmine-comment') ?: 'Working on this')) {
             $output->writeln(sprintf('Ticket <comment>%s</comment> assigned to you.',
               $ticket_id));
           }
           else {
             $output->writeln('<error>Could not assign ticket</error>');
           }
+        }
+        elseif ($input->getOption('redmine-comment')) {
+          $output->writeln('<error>You cannot provide a comment if you do not provide the --assign or --status flags</error>');
+          exit(1);
         }
       }
       catch (\Exception $e) {
