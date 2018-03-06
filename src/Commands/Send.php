@@ -11,6 +11,7 @@ use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\Repository\Repository;
 use Larowlan\Tl\Reviewer;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -67,23 +68,34 @@ class Send extends Command {
       return;
     }
     $entry_ids = $return = [];
-    foreach ($this->repository->send() as $entry) {
+    $entries = $this->repository->send();
+    $progress = new ProgressBar($output, $entries);
+    $progress->setProgressCharacter("\xF0\x9F\x8D\xBA");
+    $lines = [];
+    foreach ($entries as $entry) {
       try {
         if ((float) $entry->duration == 0) {
           // Nothing to send, but mark sent so it doesn't show up tomorrow.
           $this->repository->store([$entry->tid => 0]);
+          $progress->advance();
           continue;
         }
         if ($saved = $this->connector->sendEntry($entry)) {
           $entry_ids[$entry->tid] = $saved;
           // A real entry, give some output.
-          $output->writeln(sprintf('Stored entry for <info>%d</info>, remote id <comment>%d</comment>', $entry->tid, $entry_ids[$entry->tid]));
+          $lines[] = sprintf('Stored entry for <info>%d</info>, remote id <comment>%d</comment>', $entry->tid, $entry_ids[$entry->tid]);
+          $progress->advance();
         }
       }
       catch (ClientException $e) {
-        $output->writeln('<error>' . $e->getMessage() . '</error>');
+        $lines[] = '<error>' . $e->getMessage() . '</error>';
       }
     }
+    $progress->finish();
+    foreach ($lines as $line) {
+      $output->writeln($line);
+    }
+    $output->writeln('Done');
     $this->repository->store($entry_ids);
   }
 
