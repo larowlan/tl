@@ -90,7 +90,7 @@ services:
       -  { name: command }
   app.command.send:
     class: Larowlan\Tl\Commands\Send
-    arguments: ["@connector", "@repository", "@reviewer"]
+    arguments: ["@connector", "@repository", "@reviewer", "@logger"]
     tags:
       -  { name: command }
   app.command.review:
