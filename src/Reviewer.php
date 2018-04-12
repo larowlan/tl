@@ -49,7 +49,7 @@ class Reviewer {
   public function getSummary($date = 19780101, $check = FALSE, $exact = FALSE) {
     $data = $this->repository->review($date, $check);
     if (count($data) == 0 && !$check) {
-      throw new \Exception('All entries stored in remote system');
+      throw new \Exception("All entries stored in remote system \xF0\x9F\x8D\xBA \xF0\x9F\x8D\xBA \xF0\x9F\x8D\xBA");
     }
 
     $total = 0;
