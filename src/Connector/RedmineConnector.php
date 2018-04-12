@@ -238,7 +238,7 @@ class RedmineConnector implements Connector, ConfigurableService {
     return $tickets;
   }
 
-  public function setInProgress($ticket_id, $assign = FALSE) {
+  public function setInProgress($ticket_id, $assign = FALSE, $comment = 'Working on this') {
     $states = $this->getStates();
     if (!isset($states['In progress'])) {
       throw new \Exception('There is no "In progress" status');
@@ -247,11 +247,11 @@ class RedmineConnector implements Connector, ConfigurableService {
     if ($assign) {
       $updates['assigned_to_id'] = $this->getUserId();
     }
-    return $this->putUpdate($ticket_id, $updates);
+    return $this->putUpdate($ticket_id, $updates, $comment);
   }
 
-  public function assign($ticket_id) {
-    return $this->putUpdate($ticket_id, ['assigned_to_id' => $this->getUserId()]);
+  public function assign($ticket_id, $comment = 'Working on this') {
+    return $this->putUpdate($ticket_id, ['assigned_to_id' => $this->getUserId()], $comment);
   }
 
   protected function putUpdate($ticket_id, array $updates, $comment = 'Working on this') {

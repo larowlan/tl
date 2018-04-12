@@ -230,7 +230,7 @@ class Billable extends Command implements ConfigurableService {
         $rows[] = ['', '<comment>* Deleted or access denied tickets:</comment> ' . implode(',', $unknowns), '', ''];
       }
       $rows[] = new TableSeparator();
-      $rows[] = ['', 'Total', Formatter::formatDuration($total), '100%'];
+      $rows[] = ['', 'Total', Formatter::formatDuration($total), ''];
     }
     else {
       $rows[] = [
@@ -248,7 +248,7 @@ class Billable extends Command implements ConfigurableService {
         $rows[] = ['<comment>* Deleted or access denied tickets:</comment> ' . implode(',', $unknowns), '', ''];
       }
       $rows[] = new TableSeparator();
-      $rows[] = ['Total', Formatter::formatDuration($total), '100%'];
+      $rows[] = ['Total', Formatter::formatDuration($total), ''];
     }
 
     if ($period === static::MONTH) {
@@ -266,10 +266,14 @@ class Billable extends Command implements ConfigurableService {
       $non_billable_hrs = $non_billable / 60 / 60;
       $completed_hrs = $billable_hrs + $non_billable_hrs;
 
+      $expected = 0;
+      if ($no_weekdays_in_month > 0) {
+        $expected = $days_passed / $no_weekdays_in_month;
+      }
       $rows[] = $this->formatProgressRow('No. Days', $days_passed, $no_weekdays_in_month);
-      $rows[] = $this->formatProgressRow('Billable Hrs', $billable_hrs, $total_billable_hrs);
+      $rows[] = $this->formatProgressRow('Billable Hrs', $billable_hrs, $total_billable_hrs, $expected);
       $rows[] = $this->formatProgressRow('Non-billable Hrs', $non_billable_hrs, $total_non_billable_hrs);
-      $rows[] = $this->formatProgressRow('Total Hrs', $completed_hrs, $total_hrs);
+      $rows[] = $this->formatProgressRow('Total Hrs', $completed_hrs, $total_hrs, $expected);
     }
 
     $table->setRows($rows);
@@ -312,11 +316,13 @@ class Billable extends Command implements ConfigurableService {
    *   Numerator for progress.
    * @param float $denominator
    *   Denominator for progress.
+   * @param float $expected
+   *   Expected progress.
    *
    * @return array
    *   Formatted row.
    */
-  protected function formatProgressRow($caption, $numerator, $denominator) {
+  protected function formatProgressRow($caption, $numerator, $denominator, $expected = NULL) {
     if ($denominator < 0) {
       return [$caption, "$numerator/$denominator", '0%'];
     }
@@ -324,7 +330,18 @@ class Billable extends Command implements ConfigurableService {
     if ($numerator > $denominator) {
       $difference = sprintf('-%s', $numerator - $denominator);
     }
-    return [$caption, "$numerator/$denominator ($difference)", round(100 * $numerator / $denominator, 2) . '%'];
+    if ($expected && ($numerator / $denominator) < $expected) {
+      return [
+        $caption,
+        "$numerator/$denominator ($difference)",
+        '<error>' . round(100 * $numerator / $denominator, 2) . '%' . '</error>',
+      ];
+    }
+    return [
+      $caption,
+      "$numerator/$denominator ($difference)",
+      round(100 * $numerator / $denominator, 2) . '%'
+    ];
   }
 
   protected function getWeekdaysInMonth($m, $y) {

@@ -4,7 +4,8 @@ sudo: false
 php:
   - 5.6
   - 5.5
-  - 7
+  - 7.1
+  - 7.2
 
 matrix:
   # Don't wait for the allowed failures to build.
