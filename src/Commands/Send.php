@@ -77,6 +77,7 @@ class Send extends Command {
         if ((float) $entry->duration == 0) {
           // Nothing to send, but mark sent so it doesn't show up tomorrow.
           $this->repository->store([$entry->tid => 0]);
+          $lines[] = sprintf('Marked entry for <info>%d</info> as sent, < 15 minutes', $entry->tid);
           $progress->advance();
           continue;
         }
@@ -92,10 +93,11 @@ class Send extends Command {
       }
     }
     $progress->finish();
+    $output->writeln('');
     foreach ($lines as $line) {
       $output->writeln($line);
     }
-    $output->writeln('Done');
+    $output->writeln("Done \xF0\x9F\x8D\xBA \xF0\x9F\x8D\xBA \xF0\x9F\x8D\xBA");
     $this->repository->store($entry_ids);
   }
 
