@@ -10,6 +10,7 @@ use GuzzleHttp\Exception\ClientException;
 use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\Repository\Repository;
 use Larowlan\Tl\Reviewer;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Helper\Table;
@@ -35,11 +36,35 @@ class Send extends Command {
 
   const ALL = '19780101';
 
-  public function __construct(Connector $connector, Repository $repository, Reviewer $reviewer) {
+  /**
+   * Logger.
+   *
+   * @var \Psr\Log\LoggerInterface
+   */
+  protected $logger;
+
+  public function __construct(Connector $connector, Repository $repository, Reviewer $reviewer, LoggerInterface $logger) {
     $this->connector = $connector;
     $this->repository = $repository;
     $this->reviewer = $reviewer;
     parent::__construct();
+    $this->logger = $logger;
+  }
+
+  /**
+   * Outputs and logs progress.
+   *
+   * @param \Symfony\Component\Console\Helper\ProgressBar $progress
+   *   Progress.
+   * @param string $message
+   *   Message.
+   *
+   * @return $this
+   */
+  protected function progress(ProgressBar $progress, $message) {
+    $this->logger->info(strip_tags($message));
+    $progress->setMessage($message);
+    return $this;
   }
 
   /**
@@ -69,35 +94,39 @@ class Send extends Command {
     }
     $entry_ids = $return = [];
     $entries = $this->repository->send();
-    $progress = new ProgressBar($output, $entries);
+    $progress = new ProgressBar($output, count($entries));
+    ProgressBar::setFormatDefinition('custom', ' %current%/%max% [%bar%] %percent:3s%% - <info>%message%</info>');
+    $progress->setFormat('custom');
     $progress->setProgressCharacter("\xF0\x9F\x8D\xBA");
-    $lines = [];
+    $errors = FALSE;
     foreach ($entries as $entry) {
       try {
         if ((float) $entry->duration == 0) {
           // Nothing to send, but mark sent so it doesn't show up tomorrow.
           $this->repository->store([$entry->tid => 0]);
-          $lines[] = sprintf('Marked entry for <info>%d</info> as sent, < 15 minutes', $entry->tid);
+          $this->progress($progress, sprintf('Marked entry for <info>%d</info> as sent, < 15 minutes', $entry->tid));
           $progress->advance();
           continue;
         }
         if ($saved = $this->connector->sendEntry($entry)) {
           $entry_ids[$entry->tid] = $saved;
           // A real entry, give some output.
-          $lines[] = sprintf('Stored entry for <info>%d</info>, remote id <comment>%d</comment>', $entry->tid, $entry_ids[$entry->tid]);
+          $this->progress($progress, sprintf('Stored entry for <info>%d</info>, remote id <comment>%d</comment>', $entry->tid, $entry_ids[$entry->tid]));
           $progress->advance();
         }
       }
       catch (ClientException $e) {
-        $lines[] = '<error>' . $e->getMessage() . '</error>';
+        $this->progress($progress, '<error>' . $e->getMessage() . '</error>');
+        $errors = TRUE;
       }
     }
+    $progress->setMessage('Done');
     $progress->finish();
     $output->writeln('');
-    foreach ($lines as $line) {
-      $output->writeln($line);
+    $output->writeln("Stored remote entries \xF0\x9F\x8E\x89");
+    if ($errors) {
+      $output->writeln('<error>Errors occurred during sending, run "tl log" for more information.');
     }
-    $output->writeln("Done \xF0\x9F\x8D\xBA \xF0\x9F\x8D\xBA \xF0\x9F\x8D\xBA");
     $this->repository->store($entry_ids);
   }
 

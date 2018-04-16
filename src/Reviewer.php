@@ -84,8 +84,8 @@ class Reviewer {
         $duration,
       ];
       if ($exact) {
-        $row[] = Formatter::formatDuration($record->end - $record->start);
-        $exact_total += ($record->end - $record->start);
+        $row[] = Formatter::formatDuration(($record->end ?: time()) - $record->start);
+        $exact_total += (($record->end ?: time()) - $record->start);
       }
       $row = array_merge($row, [
         substr($details->getTitle(), 0, 25) . '...',
