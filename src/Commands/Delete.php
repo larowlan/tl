@@ -57,7 +57,7 @@ class Delete extends Command {
     $question = new ConfirmationQuestion('Are you sure?', false);
 
     $confirm = NULL;
-    if (($slot = $this->repository->slot($slot_id)) && ($confirm = ($input->hasOption('confirm') || $helper->ask($input, $output, $question))) && $this->repository->delete($slot_id)) {
+    if (($slot = $this->repository->slot($slot_id)) && ($confirm = ($input->getOption('confirm') || $helper->ask($input, $output, $question))) && $this->repository->delete($slot_id)) {
       $deleted = $this->connector->ticketDetails($slot->tid);
       $output->writeln(sprintf('Deleted slot <comment>%d</comment> against ticket <info>%d</info>: %s, duration <info>%s</info>',
         $slot->id,
