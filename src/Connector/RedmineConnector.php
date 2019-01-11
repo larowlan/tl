@@ -20,6 +20,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Console\Question\Question;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 class RedmineConnector implements Connector, ConfigurableService {
 
@@ -339,7 +340,7 @@ class RedmineConnector implements Connector, ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  public static function getConfiguration(NodeDefinition $root_node) {
+  public static function getConfiguration(NodeDefinition $root_node, ContainerBuilder $container) {
     $root_node->children()
         ->arrayNode('non_billable_projects')
         ->requiresAtLeastOneElement()
@@ -360,7 +361,7 @@ class RedmineConnector implements Connector, ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  public static function askPreBootQuestions(QuestionHelper $helper, InputInterface $input, OutputInterface $output, array $config) {
+  public static function askPreBootQuestions(QuestionHelper $helper, InputInterface $input, OutputInterface $output, array $config, ContainerBuilder $container) {
     $default_url = isset($config['url']) ? $config['url'] : 'https://redmine.previousnext.com.au';
     $default_key = isset($config['api_key']) ? $config['api_key'] : '';
     // Reset.
@@ -406,7 +407,7 @@ class RedmineConnector implements Connector, ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  public static function getDefaults($config) {
+  public static function getDefaults($config, ContainerBuilder $container) {
     if (!$config) {
       $config = [];
     }

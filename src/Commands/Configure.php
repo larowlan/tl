@@ -58,8 +58,8 @@ class Configure extends Command implements ContainerAwareCommand {
       $service_definition = $this->container->getDefinition($service_id);
       /** @var ConfigurableService $service_class */
       $service_class = $service_definition->getClass();
-      $config = $service_class::getDefaults($config);
-      $config = $service_class::askPreBootQuestions($helper, $input, $output, $config);
+      $config = $service_class::getDefaults($config, $this->container);
+      $config = $service_class::askPreBootQuestions($helper, $input, $output, $config, $this->container);
     }
     $this->container->setParameter('config', $config);
     // Now we can attempt boot.

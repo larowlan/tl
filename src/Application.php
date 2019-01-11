@@ -165,8 +165,9 @@ class Application extends BaseApplication {
   private function checkConfig(OutputInterface $output) {
     try {
       $processor = $this->container->get('config.processor');
-      /** @var ConfigurationCollector|ConfigurationInterface $configuration */
+      /** @var ConfigurationCollector|ConfigurationInterface|\Larowlan\Tl\Configuration\LoggerConfiguration $configuration */
       $configuration = $this->container->get('config.configuration');
+      $configuration->setContainerBuilder($this->container);
       $needs_config_ids = $this->container->getParameter('configurable_service_ids');
       $needs_config = [];
       foreach ($needs_config_ids as $id) {

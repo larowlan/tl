@@ -5,6 +5,7 @@ parameters:
   # This is set in Application::checkConfig
   config: []
   version: ''
+  active_connector: ''
 
 services:
   config.processor:
@@ -26,10 +27,15 @@ services:
     class: Larowlan\Tl\Repository\DbRepository
     arguments: ["@connection"]
   connector:
+    class: Larowlan\Tl\Connector\Manager
+    arguments: ['@container', '%config%']
+    tags:
+      -  { name: configurable }
+  connector.redmine:
     class: Larowlan\Tl\Connector\RedmineConnector
     arguments: ['@http_client', '@cache', '%config%', '%version%']
     tags:
-      -  { name: configurable }
+      - { name: connector }
   reviewer:
     class: Larowlan\Tl\Reviewer
     arguments: ["@connector", "@repository"]

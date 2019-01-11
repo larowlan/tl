@@ -21,6 +21,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\Question;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Yaml\Yaml;
 
 class Billable extends Command implements ConfigurableService {
@@ -73,7 +74,7 @@ class Billable extends Command implements ConfigurableService {
   public function __construct(Connector $connector, Repository $repository, array $config, $directory) {
     $this->connector = $connector;
     $this->repository = $repository;
-    $config = static::getDefaults($config);
+    $config = static::getDefaults($config, new ContainerBuilder());
     $this->billablePercentage = $config['billable_percentage'];
     $this->hoursPerDay = $config['hours_per_day'];
     $this->targets = $config['days_per_month'];
@@ -401,7 +402,7 @@ class Billable extends Command implements ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  public static function getConfiguration(NodeDefinition $root_node) {
+  public static function getConfiguration(NodeDefinition $root_node, ContainerBuilder $container) {
     $root_node->children()
         ->scalarNode('billable_percentage')
         ->defaultValue(0.8)
@@ -419,7 +420,7 @@ class Billable extends Command implements ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  public static function askPreBootQuestions(QuestionHelper $helper, InputInterface $input, OutputInterface $output, array $config) {
+  public static function askPreBootQuestions(QuestionHelper $helper, InputInterface $input, OutputInterface $output, array $config, ContainerBuilder $container) {
     $default_percentage = isset($config['billable_percentage']) ? $config['billable_percentage'] : 0.8;
     $default_hours_per_day = isset($config['hours_per_day']) ? $config['hours_per_day'] : 8;
     $config = ['billable_percentage' => '', 'hours_per_day' => ''] + $config;
@@ -441,7 +442,7 @@ class Billable extends Command implements ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  public static function getDefaults($config) {
+  public static function getDefaults($config, ContainerBuilder $container) {
     return $config + [
       'billable_percentage' => 0.8,
       'hours_per_day' => 8,
