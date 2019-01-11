@@ -9,12 +9,12 @@ namespace Larowlan\Tl\Tests;
 use Larowlan\Tl\Application;
 use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\Repository\Repository;
+use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Tester\CommandTester;
-use Symfony\Component\Console\Tests\Output\TestOutput;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\YamlFileLoader;
 use Symfony\Component\Yaml\Yaml;
@@ -22,7 +22,7 @@ use Symfony\Component\Yaml\Yaml;
 /**
  * Defines a base test class.
  */
-abstract class TlTestBase extends \PHPUnit_Framework_TestCase {
+abstract class TlTestBase extends TestCase {
 
   /**
    * Test application.
@@ -57,9 +57,9 @@ abstract class TlTestBase extends \PHPUnit_Framework_TestCase {
     mkdir($test_directory);
     file_put_contents($test_directory . '/.tl.yml', Yaml::dump(['url' => 'http://example.com']));
     $container->setParameter('directory', $test_directory);
-    $mock_connector = $this->getMock(Connector::class);
+    $mock_connector = $this->createMock(Connector::class);
     $container->set('connector', $mock_connector);
-    $configuration_processor = $this->getMock(Processor::class);
+    $configuration_processor = $this->createMock(Processor::class);
     $configuration_processor->expects($this->any())
       ->method('processConfiguration')
       ->willReturn([]);
@@ -70,7 +70,7 @@ abstract class TlTestBase extends \PHPUnit_Framework_TestCase {
       $install = $container->get('app.command.install');
       $install->setApplication($this->application);
       $input = new ArrayInput(['command' => 'install']);
-      $output = $this->getMock(OutputInterface::class);
+      $output = $this->createMock(OutputInterface::class);
       $install->run($input, $output);
     }
   }
