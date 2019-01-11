@@ -2,7 +2,7 @@
 
 namespace Larowlan\Tl\Connector;
 
-use Larowlan\Tl\Commands\ContainerAwareCommand;
+use Doctrine\Common\Cache\Cache;
 use Larowlan\Tl\Configuration\ConfigurableService;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
@@ -16,6 +16,8 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
  * Defines a class for managing connectors.
  */
 class Manager implements Connector, ConfigurableService {
+  // 7 days cache.
+  const LIFETIME = 604800;
 
   /**
    * Active connector.
@@ -31,14 +33,18 @@ class Manager implements Connector, ConfigurableService {
    */
   protected $connectorId;
 
+  protected $cache;
+  protected $version;
   /**
    * {@inheritdoc}
    */
-  public function __construct(ContainerBuilder $container, array $config) {
+  public function __construct(ContainerBuilder $container, Cache $cache, array $config, $version) {
     if (!empty($config['connector_id'])) {
       $connector_id = $config['connector_id'];
       $this->connector = $container->get($connector_id);
     }
+    $this->cache = $cache;
+    $this->version = $version;
   }
 
   /**
@@ -58,7 +64,12 @@ class Manager implements Connector, ConfigurableService {
    * {@inheritdoc}
    */
   public function ticketDetails($id) {
-    return $this->connector()->ticketDetails($id);
+    if (($details = $this->cache->fetch($this->version . ':' . $id))) {
+      return $details;
+    }
+    $ticket = $this->connector()->ticketDetails($id);
+    $this->cache->save($this->version . ':' . $id, $ticket, static::LIFETIME);
+    return $ticket;
   }
 
   /**
@@ -120,6 +131,13 @@ class Manager implements Connector, ConfigurableService {
   /**
    * {@inheritdoc}
    */
+  public function loadAlias($ticket_id) {
+    return $this->connector()->loadAlias($ticket_id);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function getConfiguration(NodeDefinition $root_node, ContainerBuilder $container) {
     foreach (array_keys($container->findTaggedServiceIds('connector')) as $id) {
       $definition = $container->getDefinition($id);
@@ -150,7 +168,7 @@ class Manager implements Connector, ConfigurableService {
     }
     $definition = $container->getDefinition($config['connector_id']);
     $class = $definition->getClass();
-    $class::askPreBootQuestions($helper, $input, $output, $config, $container);
+    $config = $class::askPreBootQuestions($helper, $input, $output, $config, $container) + $config;
     return $config;
   }
 

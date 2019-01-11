@@ -89,17 +89,18 @@ class Tag extends Command {
         continue;
       }
       $title = $this->connector->ticketDetails($entry->tid);
+      $default = reset($categories);
       $question = new ChoiceQuestion(
         sprintf('Enter tag for slot <comment>%d</comment> [<info>%d</info>]: %s [<info>%s h</info>] [%s] %s',
           $entry->id,
           $entry->tid,
           $title->getTitle(),
           $entry->duration,
-          $last ?: static::DEFAULT_TAG,
+          $last ?: $default,
           $entry->comment ? '- "' . $entry->comment . '"': ''
         ),
         $categories,
-        $last ?: static::DEFAULT_TAG
+        $last ?: $default
       );
       $tag_id = $helper->ask($input, $output, $question);
       $tag = $categories[$tag_id];
@@ -129,17 +130,18 @@ class Tag extends Command {
         $output->writeln('<error>You are offline, please try again later.</error>');
         return;
       }
+      $default = reset($categories);
       $question = new ChoiceQuestion(
         sprintf('Enter tag for slot <comment>%d</comment> [<info>%d</info>]: %s [<info>%s h</info>] [%s] %s',
           $entry->id,
           $entry->tid,
           $title->getTitle(),
           Formatter::formatDuration($entry->end - $entry->start),
-          static::DEFAULT_TAG,
+          $default,
           $entry->comment ? '- "' . $entry->comment . '"': ''
         ),
         $categories,
-        static::DEFAULT_TAG
+        $default
       );
       $tag_id = $helper->ask($input, $output, $question);
       $tag = $categories[$tag_id];

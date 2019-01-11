@@ -46,11 +46,19 @@ class RedmineConnector implements Connector, ConfigurableService {
    */
   public function __construct(ClientInterface $httpClient, Cache $cache, array $config, $version) {
     $this->httpClient = $httpClient;
-    $this->cache = $cache;
     $this->url = $config['url'];
     $this->apiKey = $config['api_key'];
     $this->nonBillableProjects = isset($config['non_billable_projects']) ? $config['non_billable_projects'] : [];
+    $this->cache = $cache;
     $this->version = $version;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function loadAlias($ticket_id) {
+    // Not supported.
+    return $ticket_id;
   }
 
   /**

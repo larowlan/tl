@@ -5,7 +5,6 @@ parameters:
   # This is set in Application::checkConfig
   config: []
   version: ''
-  active_connector: ''
 
 services:
   config.processor:
@@ -28,7 +27,7 @@ services:
     arguments: ["@connection"]
   connector:
     class: Larowlan\Tl\Connector\Manager
-    arguments: ['@container', '%config%']
+    arguments: ['@container',  '@cache', '%config%', '%version%']
     tags:
       -  { name: configurable }
   connector.redmine:
@@ -36,6 +35,11 @@ services:
     arguments: ['@http_client', '@cache', '%config%', '%version%']
     tags:
       - { name: connector }
+  connector.jira:
+    class: Larowlan\Tl\Connector\JiraConnector
+    arguments: ['%config%', '@cache', '%config%', '%version%']
+    tags:
+    - { name: connector }
   reviewer:
     class: Larowlan\Tl\Reviewer
     arguments: ["@connector", "@repository"]

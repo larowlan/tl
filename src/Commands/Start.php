@@ -70,6 +70,9 @@ class Start extends Command implements CompletionAwareInterface, LogAwareCommand
     if ($alias = $this->repository->loadAlias($ticket_id)) {
       $ticket_id = $alias;
     }
+    if ($alias = $this->connector->loadAlias($ticket_id)) {
+      $ticket_id = $alias;
+    }
     if ($title = $this->connector->ticketDetails($ticket_id)) {
       if ($stop = $this->repository->stop()) {
         $stopped = $this->connector->ticketDetails($stop->tid);

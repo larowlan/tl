@@ -116,4 +116,15 @@ interface Connector {
    */
   public function projectNames();
 
+  /**
+   * Loads a ticket alias.
+   *
+   * @param int $ticket_id
+   *   Ticket ID.
+   *
+   * @return int
+   *   Ticket alias
+   */
+  public function loadAlias($ticket_id);
+
 }
