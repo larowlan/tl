@@ -110,7 +110,7 @@ class JiraConnector implements Connector, ConfigurableService {
     }
     $question = new Question(sprintf('Enter your Jira username: <comment>[%s]</comment>', $default_username), $default_username);
     $config['jira_username'] = $helper->ask($input, $output, $question) ?: $default_username;
-    $question = new Question(sprintf('Enter your Jira API token: <comment>[%s]</comment>', $default_key), $default_key);
+    $question = new Question(sprintf('Enter your Jira password: <comment>[%s]</comment>', $default_key), $default_key);
     $config['jira_api_token'] = $helper->ask($input, $output, $question) ?: $default_key;
     return $config;
   }
