@@ -45,7 +45,9 @@ class RedmineConnector implements Connector, ConfigurableService {
     $this->httpClient = $httpClient;
     $this->url = $config['url'];
     $this->apiKey = $config['api_key'];
-    $this->nonBillableProjects = isset($config['non_billable_projects']) ? $config['non_billable_projects'] : [];
+    $this->nonBillableProjects = array_map(function ($item) {
+      return (int) $item;
+    }, $config['non_billable_projects'] ?? []);
     $this->cache = $cache;
     $this->version = $version;
   }
@@ -360,7 +362,7 @@ class RedmineConnector implements Connector, ConfigurableService {
    *   TRUE if billable.
    */
   protected function isBillable($project_id) {
-    return !in_array($project_id, $this->nonBillableProjects, TRUE);
+    return !in_array((int) $project_id, $this->nonBillableProjects, TRUE);
   }
 
   /**

@@ -74,6 +74,13 @@ class JiraConnector implements Connector, ConfigurableService {
   private $httpClient;
 
   /**
+   * Non billable project IDs.
+   *
+   * @var array
+   */
+  protected $nonBillableProjects = [];
+
+  /**
    * Constructs a new JiraConnector.
    *
    * @param array $configuration
@@ -102,6 +109,9 @@ class JiraConnector implements Connector, ConfigurableService {
     $this->userName = $configuration['jira_username'];
     $this->version = $version;
     $this->httpClient = $httpClient;
+    $this->nonBillableProjects = array_map(function ($item) {
+      return (int) $item;
+    }, $config['jira_non_billable_projects'] ?? []);
   }
 
   /**
@@ -223,8 +233,7 @@ class JiraConnector implements Connector, ConfigurableService {
       }
       return FALSE;
     }
-    // @todo work out if ticket is billable.
-    return new Ticket(sprintf('[%s] %s', $issue->key, $issue->fields->summary), $issue->fields->getProjectId(), TRUE);
+    return new Ticket(sprintf('[%s] %s', $issue->key, $issue->fields->summary), $issue->fields->getProjectId(), !in_array((int) $issue->fields->getProjectId(), $this->nonBillableProjects, TRUE));
   }
 
   /**
