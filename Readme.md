@@ -6,9 +6,9 @@
 
 ## Requirements
 
-* PHP 5.5.23+
-* php5-sqlite3 OR php7.0-sqlite3
-* php5-pdo_sqlite OR php7.0-pdo_sqlite
+* PHP 7.1+
+* php7.1-sqlite3
+* php7.1-pdo_sqlite
 
 
 ## Installation
