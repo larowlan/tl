@@ -2,7 +2,7 @@
 ## Command line time-logger
 
 * Entries stored in sqlite in your home directory
-* Sends complete entries to redmine
+* Sends complete entries to redmine or jira, or both at the same time
 
 ## Requirements
 
@@ -57,7 +57,7 @@ tl self-update
 
 ## Usage
 
-Assuming you have two redmine tickets number 3546 and 4791.
+Assuming you have two tickets number 3546 and 4791.
 ```bash
 # start work on 3546
 tl start 3546
