@@ -16,6 +16,6 @@ cache:
 
 script:
  - composer install
- - /vendor/bin/phpcs --report=checkstyle
+ - ./vendor/bin/phpcs --report=checkstyle
  - phpunit --coverage-text
 
