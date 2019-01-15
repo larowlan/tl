@@ -3,20 +3,21 @@
 namespace Larowlan\Tl\Connector;
 
 use Doctrine\Common\Cache\Cache;
+use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Exception\ConnectException;
 use JiraRestApi\Configuration\ArrayConfiguration;
 use JiraRestApi\Issue\IssueService;
-use JiraRestApi\Issue\JqlQuery;
 use JiraRestApi\Issue\Transition;
 use JiraRestApi\Issue\Worklog;
+use JiraRestApi\JiraException;
 use JiraRestApi\Project\ProjectService;
 use Larowlan\Tl\Configuration\ConfigurableService;
-use Larowlan\Tl\Formatter;
 use Larowlan\Tl\Ticket;
-use Larowlan\Tl\TicketInterface;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Question\Question;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
@@ -25,6 +26,11 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
  */
 class JiraConnector implements Connector, ConfigurableService {
 
+  /**
+   * Cache.
+   *
+   * @var \Doctrine\Common\Cache\Cache
+   */
   protected $cache;
 
   /**
@@ -46,21 +52,45 @@ class JiraConnector implements Connector, ConfigurableService {
    */
   protected $projectService;
 
+  /**
+   * Version ID.
+   *
+   * @var string
+   */
   protected $version;
+
+  /**
+   * Jira Username.
+   *
+   * @var string
+   */
   protected $username;
+
+  /**
+   * Http client.
+   *
+   * @var \GuzzleHttp\ClientInterface
+   */
+  private $httpClient;
 
   /**
    * Constructs a new JiraConnector.
    *
    * @param array $configuration
    *   Configuraiton.
+   * @param \Doctrine\Common\Cache\Cache $cache
+   *   Cache.
+   * @param array $config
+   *   Config.
    * @param string $version
    *   Version ID.
+   * @param \GuzzleHttp\ClientInterface $httpClient
+   *   HttpClient.
    *
    * @throws \JiraRestApi\JiraException
    *   When cannot connect.
    */
-  public function __construct(array $configuration, Cache $cache, array $config, $version) {
+  public function __construct(array $configuration, Cache $cache, array $config, $version, ClientInterface $httpClient) {
     $arrayConfiguration = new ArrayConfiguration([
       'jiraHost' => $configuration['jira_url'],
       'jiraUser' => $configuration['jira_username'],
@@ -71,6 +101,7 @@ class JiraConnector implements Connector, ConfigurableService {
     $this->cache = $cache;
     $this->userName = $configuration['jira_username'];
     $this->version = $version;
+    $this->httpClient = $httpClient;
   }
 
   /**
@@ -79,15 +110,20 @@ class JiraConnector implements Connector, ConfigurableService {
   public static function getConfiguration(NodeDefinition $root_node, ContainerBuilder $container) {
     $root_node->children()
       ->scalarNode('jira_username')
-        ->defaultValue('')
+      ->defaultValue('')
       ->end()
       ->scalarNode('jira_api_token')
-        ->defaultValue('')
+      ->defaultValue('')
       ->end()
       ->scalarNode('jira_url')
-        ->defaultValue(self::JIRA_URL)
+      ->defaultValue(self::JIRA_URL)
       ->end()
-    ->end();
+      ->arrayNode('jira_non_billable_projects')
+      ->requiresAtLeastOneElement()
+      ->prototype('scalar')
+      ->end()
+      ->end()
+      ->end();
   }
 
   /**
@@ -110,7 +146,15 @@ class JiraConnector implements Connector, ConfigurableService {
     }
     $question = new Question(sprintf('Enter your Jira username: <comment>[%s]</comment>', $default_username), $default_username);
     $config['jira_username'] = $helper->ask($input, $output, $question) ?: $default_username;
-    $question = new Question(sprintf('Enter your Jira password: <comment>[%s]</comment>', $default_key), $default_key);
+    $question = new Question(sprintf('Enter your Jira API token: <comment>[%s]</comment>', $default_key), $default_key);
+    $question->setValidator(function ($value) {
+      if (trim($value) == '') {
+        throw new \Exception('The token cannot be empty');
+      }
+
+      return $value;
+    });
+    $question->setHidden(TRUE);
     $config['jira_api_token'] = $helper->ask($input, $output, $question) ?: $default_key;
     return $config;
   }
@@ -119,6 +163,24 @@ class JiraConnector implements Connector, ConfigurableService {
    * {@inheritdoc}
    */
   public function askPostBootQuestions(QuestionHelper $helper, InputInterface $input, OutputInterface $output, array $config) {
+    $default_non_billable = isset($config['jira_non_billable_projects']) ? $config['jira_non_billable_projects'] : [];
+    // Reset.
+    $config = ['jira_non_billable_projects' => []] + $config;
+    try {
+      $output->writeln('<comment>Bear with us while we configure which Jira projects are non billable</comment>');
+      $options = $this->projectNames();
+    }
+    catch (JiraException $e) {
+      $output->writeln('<error>Could not connect to backend, please check your API key and that you are online</error>');
+      return $config;
+    }
+    foreach ($options as $id => $project) {
+      $default = in_array($id, $default_non_billable);
+      $question = new ConfirmationQuestion(sprintf('Is the %s project non billable?[%s/%s]', $project, $default ? 'Y' : 'y', $default ? 'n' : 'N'), $default);
+      if ($helper->ask($input, $output, $question)) {
+        $config['jira_non_billable_projects'][] = $id;
+      }
+    }
     return $config;
   }
 
@@ -134,21 +196,41 @@ class JiraConnector implements Connector, ConfigurableService {
   }
 
   /**
-   * Fetch the details of a ticket from a remote ticketing system.
-   *
-   * @param int $id
-   *   The ticket id from the remote system.
-   *
-   * @return TicketInterface
-   *   Ticket object.
+   * {@inheritdoc}
    */
-  public function ticketDetails($id) {
-    $issue = $this->issueService->get($id);
+  public static function getName() {
+    return 'Jira';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function ticketDetails($id, $connectorId) {
+    try {
+      $issue = $this->issueService->get($id);
+    }
+    catch (JiraException $e) {
+      try {
+        // Check if we're offline.
+        $this->httpClient->request('GET', self::JIRA_URL);
+      }
+      catch (ConnectException $e) {
+        return new Ticket(
+          'Offline: please try again later',
+          'Offline',
+          TRUE
+        );
+      }
+      return FALSE;
+    }
     // @todo work out if ticket is billable.
     return new Ticket(sprintf('[%s] %s', $issue->key, $issue->fields->summary), $issue->fields->getProjectId(), TRUE);
   }
 
-  public function loadAlias($ticket_id) {
+  /**
+   * {@inheritdoc}
+   */
+  public function loadAlias($ticket_id, $connectorId) {
     if (($details = $this->cache->fetch($this->version . ':alias:' . $ticket_id))) {
       return $details;
     }
@@ -192,8 +274,8 @@ class JiraConnector implements Connector, ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  public function ticketUrl($id) {
-    $id = $this->loadAlias($id);
+  public function ticketUrl($id, $connectorId) {
+    $id = $this->loadAlias($id, $connectorId);
     $issue = $this->issueService->get($id);
     return sprintf('%s/browse/%s', self::JIRA_URL, $issue->key);
   }
@@ -205,8 +287,8 @@ class JiraConnector implements Connector, ConfigurableService {
     $search = $this->issueService->search('assignee = currentUser() and status not in (Resolved, closed, Done)', 0, 25);
     $results = [];
     foreach ($search->getIssues() as $issue) {
-      $results += [$issue->fields->getProjectId() => []];
-      $results[$issue->fields->getProjectId()][$issue->id] = [
+      $results += [$issue->fields->project->name => []];
+      $results[$issue->fields->project->name][$issue->id] = [
         'title' => sprintf('[%s] %s', $issue->key, $issue->fields->summary),
         'status' => $issue->fields->status->name,
       ];
@@ -217,7 +299,7 @@ class JiraConnector implements Connector, ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  public function setInProgress($ticket_id, $assign = FALSE, $comment = 'Working on this') {
+  public function setInProgress($ticket_id, $connectorId, $assign = FALSE, $comment = 'Working on this') {
     $transition = new Transition();
     $transition->setTransitionName('In Progress');
     $transition->setCommentBody($comment);
@@ -231,14 +313,14 @@ class JiraConnector implements Connector, ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  public function assign($ticket_id, $comment = 'Working on this') {
+  public function assign($ticket_id, $connectorId, $comment = 'Working on this') {
     $this->issueService->changeAssignee($ticket_id, $this->userName);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function pause($ticket_id, $comment) {
+  public function pause($ticket_id, $comment, $connectorId) {
     // No paused status.
   }
 

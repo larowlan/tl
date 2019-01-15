@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Commands\PreinstallCommand.
- */
 
 namespace Larowlan\Tl\Commands;
 

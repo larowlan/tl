@@ -1,13 +1,7 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Tests\Commands\StartTest.php
- */
 
 namespace Larowlan\Tl\Tests\Commands;
 
-use Larowlan\Tl\Connector\Connector;
-use Larowlan\Tl\Repository\Repository;
 use Larowlan\Tl\Tests\TlTestBase;
 use Larowlan\Tl\Ticket;
 use Symfony\Component\Console\Input\ArrayInput;
@@ -25,8 +19,11 @@ class StartTest extends TlTestBase {
   public function testStart() {
     $this->getMockConnector()->expects($this->any())
       ->method('ticketDetails')
-      ->with(1234)
+      ->with(1234, 'connector.redmine')
       ->willReturn(new Ticket('Running tests', 123));
+    $this->getMockConnector()->expects($this->any())
+      ->method('spotConnector')
+      ->willReturn('connector.redmine');
     $output = $this->executeCommand('start', ['issue_number' => 1234]);
     $this->assertRegExp('/Started new entry for 1234: Running tests/', $output->getDisplay());
     $this->assertTicketIsOpen(1234);
@@ -40,7 +37,7 @@ class StartTest extends TlTestBase {
       ->method('ticketDetails')
       ->with(1234)
       ->willReturn(new Ticket('Running tests', 123));
-    $output =  new StreamOutput(fopen('php://memory', 'w', false));
+    $output = new StreamOutput(fopen('php://memory', 'w', FALSE));
     $command = $this->container->get('app.command.start');
     $command->setApplication($this->application);
     $this->application->setAutoExit(FALSE);
@@ -63,10 +60,13 @@ class StartTest extends TlTestBase {
     $this->getMockConnector()->expects($this->any())
       ->method('ticketDetails')
       ->willReturnMap([
-        [1234, new Ticket('Running tests', 123)],
-        ["1234", new Ticket('Running tests', 123)],
-        [4567, new Ticket('Running more tests', 123)],
+        [1234, 'connector.redmine', new Ticket('Running tests', 123)],
+        ["1234", 'connector.redmine', new Ticket('Running tests', 123)],
+        [4567, 'connector.redmine', new Ticket('Running more tests', 123)],
       ]);
+    $this->getMockConnector()->expects($this->any())
+      ->method('spotConnector')
+      ->willReturn('connector.redmine');
     $output = $this->executeCommand('start', ['issue_number' => 1234]);
     $this->assertRegExp('/Started new entry for 1234: Running tests/', $output->getDisplay());
     $active = $this->assertTicketIsOpen(1234);
@@ -173,7 +173,7 @@ class StartTest extends TlTestBase {
       ->willReturn(TRUE);
     $output = $this->executeCommand('start', [
       'issue_number' => 1234,
-      '--status' => TRUE
+      '--status' => TRUE,
     ]);
     $this->assertRegExp('/Started new entry for 1234: Running tests/', $output->getDisplay());
     $this->assertRegExp('/Ticket 1234 set to in-progress/', $output->getDisplay());
@@ -186,11 +186,14 @@ class StartTest extends TlTestBase {
   public function testStatusAndAssign() {
     $this->getMockConnector()->expects($this->any())
       ->method('ticketDetails')
-      ->with(1234)
+      ->with(1234, 'connector.redmine')
       ->willReturn(new Ticket('Running tests', 123));
+    $this->getMockConnector()->expects($this->any())
+      ->method('spotConnector')
+      ->willReturn('connector.redmine');
     $this->getMockConnector()->expects($this->once())
       ->method('setInProgress')
-      ->with(1234, TRUE)
+      ->with(1234, 'connector.redmine', TRUE)
       ->willReturn(TRUE);
     $output = $this->executeCommand('start', [
       'issue_number' => 1234,
@@ -206,20 +209,47 @@ class StartTest extends TlTestBase {
   /**
    * @covers ::execute
    */
-  public function testStatusAssignAndComment() {
+  public function testStatusAndAssignWithBackend() {
     $this->getMockConnector()->expects($this->any())
       ->method('ticketDetails')
-      ->with(1234)
+      ->with(1234, 'connector.redmine')
       ->willReturn(new Ticket('Running tests', 123));
     $this->getMockConnector()->expects($this->once())
       ->method('setInProgress')
-      ->with(1234, TRUE, "I will look on friday")
+      ->with(1234, 'connector.redmine', TRUE)
       ->willReturn(TRUE);
     $output = $this->executeCommand('start', [
       'issue_number' => 1234,
       '--status' => TRUE,
       '-a' => TRUE,
-      '-r' => "I will look on friday"
+      '-b' => 'redmine',
+    ]);
+    $this->assertRegExp('/Started new entry for 1234: Running tests/', $output->getDisplay());
+    $this->assertRegExp('/Ticket 1234 set to in-progress/', $output->getDisplay());
+    $this->assertRegExp('/Ticket 1234 assigned to you/', $output->getDisplay());
+    $this->assertTicketIsOpen(1234);
+  }
+
+  /**
+   * @covers ::execute
+   */
+  public function testStatusAssignAndComment() {
+    $this->getMockConnector()->expects($this->any())
+      ->method('ticketDetails')
+      ->with(1234, 'connector.redmine')
+      ->willReturn(new Ticket('Running tests', 123));
+    $this->getMockConnector()->expects($this->any())
+      ->method('spotConnector')
+      ->willReturn('connector.redmine');
+    $this->getMockConnector()->expects($this->once())
+      ->method('setInProgress')
+      ->with(1234, 'connector.redmine', TRUE, "I will look on friday")
+      ->willReturn(TRUE);
+    $output = $this->executeCommand('start', [
+      'issue_number' => 1234,
+      '--status' => TRUE,
+      '-a' => TRUE,
+      '-r' => "I will look on friday",
     ]);
     $this->assertRegExp('/Started new entry for 1234: Running tests/', $output->getDisplay());
     $this->assertRegExp('/Ticket 1234 set to in-progress/', $output->getDisplay());
@@ -241,7 +271,7 @@ class StartTest extends TlTestBase {
       ->willReturn(FALSE);
     $output = $this->executeCommand('start', [
       'issue_number' => 1234,
-      '-s' => TRUE
+      '-s' => TRUE,
     ]);
     $this->assertRegExp('/Started new entry for 1234: Running tests/', $output->getDisplay());
     $this->assertRegExp('/Could not update ticket status/', $output->getDisplay());

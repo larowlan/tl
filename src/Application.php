@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Application.php
- */
 
 namespace Larowlan\Tl;
 
@@ -11,10 +7,8 @@ use Doctrine\DBAL\Schema\Schema;
 use Larowlan\Tl\Commands\ContainerAwareCommand;
 use Larowlan\Tl\Commands\LogAwareCommand;
 use Larowlan\Tl\Commands\PreinstallCommand;
-use Larowlan\Tl\Configuration\ConfigurationCollector;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
-use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Console\Application as BaseApplication;
 use Symfony\Component\Console\Input\InputInterface;
@@ -137,8 +131,10 @@ class Application extends BaseApplication {
    * Checks schema.
    *
    * @param \Symfony\Component\Console\Output\OutputInterface $output
+   *   Output.
    *
    * @return int
+   *   Schema status.
    */
   private function checkSchema(OutputInterface $output) {
     // Check schema table and find if current version is installed.
@@ -159,13 +155,15 @@ class Application extends BaseApplication {
    * Checks config.
    *
    * @param \Symfony\Component\Console\Output\OutputInterface $output
+   *   Output.
    *
    * @return int
+   *   Config status.
    */
   private function checkConfig(OutputInterface $output) {
     try {
       $processor = $this->container->get('config.processor');
-      /** @var ConfigurationCollector|ConfigurationInterface|\Larowlan\Tl\Configuration\LoggerConfiguration $configuration */
+      /** @var \Larowlan\Tl\Configuration\ConfigurationCollector|ConfigurationInterface|\Larowlan\Tl\Configuration\LoggerConfiguration $configuration */
       $configuration = $this->container->get('config.configuration');
       $configuration->setContainerBuilder($this->container);
       $needs_config_ids = $this->container->getParameter('configurable_service_ids');

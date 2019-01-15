@@ -1,26 +1,32 @@
 <?php
 
-/**
- * @file
- * Contains \Larowlan\Tl\Connector\Connector.
- */
-
 namespace Larowlan\Tl\Connector;
 
-use Larowlan\Tl\TicketInterface;
-
+/**
+ * An interface for backend connectors.
+ */
 interface Connector {
+
+  /**
+   * Gets connector name.
+   *
+   * @return string
+   *   Name.
+   */
+  public static function getName();
 
   /**
    * Fetch the details of a ticket from a remote ticketing system.
    *
    * @param int $id
    *   The ticket id from the remote system.
+   * @param string $connectorId
+   *   Connector ID.
    *
-   * @return TicketInterface
+   * @return \Larowlan\Tl\TicketInterface
    *   Ticket object.
    */
-  public function ticketDetails($id);
+  public function ticketDetails($id, $connectorId);
 
   /**
    * Fetch the details of time categories from a remote ticketing system.
@@ -36,7 +42,7 @@ interface Connector {
    * @param object $entry
    *   A time entry corresponding with a record in the {bot_tl_slot} table.
    *
-   * @return int|NULL
+   * @return int|null
    *   The time entry id from the remote system or NULL if the entry was not
    *   able to be saved.
    */
@@ -47,11 +53,13 @@ interface Connector {
    *
    * @param mixed $id
    *   Ticket ID.
+   * @param string $connectorId
+   *   Connector ID.
    *
    * @return string
    *   The URL.
    */
-  public function ticketUrl($id);
+  public function ticketUrl($id, $connectorId);
 
   /**
    * Gets assigned tickets.
@@ -70,6 +78,8 @@ interface Connector {
    *
    * @param mixed $ticket_id
    *   Ticket ID to set in progres.
+   * @param string $connectorId
+   *   Connector ID.
    * @param bool $assign
    *   TRUE to assign as well.
    * @param string $comment
@@ -78,20 +88,22 @@ interface Connector {
    * @return bool
    *   TRUE if success.
    */
-  public function setInProgress($ticket_id, $assign = FALSE, $comment = 'Working on this');
+  public function setInProgress($ticket_id, $connectorId, $assign = FALSE, $comment = 'Working on this');
 
   /**
    * Assigns a ticket.
    *
    * @param mixed $ticket_id
-   *   Ticket ID to assign
+   *   Ticket ID to assign.
+   * @param string $connectorId
+   *   Connector ID.
    * @param string $comment
    *   Comment to use.
    *
    * @return bool
    *   TRUE if success
    */
-  public function assign($ticket_id, $comment = 'Working on this');
+  public function assign($ticket_id, $connectorId, $comment = 'Working on this');
 
   /**
    * Sets a ticket as paused.
@@ -99,20 +111,20 @@ interface Connector {
    * @param mixed $ticket_id
    *   Ticket ID to set as paused.
    * @param string $comment
-   *   Comment. Defaults to 'pausing for moment'
+   *   Comment. Defaults to 'pausing for moment'.
+   * @param string $connectorId
+   *   Connector ID.
    *
    * @return bool
    *   TRUE if success.
    */
-  public function pause($ticket_id, $comment);
+  public function pause($ticket_id, $comment, $connectorId);
 
   /**
    * Gets project names.
    *
    * @return array
    *   Project names keyed by ID.
-   *
-   * @throws \Exception
    */
   public function projectNames();
 
@@ -121,10 +133,12 @@ interface Connector {
    *
    * @param int $ticket_id
    *   Ticket ID.
+   * @param string $connectorId
+   *   Connector ID.
    *
    * @return int
    *   Ticket alias
    */
-  public function loadAlias($ticket_id);
+  public function loadAlias($ticket_id, $connectorId);
 
 }

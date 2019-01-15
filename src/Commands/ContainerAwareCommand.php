@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Commands\ContainerAwareCommand.
- */
 
 namespace Larowlan\Tl\Commands;
 
@@ -17,7 +13,7 @@ interface ContainerAwareCommand extends PreinstallCommand {
    * Some pre-install commands are container aware.
    *
    * @param \Symfony\Component\DependencyInjection\ContainerBuilder $container
-   *   Container
+   *   Container.
    */
   public function setContainerBuilder(ContainerBuilder $container);
 

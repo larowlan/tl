@@ -1,12 +1,7 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Commands\Tag.php
- */
 
 namespace Larowlan\Tl\Commands;
 
-use Doctrine\DBAL\Driver\Connection;
 use GuzzleHttp\Exception\ConnectException;
 use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\Formatter;
@@ -17,8 +12,10 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ChoiceQuestion;
-use Symfony\Component\Console\Question\Question;
 
+/**
+ *
+ */
 class Tag extends Command {
 
   /**
@@ -33,6 +30,9 @@ class Tag extends Command {
 
   const DEFAULT_TAG = 'Development:9';
 
+  /**
+   *
+   */
   public function __construct(Connector $connector, Repository $repository) {
     $this->connector = $connector;
     $this->repository = $repository;
@@ -78,17 +78,18 @@ class Tag extends Command {
     $last = FALSE;
     try {
       $entries = $this->repository->review(Review::ALL, TRUE);
-      $categories = $this->connector->fetchCategories();
+      $grouped_categories = $this->connector->fetchCategories();
     }
     catch (ConnectException $e) {
       $output->writeln('<error>You are offline, please try again later.</error>');
       return;
     }
     foreach ($entries as $entry) {
+      $categories = $grouped_categories[$entry->connector_id];
       if ($entry->category && !$input->getOption('retag')) {
         continue;
       }
-      $title = $this->connector->ticketDetails($entry->tid);
+      $title = $this->connector->ticketDetails($entry->tid, $entry->connector_id);
       $default = reset($categories);
       $question = new ChoiceQuestion(
         sprintf('Enter tag for slot <comment>%d</comment> [<info>%d</info>]: %s [<info>%s h</info>] [%s] %s',
@@ -97,7 +98,7 @@ class Tag extends Command {
           $title->getTitle(),
           $entry->duration,
           $last ?: $default,
-          $entry->comment ? '- "' . $entry->comment . '"': ''
+          $entry->comment ? '- "' . $entry->comment . '"' : ''
         ),
         $categories,
         $last ?: $default
@@ -124,9 +125,11 @@ class Tag extends Command {
     if ($entry = $this->repository->slot($slot_id)) {
       $helper = $this->getHelper('question');
       try {
-        $title = $this->connector->ticketDetails($entry->tid);
-        $categories = $this->connector->fetchCategories();
-      } catch (ConnectException $e) {
+        $title = $this->connector->ticketDetails($entry->tid, $entry->connector_id);
+        $grouped_categories = $this->connector->fetchCategories();
+        $categories = $grouped_categories[$entry->connector_id];
+      }
+      catch (ConnectException $e) {
         $output->writeln('<error>You are offline, please try again later.</error>');
         return;
       }
@@ -138,7 +141,7 @@ class Tag extends Command {
           $title->getTitle(),
           Formatter::formatDuration($entry->end - $entry->start),
           $default,
-          $entry->comment ? '- "' . $entry->comment . '"': ''
+          $entry->comment ? '- "' . $entry->comment . '"' : ''
         ),
         $categories,
         $default

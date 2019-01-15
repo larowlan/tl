@@ -1,19 +1,24 @@
 <?php
-/**
- * @file
- * Contains Schema.php
- */
 
 namespace Larowlan\Tl\Repository;
 
 use Doctrine\DBAL\Schema\Schema as DoctrineSchema;
 
+/**
+ * Defines db schema.
+ */
 class Schema {
 
-  const version = 2;
+  /**
+   * Schema version.
+   */
+  const version = 3;
 
   /**
-   * @return DoctrineSchema;
+   * Gets schema.
+   *
+   * @return \Doctrine\DBAL\Schema\Schema
+   *   Schema object.
    */
   public function getSchema() {
     $schema = new DoctrineSchema();
@@ -26,6 +31,7 @@ class Schema {
     $slots->addColumn('teid', 'bigint', ['unsigned' => TRUE])->setNotnull(FALSE);
     $slots->addColumn('comment', 'string', ['length' => 255])->setNotnull(FALSE);
     $slots->addColumn('category', 'string', ['length' => 255])->setNotnull(FALSE);
+    $slots->addColumn('connector_id', 'string', ['length' => 50])->setDefault('connector.redmine')->setNotnull(FALSE);
     $slots->setPrimaryKey(['id']);
     $slots->addIndex(['start']);
     $slots->addIndex(['end']);
@@ -39,4 +45,5 @@ class Schema {
     $aliases->addIndex(['tid']);
     return $schema;
   }
+
 }

@@ -37,7 +37,7 @@ services:
       - { name: connector }
   connector.jira:
     class: Larowlan\Tl\Connector\JiraConnector
-    arguments: ['%config%', '@cache', '%config%', '%version%']
+    arguments: ['%config%', '@cache', '%config%', '%version%', '@http_client']
     tags:
     - { name: connector }
   reviewer:

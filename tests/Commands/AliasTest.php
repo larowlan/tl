@@ -1,15 +1,9 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Tests\Commands\AliasTest.php
- */
 
 namespace Larowlan\Tl\Tests\Commands;
 
 use Larowlan\Tl\Tests\TlTestBase;
 use Larowlan\Tl\Ticket;
-use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Output\StreamOutput;
 
 /**
  * @coversDefaultClass \Larowlan\Tl\Commands\Alias

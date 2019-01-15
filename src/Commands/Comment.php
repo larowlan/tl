@@ -1,23 +1,18 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Commands\Comment.php
- */
 
 namespace Larowlan\Tl\Commands;
 
-use Doctrine\DBAL\Driver\Connection;
 use Larowlan\Tl\Connector\Connector;
-use Larowlan\Tl\Formatter;
 use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\ChoiceQuestion;
 use Symfony\Component\Console\Question\Question;
 
+/**
+ *
+ */
 class Comment extends Command {
 
   /**
@@ -32,6 +27,9 @@ class Comment extends Command {
 
   const DEFAULT_COMMENT = 'Development work';
 
+  /**
+   *
+   */
   public function __construct(Connector $connector, Repository $repository) {
     $this->connector = $connector;
     $this->repository = $repository;
@@ -62,7 +60,7 @@ class Comment extends Command {
       if ($entry->comment && !$input->getOption('recomment')) {
         continue;
       }
-      $title = $this->connector->ticketDetails($entry->tid);
+      $title = $this->connector->ticketDetails($entry->tid, $entry->connector_id);
       $question = new Question(
         sprintf('Enter comment for slot <comment>%d</comment> [<info>%d</info>]: %s [<info>%s h</info>] [%s]',
           $entry->id,

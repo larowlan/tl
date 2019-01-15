@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains LoggerConfiguration.php
- */
 
 namespace Larowlan\Tl\Configuration;
 
@@ -10,17 +6,23 @@ use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 
+/**
+ * Configuration for the logger app.
+ */
 class LoggerConfiguration implements ConfigurationInterface, ConfigurationCollector {
 
   /**
    * Array of services to request configuration from.
    *
-   * @var ConfigurableService[]
+   * @var \Larowlan\Tl\Configuration\ConfigurableService[]
+   *   Services.
    */
   protected $services = [];
 
   /**
-   * @var ContainerBuilder
+   * Container.
+   *
+   * @var \Symfony\Component\DependencyInjection\ContainerBuilder
    */
   protected $container;
 

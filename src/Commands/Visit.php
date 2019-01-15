@@ -1,20 +1,17 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Commands\Visit.php
- */
 
 namespace Larowlan\Tl\Commands;
 
-use Doctrine\DBAL\Driver\Connection;
-use Larowlan\Tl\Connector\Connector;
-use Larowlan\Tl\Formatter;
+use Larowlan\Tl\Connector\ConnectorManager;
 use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ *
+ */
 class Visit extends Command {
 
   /**
@@ -27,7 +24,10 @@ class Visit extends Command {
    */
   protected $repository;
 
-  public function __construct(Connector $connector, Repository $repository) {
+  /**
+   *
+   */
+  public function __construct(ConnectorManager $connector, Repository $repository) {
     $this->connector = $connector;
     $this->repository = $repository;
     parent::__construct();
@@ -59,7 +59,7 @@ class Visit extends Command {
       $output->writeln('<error>No active ticket, please use tl visit {ticket_id} to specifiy a ticket.</error>');
       return;
     }
-    $url = $this->connector->ticketUrl($issue_number);
+    $url = $this->connector->ticketUrl($issue_number, $data ? $data->connector_id : $this->connector->spotConnector($issue_number, $input, $output));
     $this->open($url, $output);
   }
 

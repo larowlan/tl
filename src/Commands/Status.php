@@ -1,12 +1,7 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Commands\Status.php
- */
 
 namespace Larowlan\Tl\Commands;
 
-use Doctrine\DBAL\Driver\Connection;
 use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\Formatter;
 use Larowlan\Tl\Repository\Repository;
@@ -17,6 +12,9 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ *
+ */
 class Status extends Command {
 
   /**
@@ -29,6 +27,9 @@ class Status extends Command {
    */
   protected $repository;
 
+  /**
+   *
+   */
   public function __construct(Connector $connector, Repository $repository) {
     $this->connector = $connector;
     $this->repository = $repository;
@@ -64,7 +65,7 @@ class Status extends Command {
     foreach ($data as $record) {
       $record->duration = ($record->end ?: time()) - $record->start;
       $total += $record->duration;
-      $details = $this->connector->ticketDetails($record->tid);
+      $details = $this->connector->ticketDetails($record->tid, $record->connector_id);
       if (empty($record->end)) {
         $record->tid .= ' *';
       }

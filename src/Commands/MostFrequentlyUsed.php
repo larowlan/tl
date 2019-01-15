@@ -1,24 +1,17 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Commands\MostFrequentlyUsed.php
- */
 
 namespace Larowlan\Tl\Commands;
 
-use Doctrine\DBAL\Driver\Connection;
 use Larowlan\Tl\Connector\Connector;
-use Larowlan\Tl\Formatter;
 use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\ChoiceQuestion;
-use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Console\Helper\Table;
 
+/**
+ *
+ */
 class MostFrequentlyUsed extends Command {
 
   /**
@@ -31,7 +24,9 @@ class MostFrequentlyUsed extends Command {
    */
   protected $repository;
 
-
+  /**
+   *
+   */
   public function __construct(Connector $connector, Repository $repository) {
     $this->connector = $connector;
     $this->repository = $repository;
@@ -59,7 +54,9 @@ class MostFrequentlyUsed extends Command {
 
       $rows = [];
       foreach ($entries as $entry) {
-        $details = $this->connector->ticketDetails($entry->tid);
+        if (!$details = $this->connector->ticketDetails($entry->tid, $entry->connector_id)) {
+          continue;
+        }
         $rows[] = [$entry->tid, $details->getTitle()];
       }
       $table->setRows($rows);

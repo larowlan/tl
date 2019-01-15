@@ -1,14 +1,21 @@
 <?php
-/**
- * @file
- * Contains Formatter.php
- */
 
 namespace Larowlan\Tl;
 
-
+/**
+ * Utility formatter.
+ */
 class Formatter {
 
+  /**
+   * Formats a duration.
+   *
+   * @param int $duration
+   *   Duration.
+   *
+   * @return string
+   *   Formatted duration.
+   */
   public static function formatDuration($duration) {
     if ($duration < 60) {
       // Less than one minute.
@@ -28,4 +35,5 @@ class Formatter {
       return "$hours:$minutes:$seconds";
     }
   }
+
 }

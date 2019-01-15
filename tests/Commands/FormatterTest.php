@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains FormatterTest.php
- */
 
 namespace Larowlan\Tl\Tests\Commands;
 
@@ -26,7 +22,7 @@ class FormatterTest extends TestCase {
   }
 
   /**
-   * Data provider for testFormatDuration
+   * Data provider for testFormatDuration.
    */
   public function providerFormatDuration() {
     return [
