@@ -59,7 +59,7 @@ class Visit extends Command {
       $output->writeln('<error>No active ticket, please use tl visit {ticket_id} to specifiy a ticket.</error>');
       return;
     }
-    $url = $this->connector->ticketUrl($issue_number, $data ? $data->connector_id : $this->connector->spotConnector($issue_number, $input, $output));
+    $url = $this->connector->ticketUrl($issue_number, isset($data) ? $data->connector_id : $this->connector->spotConnector($issue_number, $input, $output));
     $this->open($url, $output);
   }
 
