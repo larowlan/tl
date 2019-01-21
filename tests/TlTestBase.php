@@ -4,6 +4,8 @@ namespace Larowlan\Tl\Tests;
 
 use Larowlan\Tl\Application;
 use Larowlan\Tl\Connector\ConnectorManager;
+use Larowlan\Tl\Tests\Commands\AliasTest;
+use Larowlan\Tl\Ticket;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Config\FileLocator;
@@ -138,6 +140,19 @@ abstract class TlTestBase extends TestCase {
     $this->assertNull($active->category);
     $this->assertNull($active->teid);
     return $active;
+  }
+
+  /**
+   * Sets up connector.
+   */
+  protected function setupConnector() {
+    $this->getMockConnector()->expects($this->any())
+      ->method('ticketDetails')
+      ->with(1234, 'connector.redmine')
+      ->willReturn(new Ticket('Running tests', 123));
+    $this->getMockConnector()->expects($this->any())
+      ->method('spotConnector')
+      ->willReturn('connector.redmine');
   }
 
 }

@@ -33,10 +33,7 @@ class StartTest extends TlTestBase {
    * @covers \Larowlan\Tl\Application::doRun
    */
   public function testStartLogging() {
-    $this->getMockConnector()->expects($this->any())
-      ->method('ticketDetails')
-      ->with(1234)
-      ->willReturn(new Ticket('Running tests', 123));
+    $this->setupConnector();
     $output = new StreamOutput(fopen('php://memory', 'w', FALSE));
     $command = $this->container->get('app.command.start');
     $command->setApplication($this->application);
@@ -84,10 +81,7 @@ class StartTest extends TlTestBase {
    * @covers ::execute
    */
   public function testStartWithComment() {
-    $this->getMockConnector()->expects($this->any())
-      ->method('ticketDetails')
-      ->with(1234)
-      ->willReturn(new Ticket('Running tests', 123));
+    $this->setupConnector();
     $output = $this->executeCommand('start', [
       'issue_number' => 1234,
       'comment' => 'Doing stuff',
@@ -100,10 +94,7 @@ class StartTest extends TlTestBase {
    * @covers ::execute
    */
   public function testAssign() {
-    $this->getMockConnector()->expects($this->any())
-      ->method('ticketDetails')
-      ->with(1234)
-      ->willReturn(new Ticket('Running tests', 123));
+    $this->setupConnector();
     $this->getMockConnector()->expects($this->once())
       ->method('assign')
       ->with(1234)
@@ -121,10 +112,7 @@ class StartTest extends TlTestBase {
    * @covers ::execute
    */
   public function testAssignShortSyntax() {
-    $this->getMockConnector()->expects($this->any())
-      ->method('ticketDetails')
-      ->with(1234)
-      ->willReturn(new Ticket('Running tests', 123));
+    $this->setupConnector();
     $this->getMockConnector()->expects($this->once())
       ->method('assign')
       ->with(1234)
@@ -142,10 +130,7 @@ class StartTest extends TlTestBase {
    * @covers ::execute
    */
   public function testAssignAlreadyAssigned() {
-    $this->getMockConnector()->expects($this->any())
-      ->method('ticketDetails')
-      ->with(1234)
-      ->willReturn(new Ticket('Running tests', 123));
+    $this->setupConnector();
     $this->getMockConnector()->expects($this->once())
       ->method('assign')
       ->with(1234)
@@ -163,10 +148,7 @@ class StartTest extends TlTestBase {
    * @covers ::execute
    */
   public function testStatus() {
-    $this->getMockConnector()->expects($this->any())
-      ->method('ticketDetails')
-      ->with(1234)
-      ->willReturn(new Ticket('Running tests', 123));
+    $this->setupConnector();
     $this->getMockConnector()->expects($this->once())
       ->method('setInProgress')
       ->with(1234)
@@ -261,10 +243,7 @@ class StartTest extends TlTestBase {
    * @covers ::execute
    */
   public function testStatusAlreadyInProgress() {
-    $this->getMockConnector()->expects($this->any())
-      ->method('ticketDetails')
-      ->with(1234)
-      ->willReturn(new Ticket('Running tests', 123));
+    $this->setupConnector();
     $this->getMockConnector()->expects($this->once())
       ->method('setInProgress')
       ->with(1234)
