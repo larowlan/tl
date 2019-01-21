@@ -79,6 +79,9 @@ class Start extends Command implements CompletionAwareInterface, LogAwareCommand
     else {
       $connector_id = $this->connector->spotConnector($ticket_id, $input, $output);
     }
+    if (!$connector_id) {
+      throw new \InvalidArgumentException('No such ticket was found in any backends.');
+    }
     if ($alias = $this->connector->loadAlias($ticket_id, $connector_id)) {
       $ticket_id = $alias;
     }

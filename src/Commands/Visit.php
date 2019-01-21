@@ -59,7 +59,7 @@ class Visit extends Command {
       $output->writeln('<error>No active ticket, please use tl visit {ticket_id} to specifiy a ticket.</error>');
       return;
     }
-    $url = $this->connector->ticketUrl($issue_number, isset($data) ? $data->connector_id : $this->connector->spotConnector($issue_number, $input, $output));
+    $url = $this->connector->ticketUrl($issue_number, isset($data) ? $data->connector_id : $this->getConnector($input, $output, $issue_number));
     $this->open($url, $output);
   }
 
@@ -92,6 +92,29 @@ class Visit extends Command {
       // Can't find assets valid browser.
       $output->writeln('<error>Could not find a browser helper.</error>');
     }
+  }
+
+  /**
+   * Gets connector ID.
+   * @param \Symfony\Component\Console\Input\InputInterface $input
+   *   Input.
+   * @param \Symfony\Component\Console\Output\OutputInterface $output
+   *   Output.
+   * @param mixed $issue_number
+   *   Issue number.
+   *
+   * @return string
+   *   Connector ID.
+   *
+   * @throws \InvalidArgumentException
+   *   When no such ticket exists.
+   */
+  protected function getConnector(InputInterface $input, OutputInterface $output, $issue_number) {
+    $connector_id = $this->connector->spotConnector($issue_number, $input, $output);
+    if (!$connector_id) {
+      throw new \InvalidArgumentException('No such ticket was found in any backends.');
+    }
+    return $connector_id;
   }
 
 }
