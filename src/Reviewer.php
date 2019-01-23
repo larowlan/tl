@@ -1,34 +1,53 @@
 <?php
-/**
- * @file
- * Contains Reviewer.php
- */
 
 namespace Larowlan\Tl;
-
 
 use GuzzleHttp\Exception\ConnectException;
 use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Helper\TableSeparator;
 
+/**
+ * Reviewer helper.
+ */
 class Reviewer {
 
   /**
+   * Connector.
+   *
    * @var \Larowlan\Tl\Connector\Connector
    */
   protected $connector;
 
   /**
+   * Repository.
+   *
    * @var \Larowlan\Tl\Repository\Repository
    */
   protected $repository;
 
+  /**
+   * Constructs a new Reviewer.
+   *
+   * @param \Larowlan\Tl\Connector\Connector $connector
+   *   Connector.
+   * @param \Larowlan\Tl\Repository\Repository $repository
+   *   Repository.
+   */
   public function __construct(Connector $connector, Repository $repository) {
     $this->connector = $connector;
     $this->repository = $repository;
   }
 
+  /**
+   * Gets table headers.
+   *
+   * @param bool $exact
+   *   TRUE to include exact column.
+   *
+   * @return array
+   *   Headers.
+   */
   public static function headers($exact = FALSE) {
     $headers = [
       'SlotID',
@@ -46,6 +65,22 @@ class Reviewer {
     return $headers;
   }
 
+  /**
+   * Gets summary of tickets.
+   *
+   * @param int $date
+   *   Start date.
+   * @param bool $check
+   *   Check if stored remotely already.
+   * @param bool $exact
+   *   TRUE to include exact column.
+   *
+   * @return array
+   *   Rows.
+   *
+   * @throws \Exception
+   *   When all entries already stored and check is TRUE.
+   */
   public function getSummary($date = 19780101, $check = FALSE, $exact = FALSE) {
     $data = $this->repository->review($date, $check);
     if (count($data) == 0 && !$check) {
@@ -63,15 +98,15 @@ class Reviewer {
     $exact_total = 0;
     foreach ($data as $record) {
       $total += $record->duration;
-      $details = $this->connector->ticketDetails($record->tid);
+      $details = $this->connector->ticketDetails($record->tid, $record->connector_id);
       $category_id = str_pad($record->category, 3, 0, STR_PAD_LEFT);
       $category = '';
       if ($record->category) {
         if ($offline) {
           $category = 'Offline';
         }
-        elseif (isset($categories[$category_id])) {
-          $category = $categories[$category_id];
+        elseif (isset($categories[$record->connector_id][$category_id])) {
+          $category = $categories[$record->connector_id][$category_id];
         }
         else {
           $category = 'Unknown';
@@ -103,7 +138,7 @@ class Reviewer {
         '<info>' . Formatter::formatDuration($exact_total) . '</info>',
         '',
         '',
-        ''
+        '',
       ];
     }
     else {
@@ -113,9 +148,10 @@ class Reviewer {
         '<info>' . $total . ' h</info>',
         '',
         '',
-        ''
+        '',
       ];
     }
     return $rows;
   }
+
 }

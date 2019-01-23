@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Tests\Commands\ContinueTest.
- */
 
 namespace Larowlan\Tl\Tests\Commands;
 
@@ -18,6 +14,7 @@ class ContinueTest extends TlTestBase {
   protected $slotId1;
   protected $slotId2;
   protected $slotId3;
+
   /**
    * {@inheritdoc}
    */
@@ -26,10 +23,13 @@ class ContinueTest extends TlTestBase {
     $this->getMockConnector()->expects($this->any())
       ->method('ticketDetails')
       ->willReturnMap([
-        ['1', new Ticket('Do something', 1)],
-        ['2', new Ticket('Do something else', 2)],
-        ['3', new Ticket('Do something more', 3)],
+        ['1', 'connector.redmine', new Ticket('Do something', 1)],
+        ['2', 'connector.redmine', new Ticket('Do something else', 2)],
+        ['3', 'connector.redmine', new Ticket('Do something more', 3)],
       ]);
+    $this->getMockConnector()->expects($this->any())
+      ->method('spotConnector')
+      ->willReturn('connector.redmine');
     $repository = $this->getRepository();
     // Five entries for today.
     $start = time();
@@ -37,26 +37,30 @@ class ContinueTest extends TlTestBase {
     $this->slotId1 = $repository->insert([
       'tid' => 1,
       'start' => $start,
-      'end' => $start + 3588 * 7
-    ]);
+      'end' => $start + 3588 * 7,
+      'connector_id' => ':connector_id',
+    ], [':connector_id' => 'connector.redmine']);
     // 1 hr.
     $this->slotId2 = $repository->insert([
       'tid' => 2,
       'start' => $start,
-      'end' => $start + 3600
-    ]);
+      'end' => $start + 3600,
+      'connector_id' => ':connector_id',
+    ], [':connector_id' => 'connector.redmine']);
     // 9 hrs.
     $this->slotId3 = $repository->insert([
       'tid' => 3,
       'start' => $start,
-      'end' => $start + 3600 * 9
-    ]);
+      'end' => $start + 3600 * 9,
+      'connector_id' => ':connector_id',
+    ], [':connector_id' => 'connector.redmine']);
     // Yesterday.
     $repository->insert([
       'tid' => 3,
       'start' => $start - 86400,
-      'end' => $start - 86400 + 3600 * 9
-    ]);
+      'end' => $start - 86400 + 3600 * 9,
+      'connector_id' => ':connector_id',
+    ], [':connector_id' => 'connector.redmine']);
   }
 
   /**
@@ -78,7 +82,7 @@ class ContinueTest extends TlTestBase {
    */
   public function testContinueCommandWithSlotId() {
     $this->setUp();
-    $result = $this->executeCommand('continue' ,['slot_id' => $this->slotId2]);
+    $result = $this->executeCommand('continue', ['slot_id' => $this->slotId2]);
     $this->assertContains('Continued entry for 2: Do something else [slot:' . $this->slotId2 . ']', $result->getDisplay());
     $this->assertTicketIsOpen(2);
     $this->getRepository()->stop();

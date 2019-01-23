@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Commands\Delete.php
- */
 
 namespace Larowlan\Tl\Commands;
 
@@ -16,6 +12,9 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ConfirmationQuestion;
 
+/**
+ *
+ */
 class Delete extends Command {
 
   /**
@@ -28,6 +27,9 @@ class Delete extends Command {
    */
   protected $repository;
 
+  /**
+   *
+   */
   public function __construct(Connector $connector, Repository $repository) {
     $this->connector = $connector;
     $this->repository = $repository;
@@ -54,11 +56,11 @@ class Delete extends Command {
   protected function execute(InputInterface $input, OutputInterface $output) {
     $slot_id = $input->getArgument('slot_id');
     $helper = $this->getHelper('question');
-    $question = new ConfirmationQuestion('Are you sure?', false);
+    $question = new ConfirmationQuestion('Are you sure?', FALSE);
 
     $confirm = NULL;
     if (($slot = $this->repository->slot($slot_id)) && ($confirm = ($input->getOption('confirm') || $helper->ask($input, $output, $question))) && $this->repository->delete($slot_id)) {
-      $deleted = $this->connector->ticketDetails($slot->tid);
+      $deleted = $this->connector->ticketDetails($slot->tid, $slot->connector_id);
       $output->writeln(sprintf('Deleted slot <comment>%d</comment> against ticket <info>%d</info>: %s, duration <info>%s</info>',
         $slot->id,
         $slot->tid,

@@ -1,23 +1,18 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Commands\Tag.php
- */
 
 namespace Larowlan\Tl\Commands;
 
-use Doctrine\DBAL\Driver\Connection;
 use Larowlan\Tl\Connector\Connector;
-use Larowlan\Tl\Formatter;
+use Larowlan\Tl\Connector\Manager;
 use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\ChoiceQuestion;
-use Symfony\Component\Console\Question\Question;
 
+/**
+ *
+ */
 class TagAll extends Command {
 
   /**
@@ -30,6 +25,9 @@ class TagAll extends Command {
    */
   protected $repository;
 
+  /**
+   *
+   */
   public function __construct(Connector $connector, Repository $repository) {
     $this->connector = $connector;
     $this->repository = $repository;
@@ -52,27 +50,31 @@ class TagAll extends Command {
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
     $entries = $this->repository->review(Review::ALL, TRUE);
+    $connector_ids = array_unique(array_map(function ($entry) {
+      return $entry->connector_id;
+    }, $entries));
     $helper = $this->getHelper('question');
-    $last = FALSE;
     $categories = $this->connector->fetchCategories();
-    $question = new ChoiceQuestion(
-      sprintf('Select tag to use:[%s]',
-        $last ?: Tag::DEFAULT_TAG
-      ),
-      $categories,
-      $last ?: Tag::DEFAULT_TAG
-    );
-    $tag_id = $helper->ask($input, $output, $question);
-    $tag = $categories[$tag_id];
-    list(, $tag) = explode(':', $tag);
+    $tags = [];
+    foreach ($connector_ids as $connector_id) {
+      $question = new ChoiceQuestion(
+        sprintf('Select tag to use for %s tickets', Manager::formatConnectorId($connector_id)),
+        $categories[$connector_id]
+      );
+      $tag_id = $helper->ask($input, $output, $question);
+      $tag = $categories[$connector_id][$tag_id];
+      list(, $tag) = explode(':', $tag);
+      $tags[$connector_id] = $tag;
+    }
+    $tagged = FALSE;
     foreach ($entries as $entry) {
       if ($entry->category) {
         continue;
       }
-      $this->repository->tag($tag, $entry->id);
-      $last = $tag;
+      $this->repository->tag($tags[$entry->connector_id], $entry->id);
+      $tagged = TRUE;
     }
-    if (!$last) {
+    if (!$tagged) {
       $output->writeln('<error>All items already tagged, use --retag to retag</error>');
     }
   }

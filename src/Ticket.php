@@ -1,25 +1,29 @@
 <?php
-/**
- * @file
- * Contains Ticket.php
- */
 
 namespace Larowlan\Tl;
 
-
+/**
+ * Ticket value object.
+ */
 class Ticket implements TicketInterface {
 
   /**
+   * Title.
+   *
    * @var string
    */
   protected $title;
 
   /**
+   * Project ID.
+   *
    * @var mixed
    */
   protected $projectId;
 
   /**
+   * Is billable flag.
+   *
    * @var bool
    */
   protected $isBillable = FALSE;

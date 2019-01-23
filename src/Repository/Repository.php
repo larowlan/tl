@@ -1,12 +1,10 @@
 <?php
 
-/**
- * @file
- * Contains \Larowlan\Tl\Repository\Repository.
- */
-
 namespace Larowlan\Tl\Repository;
 
+/**
+ * Interface for storage of slots.
+ */
 interface Repository {
 
   public function getActive();
@@ -15,7 +13,7 @@ interface Repository {
 
   public function stop($slot_id = NULL);
 
-  public function start($ticket_id, $comment = '', $force_continue = FALSE);
+  public function start($ticket_id, $connectorId, $comment = '', $force_continue = FALSE);
 
   public function insert($slot, $params = []);
 
@@ -34,12 +32,19 @@ interface Repository {
   public function tag($tag_id, $slot_id = NULL);
 
   public function frequent();
+
   public function slot($slot_id);
+
   public function delete($slot_id);
 
   public function addAlias($ticket_id, $alias);
+
   public function removeAlias($ticket_id, $alias);
+
   public function loadAlias($alias);
+
   public function listAliases($filter = '');
+
   public function totalByTicket($start_timestamp, $end_timestamp = NULL);
+
 }

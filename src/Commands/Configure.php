@@ -1,12 +1,7 @@
 <?php
 
-/**
- * @file
- * Contains \Larowlan\Tl\Commands\Configure.php
- */
 namespace Larowlan\Tl\Commands;
 
-use Larowlan\Tl\Configuration\ConfigurableService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -19,12 +14,15 @@ use Symfony\Component\Yaml\Yaml;
 class Configure extends Command implements ContainerAwareCommand {
 
   /**
-   * @var ContainerBuilder
+   * @var \Symfony\Component\DependencyInjection\ContainerBuilder
    */
   protected $container;
   protected $directory;
   protected $configurableServiceIds;
 
+  /**
+   *
+   */
   public function __construct($directory, array $configurable_service_ids) {
     $this->directory = $directory;
     $this->configurableServiceIds = $configurable_service_ids;
@@ -56,15 +54,15 @@ class Configure extends Command implements ContainerAwareCommand {
     }
     foreach ($this->configurableServiceIds as $service_id) {
       $service_definition = $this->container->getDefinition($service_id);
-      /** @var ConfigurableService $service_class */
+      /** @var \Larowlan\Tl\Configuration\ConfigurableService $service_class */
       $service_class = $service_definition->getClass();
-      $config = $service_class::getDefaults($config);
-      $config = $service_class::askPreBootQuestions($helper, $input, $output, $config);
+      $config = $service_class::getDefaults($config, $this->container);
+      $config = $service_class::askPreBootQuestions($helper, $input, $output, $config, $this->container);
     }
     $this->container->setParameter('config', $config);
     // Now we can attempt boot.
     foreach ($this->configurableServiceIds as $service_id) {
-      /** @var ConfigurableService $service */
+      /** @var \Larowlan\Tl\Configuration\ConfigurableService $service */
       $service = $this->container->get($service_id);
       $config = $service->askPostBootQuestions($helper, $input, $output, $config);
     }
@@ -79,4 +77,5 @@ class Configure extends Command implements ContainerAwareCommand {
   public function setContainerBuilder(ContainerBuilder $container) {
     $this->container = $container;
   }
+
 }

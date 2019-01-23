@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Commands\LogAwareCommand.
- */
 
 namespace Larowlan\Tl\Commands;
 

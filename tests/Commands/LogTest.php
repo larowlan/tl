@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Tests\Commands\LogTest.php
- */
 
 namespace Larowlan\Tl\Tests\Commands;
 
@@ -22,11 +18,8 @@ class LogTest extends TlTestBase {
    * @covers ::execute
    */
   public function testLogging() {
-    $this->getMockConnector()->expects($this->any())
-      ->method('ticketDetails')
-      ->with(1234)
-      ->willReturn(new Ticket('Running tests', 123));
-    $output =  new StreamOutput(fopen('php://memory', 'w', false));
+    $this->setupConnector();
+    $output = new StreamOutput(fopen('php://memory', 'w', FALSE));
     $command = $this->container->get('app.command.start');
     $command->setApplication($this->application);
     $this->application->setAutoExit(FALSE);

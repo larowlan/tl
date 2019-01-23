@@ -1,14 +1,12 @@
 <?php
 
-/**
- * @file
- * Contains \Larowlan\Tl\Repository\DbRepository
- */
-
 namespace Larowlan\Tl\Repository;
 
 use Doctrine\DBAL\Connection;
 
+/**
+ * Repository backed by a database.
+ */
 class DbRepository implements Repository {
 
   /**
@@ -16,7 +14,7 @@ class DbRepository implements Repository {
    *
    * @var array
    */
-  protected $userDetails = array();
+  protected $userDetails = [];
 
   /**
    * The active database connection.
@@ -25,13 +23,20 @@ class DbRepository implements Repository {
    */
   protected $connection;
 
+  /**
+   * {@inheritdoc}
+   */
   public function __construct(Connection $connection) {
     $this->connection = $connection;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function qb() {
     return $this->connection()->createQueryBuilder();
   }
+
   /**
    * {@inheritdoc}
    */
@@ -50,6 +55,9 @@ class DbRepository implements Repository {
     return FALSE;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getActive($slot_id = NULL) {
     $q = $this->qb()->select('*')
       ->from('slots', 's')
@@ -66,6 +74,9 @@ class DbRepository implements Repository {
     return FALSE;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function latest() {
     $q = $this->qb()->select('*')
       ->from('slots', 's')
@@ -78,9 +89,13 @@ class DbRepository implements Repository {
     return FALSE;
   }
 
-  public function start($ticket_id, $comment = '', $force_continue = FALSE) {
+  /**
+   * {@inheritdoc}
+   */
+  public function start($ticket_id, $connectorId, $comment = '', $force_continue = FALSE) {
     $continue_query = $continue = $this->qb()->select('*')
       ->from('slots', 's')
+      ->where('s.connector_id = :connector_id')
       ->where('s.tid = :tid');
     if (!$force_continue) {
       $continue_query->andWhere('s.comment IS NULL')
@@ -91,6 +106,7 @@ class DbRepository implements Repository {
         ->setParameter('id', $force_continue);
     }
     $continue = $continue_query->setParameter('tid', $ticket_id)
+      ->setParameter('connector_id', $connectorId)
       ->execute()
       ->fetch(\PDO::FETCH_OBJ);
     if ((!$comment || $force_continue) && $continue) {
@@ -101,21 +117,25 @@ class DbRepository implements Repository {
         ->set('end', ':end')
         ->setParameter(':end', NULL)
         ->execute();
-      return array($continue->id, TRUE);
+      return [$continue->id, TRUE];
     }
-    $record = array(
+    $record = [
       'tid' => $ticket_id,
       'start' => $this::requestTime(),
-    );
-    $params = [];
+      'connector_id' => ':connector_id',
+    ];
+    $params = [':connector_id' => $connectorId];
     if ($comment) {
       $record['comment'] = ':comment';
       $params[':comment'] = $comment;
     }
 
-    return array($this->insert($record, $params), FALSE);
+    return [$this->insert($record, $params), FALSE];
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function insert($slot, $params = []) {
     $query = $this->qb()->insert('slots')
       ->values($slot);
@@ -126,6 +146,9 @@ class DbRepository implements Repository {
     return $this->connection()->lastInsertId();
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function status($date = NULL) {
     if (!$date) {
       $stamp = mktime('0', '0');
@@ -133,7 +156,7 @@ class DbRepository implements Repository {
     else {
       $stamp = strtotime($date);
     }
-    $return = $this->qb()->select('id', 'tid', 'end', 'start')
+    $return = $this->qb()->select('id', 'tid', 'end', 'start', 'connector_id')
       ->from('slots')
       ->where('start > :start AND start < :end')
       ->setParameter(':start', $stamp)
@@ -143,6 +166,9 @@ class DbRepository implements Repository {
     return $return;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function review($date = NULL, $check = FALSE) {
     if (!$date) {
       $stamp = mktime('0', '0');
@@ -150,8 +176,9 @@ class DbRepository implements Repository {
     else {
       $stamp = strtotime($date);
     }
-    $query = $this->qb()->select('end', 'tid', 'category', 'comment', 'id', 'start')
-    ->from('slots');
+    $query = $this->qb()
+      ->select('end', 'tid', 'category', 'comment', 'id', 'start', 'connector_id')
+      ->from('slots');
     $where = $this->qb()->expr()->andX(
       $this->qb()->expr()->isNull('teid'),
       $this->qb()->expr()->gt('start', ':stamp')
@@ -172,10 +199,16 @@ class DbRepository implements Repository {
     return $return;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function send() {
     return $this->review('19780101');
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function store($entries) {
     foreach ($entries as $tid => $entry_id) {
       $this->qb()->update('slots')
@@ -187,6 +220,9 @@ class DbRepository implements Repository {
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function edit($slot_id, $duration) {
     $request_time = $this::requestTime();
     return $this->qb()->update('slots')
@@ -197,7 +233,7 @@ class DbRepository implements Repository {
   }
 
   /**
-   * Wraps REQUEST_TIME constant
+   * Wraps REQUEST_TIME constant.
    *
    * @return int
    *   Current request time.
@@ -206,6 +242,9 @@ class DbRepository implements Repository {
     return time();
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function tag($tag_id, $slot_id = NULL) {
     $query = $this->qb()->update('slots')
       ->set('category', ':tag')
@@ -217,6 +256,9 @@ class DbRepository implements Repository {
     return $query->execute();
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function comment($slot_id, $comment) {
     return $this->qb()->update('slots')
       ->set('comment', ':comment')
@@ -227,9 +269,12 @@ class DbRepository implements Repository {
       ->execute();
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function frequent() {
     return $this->qb()
-      ->select('tid')
+      ->select('tid', 'connector_id')
       ->from('slots', 's')
       ->groupBy('tid')
       ->orderBy('COUNT(*)', 'DESC')
@@ -238,6 +283,9 @@ class DbRepository implements Repository {
       ->fetchAll(\PDO::FETCH_OBJ);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function slot($slot_id) {
     return $this->qb()->select('*')
       ->from('slots')
@@ -247,6 +295,9 @@ class DbRepository implements Repository {
       ->fetch(\PDO::FETCH_OBJ);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function delete($slot_id) {
     return $this->qb()->delete('slots')
       ->where('id = :id')
@@ -256,10 +307,16 @@ class DbRepository implements Repository {
       ->execute();
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function connection() {
     return $this->connection;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function addAlias($ticket_id, $alias) {
     return $this->qb()->insert('aliases')
       ->values([
@@ -271,6 +328,9 @@ class DbRepository implements Repository {
       ->execute();
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function removeAlias($ticket_id, $alias) {
     return $this->qb()->delete('aliases')
       ->where('tid = :ticket_id')
@@ -280,6 +340,9 @@ class DbRepository implements Repository {
       ->execute();
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function loadAlias($alias) {
     return $this->qb()->select('tid')
       ->from('aliases')
@@ -289,6 +352,9 @@ class DbRepository implements Repository {
       ->fetchColumn();
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function listAliases($filter = '') {
     $query = $this->qb()->select('alias', 'tid')
       ->from('aliases');
@@ -302,12 +368,15 @@ class DbRepository implements Repository {
       ->fetchAll(\PDO::FETCH_OBJ);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function totalByTicket($start, $end = NULL) {
     if (!$end) {
       // Some time in the future.
       $end = time() + 86400;
     }
-    $return = $this->qb()->select('tid', 'end', 'start')
+    $return = $this->qb()->select('tid', 'end', 'start', 'connector_id')
       ->from('slots')
       ->where('start > :start AND start < :end')
       ->setParameter(':start', $start)
@@ -317,10 +386,10 @@ class DbRepository implements Repository {
     $totals = [];
     foreach ($return as $row) {
       $row->duration = round((($row->end ?: time()) - $row->start) / 900) * 900;
-      if (!isset($totals[$row->tid])) {
-        $totals[$row->tid] = 0;
+      if (!isset($totals[$row->connector_id][$row->tid])) {
+        $totals[$row->connector_id][$row->tid] = 0;
       }
-      $totals[$row->tid] += $row->duration;
+      $totals[$row->connector_id][$row->tid] += $row->duration;
     }
     return $totals;
   }

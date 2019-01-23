@@ -1,15 +1,9 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Tests\Commands\AliasTest.php
- */
 
 namespace Larowlan\Tl\Tests\Commands;
 
 use Larowlan\Tl\Tests\TlTestBase;
 use Larowlan\Tl\Ticket;
-use Symfony\Component\Console\Input\ArrayInput;
-use Symfony\Component\Console\Output\StreamOutput;
 
 /**
  * @coversDefaultClass \Larowlan\Tl\Commands\Alias
@@ -21,10 +15,7 @@ class AliasTest extends TlTestBase {
    * @covers ::execute
    */
   public function testCreate() {
-    $this->getMockConnector()->expects($this->any())
-      ->method('ticketDetails')
-      ->with(1234)
-      ->willReturn(new Ticket('Running tests', 123));
+    $this->setupConnector();
     $output = $this->executeCommand('alias', [
       'ticket_id' => 1234,
       'alias' => 'pony',
@@ -41,10 +32,7 @@ class AliasTest extends TlTestBase {
    * @covers ::execute
    */
   public function testDelete() {
-    $this->getMockConnector()->expects($this->any())
-      ->method('ticketDetails')
-      ->with(1234)
-      ->willReturn(new Ticket('Running tests', 123));
+    $this->setupConnector();
     $output = $this->executeCommand('alias', [
       'ticket_id' => 1234,
       'alias' => 'pony',
@@ -62,10 +50,7 @@ class AliasTest extends TlTestBase {
    * @covers ::execute
    */
   public function testList() {
-    $this->getMockConnector()->expects($this->any())
-      ->method('ticketDetails')
-      ->with(1234)
-      ->willReturn(new Ticket('Running tests', 123));
+    $this->setupConnector();
     $aliases = [
       'some',
       'drunk',

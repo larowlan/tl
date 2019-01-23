@@ -1,11 +1,6 @@
 <?php
-/**
- * @file
- * Contains Install.php
- */
 
 namespace Larowlan\Tl\Commands;
-
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Schema\Comparator;
@@ -15,12 +10,18 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ *
+ */
 class Install extends Command implements PreinstallCommand {
 
   protected $connection;
   protected $directory;
   protected $schema;
 
+  /**
+   *
+   */
   public function __construct(Connection $connection, $directory, Schema $schema) {
     $this->connection = $connection;
     $this->directory = $directory;
