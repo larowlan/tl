@@ -1,13 +1,7 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Tests\Commands\StatusTest
- */
 
 namespace Larowlan\Tl\Tests\Commands;
 
-use Larowlan\Tl\Connector\Connector;
-use Larowlan\Tl\Repository\Repository;
 use Larowlan\Tl\Tests\TlTestBase;
 use Larowlan\Tl\Ticket;
 

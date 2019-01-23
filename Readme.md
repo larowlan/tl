@@ -2,13 +2,13 @@
 ## Command line time-logger
 
 * Entries stored in sqlite in your home directory
-* Sends complete entries to redmine
+* Sends complete entries to redmine or jira, or both at the same time
 
 ## Requirements
 
-* PHP 5.5.23+
-* php5-sqlite3 OR php7.0-sqlite3
-* php5-pdo_sqlite OR php7.0-pdo_sqlite
+* PHP 7.1+
+* php7.1-sqlite3
+* php7.1-pdo_sqlite
 
 
 ## Installation
@@ -57,7 +57,7 @@ tl self-update
 
 ## Usage
 
-Assuming you have two redmine tickets number 3546 and 4791.
+Assuming you have two tickets number 3546 and 4791.
 ```bash
 # start work on 3546
 tl start 3546

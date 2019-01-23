@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\DateHelper.
- */
 
 namespace Larowlan\Tl;
 
@@ -14,7 +10,7 @@ class DateHelper {
   /**
    * Gets the start of the month.
    *
-   * @param \DateTime|NULL $start_date
+   * @param \DateTime|null $start_date
    *   Date to get offset from.
    *
    * @return \DateTime
@@ -29,7 +25,7 @@ class DateHelper {
   /**
    * Gets the start of the week.
    *
-   * @param \DateTime|NULL $start_date
+   * @param \DateTime|null $start_date
    *   Date to get offset from.
    *
    * @return \DateTime
@@ -43,7 +39,7 @@ class DateHelper {
   /**
    * Gets the start of the day.
    *
-   * @param \DateTime|NULL $start_date
+   * @param \DateTime|null $start_date
    *   Date to get offset from.
    *
    * @return \DateTime

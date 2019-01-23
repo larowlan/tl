@@ -1,17 +1,14 @@
 <?php
-/**
- * @file
- * Contains FormatterTest.php
- */
 
 namespace Larowlan\Tl\Tests\Commands;
 
 use Larowlan\Tl\Formatter;
+use PHPUnit\Framework\TestCase;
 
 /**
  * @coversDefaultClass Larowlan\Tl\Formatter
  */
-class FormatterTest extends \PHPUnit_Framework_TestCase {
+class FormatterTest extends TestCase {
 
   /**
    * Tests formatter for times.
@@ -25,7 +22,7 @@ class FormatterTest extends \PHPUnit_Framework_TestCase {
   }
 
   /**
-   * Data provider for testFormatDuration
+   * Data provider for testFormatDuration.
    */
   public function providerFormatDuration() {
     return [

@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains LogHelper.php
- */
 
 namespace Larowlan\Tl;
 
@@ -15,18 +11,18 @@ class LogHelper {
    * Tails a file.
    *
    * @param string $filepath
-   *   File to read from
+   *   File to read from.
    * @param int $lines
-   *   Number ofl lines
-   * @param bool|TRUE $adaptive
+   *   Number ofl lines.
+   * @param bool|true $adaptive
    *   Adapt the buffer size.
    *
    * @return bool|string
    *   Output as appropriate.
    *
-   * Adapted from https://gist.github.com/lorenzos/1711e81a9162320fde20
+   *   Adapted from https://gist.github.com/lorenzos/1711e81a9162320fde20
    */
-  public static function tail($filepath, $lines = 1, $adaptive = true) {
+  public static function tail($filepath, $lines = 1, $adaptive = TRUE) {
 
     // Open file.
     $f = @fopen($filepath, "rb");
@@ -35,7 +31,7 @@ class LogHelper {
     }
 
     // Set buffer size.
-    if (!$adaptive)  {
+    if (!$adaptive) {
       $buffer = 4096;
     }
     else {
@@ -47,7 +43,7 @@ class LogHelper {
 
     // Read it and adjust line number if necessary. Otherwise the result would
     // be wrong if file doesn't end with a blank line.
-    if (fread($f, 1) !== "\n")  {
+    if (fread($f, 1) !== "\n") {
       $lines -= 1;
     }
 
@@ -75,7 +71,7 @@ class LogHelper {
       $output = substr($output, strpos($output, "\n") + 1);
     }
 
-    // Close file and return
+    // Close file and return.
     fclose($f);
     return trim($output);
   }

@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\LogAwareOutput.
- */
 
 namespace Larowlan\Tl;
 
@@ -29,6 +25,14 @@ class LogAwareOutput implements OutputInterface {
    */
   protected $log;
 
+  /**
+   * Constructs a new LogAwareOutput.
+   *
+   * @param \Symfony\Component\Console\Output\OutputInterface $output
+   *   Output.
+   * @param \Psr\Log\LoggerInterface $log
+   *   Logger.
+   */
   public function __construct(OutputInterface $output, LoggerInterface $log) {
     $this->output = $output;
     $this->log = $log;

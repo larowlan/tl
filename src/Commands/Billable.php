@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Commands\Billable.php
- */
 
 namespace Larowlan\Tl\Commands;
 
@@ -21,8 +17,12 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Question\Question;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Yaml\Yaml;
 
+/**
+ *
+ */
 class Billable extends Command implements ConfigurableService {
 
   const WEEK = 'week';
@@ -57,7 +57,7 @@ class Billable extends Command implements ConfigurableService {
   protected $hoursPerDay;
 
   /**
-   * Array of targets, keyed by Y-m
+   * Array of targets, keyed by Y-m.
    *
    * @var int[]
    */
@@ -70,10 +70,13 @@ class Billable extends Command implements ConfigurableService {
    */
   protected $directory;
 
+  /**
+   *
+   */
   public function __construct(Connector $connector, Repository $repository, array $config, $directory) {
     $this->connector = $connector;
     $this->repository = $repository;
-    $config = static::getDefaults($config);
+    $config = static::getDefaults($config, new ContainerBuilder());
     $this->billablePercentage = $config['billable_percentage'];
     $this->hoursPerDay = $config['hours_per_day'];
     $this->targets = $config['days_per_month'];
@@ -162,26 +165,28 @@ class Billable extends Command implements ConfigurableService {
     $projects = [];
     $billable_projects = [];
     $non_billable_projects = [];
-    foreach ($this->repository->totalByTicket($date->getTimestamp(), $end->getTimestamp()) as $tid => $duration) {
-      $details = $this->connector->ticketDetails($tid);
-      if ($details) {
-        if (!isset($projects[$details->getProjectId()])) {
-          $projects[$details->getProjectId()] = 0;
-        }
-        if ($details->isBillable()) {
-          $billable += $duration;
-          $projects[$details->getProjectId()] += $duration;
-          $billable_projects[$details->getProjectId()] = $details->getProjectId();
+    foreach ($this->repository->totalByTicket($date->getTimestamp(), $end->getTimestamp()) as $connector_id => $items) {
+      foreach ($items as $tid => $duration) {
+        $details = $this->connector->ticketDetails($tid, $connector_id);
+        if ($details) {
+          if (!isset($projects[$connector_id][$details->getProjectId()])) {
+            $projects[$connector_id][$details->getProjectId()] = 0;
+          }
+          if ($details->isBillable()) {
+            $billable += $duration;
+            $projects[$connector_id][$details->getProjectId()] += $duration;
+            $billable_projects[$connector_id][$details->getProjectId()] = $details->getProjectId();
+          }
+          else {
+            $non_billable += $duration;
+            $projects[$connector_id][$details->getProjectId()] += $duration;
+            $non_billable_projects[$connector_id][$details->getProjectId()] = $details->getProjectId();
+          }
         }
         else {
-          $non_billable += $duration;
-          $projects[$details->getProjectId()] += $duration;
-          $non_billable_projects[$details->getProjectId()] = $details->getProjectId();
+          $unknown += $duration;
+          $unknowns[] = $tid;
         }
-      }
-      else {
-        $unknown += $duration;
-        $unknowns[] = $tid;
       }
     }
     $table = new Table($output);
@@ -199,29 +204,43 @@ class Billable extends Command implements ConfigurableService {
     if ($project) {
       $project_names = $this->connector->projectNames();
       $rows[] = ['Billable', '', '', ''];
-      foreach ($billable_projects as $project_id) {
-        $project_name = isset($project_names[$project_id]) ? $project_names[$project_id] : "Project ID $project_id";
-        $rows[] = ['', $project_name, Formatter::formatDuration($projects[$project_id]), ''];
+      foreach ($billable_projects as $connector_id => $connector_projects) {
+        foreach ($connector_projects as $project_id) {
+          $project_name = isset($project_names[$connector_id][$project_id]) ? $project_names[$connector_id][$project_id] : "Project ID $project_id";
+          $rows[] = [
+            '',
+            $project_name,
+            Formatter::formatDuration($projects[$connector_id][$project_id]),
+            '',
+          ];
+        }
       }
       $rows[] = new TableSeparator();
       $rows[] = [
         'Billable',
         '',
         Formatter::formatDuration($billable),
-        "<$tag>" . ($total ? round(100 * $billable / $total, 2) : 0) . "%</$tag>"
+        "<$tag>" . ($total ? round(100 * $billable / $total, 2) : 0) . "%</$tag>",
       ];
       $rows[] = new TableSeparator();
       $rows[] = ['Non-Billable', '', '', ''];
-      foreach ($non_billable_projects as $project_id) {
-        $project_name = isset($project_names[$project_id]) ? $project_names[$project_id] : "Project ID $project_id";
-        $rows[] = ['', $project_name, Formatter::formatDuration($projects[$project_id]), ''];
+      foreach ($non_billable_projects as $connector_id => $connector_projects) {
+        foreach ($connector_projects as $project_id) {
+          $project_name = isset($project_names[$connector_id][$project_id]) ? $project_names[$connector_id][$project_id] : "Project ID $project_id";
+          $rows[] = [
+            '',
+            $project_name,
+            Formatter::formatDuration($projects[$connector_id][$project_id]),
+            '',
+          ];
+        }
       }
       $rows[] = new TableSeparator();
       $rows[] = [
         'Non-billable',
         '',
         Formatter::formatDuration($non_billable),
-        round(100 * $non_billable / $total, 2) . '%'
+        round(100 * $non_billable / $total, 2) . '%',
       ];
       if ($unknown) {
         $rows[] = new TableSeparator();
@@ -236,12 +255,12 @@ class Billable extends Command implements ConfigurableService {
       $rows[] = [
         'Billable',
         Formatter::formatDuration($billable),
-        "<$tag>" . ($total ? round(100 * $billable / $total, 2) : 0) . "%</$tag>"
+        "<$tag>" . ($total ? round(100 * $billable / $total, 2) : 0) . "%</$tag>",
       ];
       $rows[] = [
         'Non-billable',
         Formatter::formatDuration($non_billable),
-        ($total ? round(100 * $non_billable / $total, 2) : 0) . '%'
+        ($total ? round(100 * $non_billable / $total, 2) : 0) . '%',
       ];
       if ($unknown) {
         $rows[] = ['Unknown<comment>*</comment>', Formatter::formatDuration($unknown), round(100 * $unknown / $total, 2) . '%'];
@@ -280,6 +299,9 @@ class Billable extends Command implements ConfigurableService {
     $table->render();
   }
 
+  /**
+   *
+   */
   protected function getTotalMonthHours($m, $y) {
     $target_key = sprintf('%s_%s', $y, $m);
     // If we have no customisations it's just number of days times hours per
@@ -340,10 +362,13 @@ class Billable extends Command implements ConfigurableService {
     return [
       $caption,
       "$numerator/$denominator ($difference)",
-      round(100 * $numerator / $denominator, 2) . '%'
+      round(100 * $numerator / $denominator, 2) . '%',
     ];
   }
 
+  /**
+   *
+   */
   protected function getWeekdaysInMonth($m, $y) {
     $target_key = sprintf('%s_%s', $y, $m);
     if (isset($this->targets[$target_key])) {
@@ -364,6 +389,9 @@ class Billable extends Command implements ConfigurableService {
     return $weekdays + 20;
   }
 
+  /**
+   *
+   */
   protected function getWeekdaysPassedThisMonth($output, \DateTime $reference_point) {
     $days_passed = $reference_point->format('d');
     if ($reference_point->format('Y-m-t') < date('Y-m-d')) {
@@ -401,17 +429,17 @@ class Billable extends Command implements ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  public static function getConfiguration(NodeDefinition $root_node) {
+  public static function getConfiguration(NodeDefinition $root_node, ContainerBuilder $container) {
     $root_node->children()
-        ->scalarNode('billable_percentage')
-        ->defaultValue(0.8)
-        ->end()
-        ->scalarNode('hours_per_day')
-        ->defaultValue(8)
-        ->end()
-        ->arrayNode('days_per_month')
-        ->prototype('scalar')
-        ->end()
+      ->scalarNode('billable_percentage')
+      ->defaultValue(0.8)
+      ->end()
+      ->scalarNode('hours_per_day')
+      ->defaultValue(8)
+      ->end()
+      ->arrayNode('days_per_month')
+      ->prototype('scalar')
+      ->end()
       ->end();
     return $root_node;
   }
@@ -419,7 +447,7 @@ class Billable extends Command implements ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  public static function askPreBootQuestions(QuestionHelper $helper, InputInterface $input, OutputInterface $output, array $config) {
+  public static function askPreBootQuestions(QuestionHelper $helper, InputInterface $input, OutputInterface $output, array $config, ContainerBuilder $container) {
     $default_percentage = isset($config['billable_percentage']) ? $config['billable_percentage'] : 0.8;
     $default_hours_per_day = isset($config['hours_per_day']) ? $config['hours_per_day'] : 8;
     $config = ['billable_percentage' => '', 'hours_per_day' => ''] + $config;
@@ -441,7 +469,7 @@ class Billable extends Command implements ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  public static function getDefaults($config) {
+  public static function getDefaults($config, ContainerBuilder $container) {
     return $config + [
       'billable_percentage' => 0.8,
       'hours_per_day' => 8,

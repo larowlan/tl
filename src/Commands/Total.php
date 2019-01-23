@@ -1,19 +1,15 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Commands\Total.php
- */
 
 namespace Larowlan\Tl\Commands;
 
-use Larowlan\Tl\Connector\Connector;
-use Larowlan\Tl\Repository\Repository;
 use Larowlan\Tl\Reviewer;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ *
+ */
 class Total extends Command {
 
   /**
@@ -23,6 +19,9 @@ class Total extends Command {
 
   const ALL = '19780101';
 
+  /**
+   *
+   */
   public function __construct(Reviewer $reviewer) {
     $this->reviewer = $reviewer;
     parent::__construct();

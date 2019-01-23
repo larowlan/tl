@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Commands\Continues.php
- */
 
 namespace Larowlan\Tl\Commands;
 
@@ -13,6 +9,9 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ *
+ */
 class Continues extends Command implements LogAwareCommand {
 
   /**
@@ -25,6 +24,9 @@ class Continues extends Command implements LogAwareCommand {
    */
   protected $repository;
 
+  /**
+   *
+   */
   public function __construct(Connector $connector, Repository $repository) {
     $this->connector = $connector;
     $this->repository = $repository;
@@ -55,8 +57,8 @@ class Continues extends Command implements LogAwareCommand {
       $slot = $this->repository->latest();
     }
     if ($slot) {
-      $details = $this->connector->ticketDetails($slot->tid);
-      list($slot_id, $continued) = $this->repository->start($slot->tid, $slot->comment, $slot->id);
+      $details = $this->connector->ticketDetails($slot->tid, $slot->connector_id);
+      list($slot_id, $continued) = $this->repository->start($slot->tid, $slot->connector_id, $slot->comment, $slot->id);
       $output->writeln(sprintf('<bg=blue;fg=white;options=bold>[%s]</> <comment>%s</comment> entry for <info>%d</info>: %s [slot:<comment>%d</comment>]',
         (new \DateTime())->format('h:i'),
         $continued ? 'Continued' : 'Started new',

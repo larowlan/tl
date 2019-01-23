@@ -1,13 +1,9 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Commands\Start.php
- */
 
 namespace Larowlan\Tl\Commands;
 
-use Doctrine\DBAL\Driver\Connection;
 use Larowlan\Tl\Connector\Connector;
+use Larowlan\Tl\Connector\ConnectorManager;
 use Larowlan\Tl\Formatter;
 use Larowlan\Tl\Repository\Repository;
 use Stecman\Component\Symfony\Console\BashCompletion\Completion\CompletionAwareInterface;
@@ -18,6 +14,9 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ *
+ */
 class Start extends Command implements CompletionAwareInterface, LogAwareCommand {
 
   /**
@@ -30,7 +29,10 @@ class Start extends Command implements CompletionAwareInterface, LogAwareCommand
    */
   protected $repository;
 
-  public function __construct(Connector $connector, Repository $repository) {
+  /**
+   *
+   */
+  public function __construct(ConnectorManager $connector, Repository $repository) {
     $this->connector = $connector;
     $this->repository = $repository;
     parent::__construct();
@@ -48,6 +50,7 @@ class Start extends Command implements CompletionAwareInterface, LogAwareCommand
       ->addArgument('comment', InputArgument::OPTIONAL, 'Comment to start with')
       ->addOption('status', 's', InputOption::VALUE_NONE, 'Set issue to in progress')
       ->addOption('assign', 'a', InputOption::VALUE_NONE, 'Assign issue to you')
+      ->addOption('backend', 'b', InputOption::VALUE_OPTIONAL, 'Backend to use')
       ->addOption('redmine-comment', 'r', InputOption::VALUE_REQUIRED, 'Redmine comment')
       ->addUsage('tl start 12355')
       ->addUsage('tl start 12355 "Doin stuff"')
@@ -70,9 +73,21 @@ class Start extends Command implements CompletionAwareInterface, LogAwareCommand
     if ($alias = $this->repository->loadAlias($ticket_id)) {
       $ticket_id = $alias;
     }
-    if ($title = $this->connector->ticketDetails($ticket_id)) {
+    if ($connector_id = $input->getOption('backend')) {
+      $connector_id = 'connector.' . $connector_id;
+    }
+    else {
+      $connector_id = $this->connector->spotConnector($ticket_id, $input, $output);
+    }
+    if (!$connector_id) {
+      throw new \InvalidArgumentException('No such ticket was found in any backends.');
+    }
+    if ($alias = $this->connector->loadAlias($ticket_id, $connector_id)) {
+      $ticket_id = $alias;
+    }
+    if ($title = $this->connector->ticketDetails($ticket_id, $connector_id)) {
       if ($stop = $this->repository->stop()) {
-        $stopped = $this->connector->ticketDetails($stop->tid);
+        $stopped = $this->connector->ticketDetails($stop->tid, $stop->connector_id);
         $output->writeln(sprintf('Closed slot <comment>%d</comment> against ticket <info>%d</info>: %s, duration <info>%s</info>',
           $stop->id,
           $stop->tid,
@@ -81,7 +96,7 @@ class Start extends Command implements CompletionAwareInterface, LogAwareCommand
         ));
       }
       try {
-        list($slot_id, $continued) = $this->repository->start($ticket_id, $input->getArgument('comment'));
+        list($slot_id, $continued) = $this->repository->start($ticket_id, $connector_id, $input->getArgument('comment'));
         $output->writeln(sprintf('<bg=blue;fg=white;options=bold>[%s]</> <comment>%s</comment> entry for <info>%d</info>: %s [slot:<comment>%d</comment>]',
           (new \DateTime())->format('h:i'),
           $continued ? 'Continued' : 'Started new',
@@ -90,7 +105,7 @@ class Start extends Command implements CompletionAwareInterface, LogAwareCommand
           $slot_id
         ));
         if ($input->getOption('status')) {
-          if ($this->connector->setInProgress($ticket_id, $assign = $input->getOption('assign'), $input->getOption('redmine-comment') ?: 'Working on this')) {
+          if ($this->connector->setInProgress($ticket_id, $connector_id, $assign = $input->getOption('assign'), $input->getOption('redmine-comment') ?: 'Working on this')) {
             $output->writeln(sprintf('Ticket <comment>%s</comment> set to in-progress.', $ticket_id));
             if ($assign) {
               $output->writeln(sprintf('Ticket <comment>%s</comment> assigned to you.', $ticket_id));
@@ -104,7 +119,7 @@ class Start extends Command implements CompletionAwareInterface, LogAwareCommand
           }
         }
         elseif ($input->getOption('assign')) {
-          if ($this->connector->assign($ticket_id, $input->getOption('redmine-comment') ?: 'Working on this')) {
+          if ($this->connector->assign($ticket_id, $connector_id, $input->getOption('redmine-comment') ?: 'Working on this')) {
             $output->writeln(sprintf('Ticket <comment>%s</comment> assigned to you.',
               $ticket_id));
           }
@@ -118,7 +133,7 @@ class Start extends Command implements CompletionAwareInterface, LogAwareCommand
         }
       }
       catch (\Exception $e) {
-        $output->writeln(sprintf('<error>Error creating slot: %s</error>',  $e->getMessage()));
+        $output->writeln(sprintf('<error>Error creating slot: %s</error>', $e->getMessage()));
       }
     }
     else {
