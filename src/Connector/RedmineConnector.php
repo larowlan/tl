@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Larowlan\Tl\Connector\RedmineConnector.
- */
-
 namespace Larowlan\Tl\Connector;
 
 use Doctrine\Common\Cache\Cache;
@@ -14,13 +9,16 @@ use GuzzleHttp\Exception\ConnectException;
 use Larowlan\Tl\Configuration\ConfigurableService;
 use Larowlan\Tl\Ticket;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
-use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Question\ChoiceQuestion;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Symfony\Component\Console\Question\Question;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 
+/**
+ * Redmine backend.
+ */
 class RedmineConnector implements Connector, ConfigurableService {
 
   protected $httpClient;
@@ -45,21 +43,27 @@ class RedmineConnector implements Connector, ConfigurableService {
    */
   public function __construct(ClientInterface $httpClient, Cache $cache, array $config, $version) {
     $this->httpClient = $httpClient;
-    $this->cache = $cache;
     $this->url = $config['url'];
     $this->apiKey = $config['api_key'];
-    $this->nonBillableProjects = isset($config['non_billable_projects']) ? $config['non_billable_projects'] : [];
+    $this->nonBillableProjects = array_map(function ($item) {
+      return (int) $item;
+    }, $config['non_billable_projects'] ?? []);
+    $this->cache = $cache;
     $this->version = $version;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function ticketDetails($id) {
-    if (($details = $this->cache->fetch($this->version . ':' . $id))) {
-      return $details;
-    }
-    // We need to fetch it.
+  public function loadAlias($ticket_id, $connectorId) {
+    // Not supported.
+    return $ticket_id;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function ticketDetails($id, $connectorId) {
     $url = $this->url . '/issues/' . $id . '.xml';
     try {
       if ($xml = $this->fetch($url, $this->apiKey)) {
@@ -68,8 +72,6 @@ class RedmineConnector implements Connector, ConfigurableService {
           (string) $xml->project['id'],
           $this->isBillable((string) $xml->project['id'])
         );
-        $this->cache->save($this->version . ':' . $id, $entry,
-          static::LIFETIME);
         return $entry;
       }
     }
@@ -81,6 +83,13 @@ class RedmineConnector implements Connector, ConfigurableService {
       );
     }
     return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getName() {
+    return 'Redmine';
   }
 
   /**
@@ -115,7 +124,7 @@ class RedmineConnector implements Connector, ConfigurableService {
       return 0;
     }
     $url = $this->url . '/time_entries.xml';
-    $details = $this->ticketDetails($entry->tid);
+    $details = $this->ticketDetails($entry->tid, $entry->connector_id);
     $data = [
       'issue_id'    => $entry->tid,
       'project_id'  => $details->getProjectId(),
@@ -194,11 +203,14 @@ class RedmineConnector implements Connector, ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  public function ticketUrl($id) {
+  public function ticketUrl($id, $connectorId) {
     return $this->url . '/issues/' . $id;
   }
 
-  public function assigned($user = 'me') {
+  /**
+   * {@inheritdoc}
+   */
+  public function assigned($user) {
     $url = $this->url . '/issues.xml?assigned_to_id=' . $user;
     $tickets = [];
     if ($xml = $this->fetch($url, $this->apiKey)) {
@@ -215,7 +227,7 @@ class RedmineConnector implements Connector, ConfigurableService {
 
       // Sort by status.
       foreach ($tickets as $project => &$project_issues) {
-        uasort($project_issues, function($a, $b) {
+        uasort($project_issues, function ($a, $b) {
           return strcmp($a['status'], $b['status']);
         });
       }
@@ -224,21 +236,23 @@ class RedmineConnector implements Connector, ConfigurableService {
     if ((int) $xml['total_count'] > (int) $xml['limit']) {
       $tickets['...']['...'] = [
         'title' => sprintf('Showing <info>%s</info> of <info>%s</info>', $xml['limit'], $xml['total_count']),
-        'status' => 'Too many Issues!'
+        'status' => 'Too many Issues!',
       ];
     }
     else {
       $tickets['...'][''] = [
         'title' => sprintf('Showing <info>%s</info> issues', $xml['total_count']),
-        'status' => ''
+        'status' => '',
       ];
     }
-
 
     return $tickets;
   }
 
-  public function setInProgress($ticket_id, $assign = FALSE, $comment = 'Working on this') {
+  /**
+   * {@inheritdoc}
+   */
+  public function setInProgress($ticket_id, $connectorId, $assign = FALSE, $comment = 'Working on this') {
     $states = $this->getStates();
     if (!isset($states['In progress'])) {
       throw new \Exception('There is no "In progress" status');
@@ -250,10 +264,16 @@ class RedmineConnector implements Connector, ConfigurableService {
     return $this->putUpdate($ticket_id, $updates, $comment);
   }
 
-  public function assign($ticket_id, $comment = 'Working on this') {
+  /**
+   * {@inheritdoc}
+   */
+  public function assign($ticket_id, $connectorId, $comment = 'Working on this') {
     return $this->putUpdate($ticket_id, ['assigned_to_id' => $this->getUserId()], $comment);
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function putUpdate($ticket_id, array $updates, $comment = 'Working on this') {
     $url = $this->url . '/issues/' . $ticket_id . '.xml';
     $xml = new \SimpleXMLElement('<?xml version="1.0"?><issue></issue>');
@@ -280,6 +300,9 @@ class RedmineConnector implements Connector, ConfigurableService {
     return FALSE;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function getStates() {
     $cid = 'redmine-states';
     if (($details = $this->cache->fetch($this->version . ':' . $cid))) {
@@ -299,6 +322,9 @@ class RedmineConnector implements Connector, ConfigurableService {
 
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function getUserId() {
     $url = $this->url . '/users/current.xml';
     $cid = 'userid';
@@ -307,14 +333,17 @@ class RedmineConnector implements Connector, ConfigurableService {
     }
     if ($xml = $this->fetch($url, $this->apiKey)) {
       // Cache permanent.
-      $uid = (int)$xml->id;
+      $uid = (int) $xml->id;
       $this->cache->save($this->version . ':' . $cid, $uid, 0);
       return $uid;
     }
     throw new \Exception('Could not determine your user ID');
   }
 
-  public function pause($ticket_id, $comment) {
+  /**
+   * {@inheritdoc}
+   */
+  public function pause($ticket_id, $comment, $connectorId) {
     $states = $this->getStates();
     if (!isset($states['Paused'])) {
       throw new \Exception('There is no "Paused" status');
@@ -333,34 +362,34 @@ class RedmineConnector implements Connector, ConfigurableService {
    *   TRUE if billable.
    */
   protected function isBillable($project_id) {
-    return !in_array($project_id, $this->nonBillableProjects, TRUE);
+    return !in_array((int) $project_id, $this->nonBillableProjects, TRUE);
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function getConfiguration(NodeDefinition $root_node) {
+  public static function getConfiguration(NodeDefinition $root_node, ContainerBuilder $container) {
     $root_node->children()
-        ->arrayNode('non_billable_projects')
-        ->requiresAtLeastOneElement()
-          ->prototype('scalar')
-          ->end()
-        ->end()
-        ->scalarNode('api_key')
-        ->isRequired()
-        ->defaultValue('')
-        ->end()
-        ->scalarNode('url')
-        ->defaultValue('https://redmine.previousnext.com.au')
-        ->isRequired()
-        ->end()
+      ->arrayNode('non_billable_projects')
+      ->requiresAtLeastOneElement()
+      ->prototype('scalar')
+      ->end()
+      ->end()
+      ->scalarNode('api_key')
+      ->isRequired()
+      ->defaultValue('')
+      ->end()
+      ->scalarNode('url')
+      ->defaultValue('https://redmine.previousnext.com.au')
+      ->isRequired()
+      ->end()
       ->end();
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function askPreBootQuestions(QuestionHelper $helper, InputInterface $input, OutputInterface $output, array $config) {
+  public static function askPreBootQuestions(QuestionHelper $helper, InputInterface $input, OutputInterface $output, array $config, ContainerBuilder $container) {
     $default_url = isset($config['url']) ? $config['url'] : 'https://redmine.previousnext.com.au';
     $default_key = isset($config['api_key']) ? $config['api_key'] : '';
     // Reset.
@@ -384,6 +413,7 @@ class RedmineConnector implements Connector, ConfigurableService {
     $config = ['non_billable_projects' => []] + $config;
     try {
       $options = $this->projectNames();
+      $output->writeln('<comment>Bear with us while we configure which Redmine projects are non billable</comment>');
     }
     catch (ConnectException $e) {
       $output->writeln('<error>Could not connect to backend, please check your API key and that you are online</error>');
@@ -393,20 +423,20 @@ class RedmineConnector implements Connector, ConfigurableService {
       $output->writeln('<error>An error occured trying to connect to the backend, please check your API key and that you are online</error>');
       throw $e;
     }
-
-    $question = new ChoiceQuestion(sprintf('Select non billable project IDs (separated by ,):'), $options, implode(',', $default_non_billable));
-    $question->setMultiselect(TRUE);
-    $config['non_billable_projects'] = $helper->ask($input, $output, $question) ?: $default_non_billable;
-    $config['non_billable_projects'] = array_map(function($item) {
-      return explode('::', $item, 2)[1];
-    }, $config['non_billable_projects']);
+    foreach ($options as $id => $project) {
+      $default = in_array($id, $default_non_billable);
+      $question = new ConfirmationQuestion(sprintf('Is the %s project non billable?[%s/%s]', $project, $default ? 'Y' : 'y', $default ? 'n' : 'N'), $default);
+      if ($helper->ask($input, $output, $question)) {
+        $config['non_billable_projects'][] = $id;
+      }
+    }
     return $config;
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function getDefaults($config) {
+  public static function getDefaults($config, ContainerBuilder $container) {
     if (!$config) {
       $config = [];
     }
@@ -420,7 +450,7 @@ class RedmineConnector implements Connector, ConfigurableService {
   public function projectNames() {
     $cid = 'redmine-projects';
     if (($details = $this->cache->fetch($this->version . ':' . $cid))) {
-       return $details;
+      return $details;
     }
 
     $options = [];

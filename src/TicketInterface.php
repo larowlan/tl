@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\TicketInterface.
- */
 
 namespace Larowlan\Tl;
 
@@ -23,6 +19,7 @@ interface TicketInterface {
    * Gets the ticket project ID.
    *
    * @return mixed
+   *   Project ID.
    */
   public function getProjectId();
 

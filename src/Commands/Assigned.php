@@ -1,23 +1,19 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Commands\Assigned.php
- */
 
 namespace Larowlan\Tl\Commands;
 
-use Doctrine\DBAL\Driver\Connection;
 use Larowlan\Tl\Connector\Connector;
-use Larowlan\Tl\Formatter;
 use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableSeparator;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ *
+ */
 class Assigned extends Command {
 
   /**
@@ -30,6 +26,9 @@ class Assigned extends Command {
    */
   protected $repository;
 
+  /**
+   *
+   */
   public function __construct(Connector $connector, Repository $repository) {
     $this->connector = $connector;
     $this->repository = $repository;
@@ -56,20 +55,25 @@ class Assigned extends Command {
       $table->setHeaders(['JobId', 'Title', 'Status']);
       $rows = [];
       $first = TRUE;
-      foreach ($data as $project => $tickets) {
-        if (!$first) {
-          $rows[] = new TableSeparator();
-        }
-        $rows[] = ['', '<comment>' . $project . '</comment>'];
-        $rows[] = new TableSeparator();
-        foreach ($tickets as $id => $ticket_info) {
+      foreach ($data as $connector_id => $connector_data) {
+        foreach ($connector_data as $project => $tickets) {
+          if (!$first) {
+            $rows[] = new TableSeparator();
+          }
           $rows[] = [
-            $id,
-            $ticket_info['title'],
-            $ticket_info['status'],
+            '',
+            sprintf('<comment>%s [%s]</comment>', $project, $connector_id),
           ];
+          $rows[] = new TableSeparator();
+          foreach ($tickets as $id => $ticket_info) {
+            $rows[] = [
+              $id,
+              substr($ticket_info['title'], 0, 50) . '...',
+              $ticket_info['status'],
+            ];
+          }
+          $first = FALSE;
         }
-        $first = FALSE;
       }
       $table->setRows($rows);
       $table->render();

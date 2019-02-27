@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Tests\Commands\ReviewTest.
- */
 
 namespace Larowlan\Tl\Tests\Commands;
 
@@ -23,10 +19,13 @@ class ReviewTest extends TlTestBase {
     $this->getMockConnector()->expects($this->any())
       ->method('ticketDetails')
       ->willReturnMap([
-        ['1', new Ticket('Do something', 1)],
-        ['2', new Ticket('Do something else ', 2)],
-        ['3', new Ticket('Do something more', 3)],
+        ['1', 'connector.redmine', new Ticket('Do something', 1)],
+        ['2', 'connector.redmine', new Ticket('Do something else ', 2)],
+        ['3', 'connector.redmine', new Ticket('Do something more', 3)],
       ]);
+    $this->getMockConnector()->expects($this->any())
+      ->method('spotConnector')
+      ->willReturn('connector.redmine');
     $repository = $this->getRepository();
     // Five entries for today.
     $start = time();
@@ -34,20 +33,23 @@ class ReviewTest extends TlTestBase {
     $repository->insert([
       'tid' => 1,
       'start' => $start,
-      'end' => $start + 3588 * 7
-    ]);
+      'end' => $start + 3588 * 7,
+      'connector_id' => ':connector_id',
+    ], [':connector_id' => 'connector.redmine']);
     // 1 hr.
     $repository->insert([
       'tid' => 2,
       'start' => $start,
-      'end' => $start + 3600
-    ]);
+      'end' => $start + 3600,
+      'connector_id' => ':connector_id',
+    ], [':connector_id' => 'connector.redmine']);
     // 3 hrs.
     $repository->insert([
       'tid' => 3,
       'start' => $start,
-      'end' => $start + 3600 * 3
-    ]);
+      'end' => $start + 3600 * 3,
+      'connector_id' => ':connector_id',
+    ], [':connector_id' => 'connector.redmine']);
   }
 
   /**
@@ -67,7 +69,7 @@ class ReviewTest extends TlTestBase {
    */
   public function testReviewExact() {
     $this->setUp();
-    $result = $this->executeCommand('review' ,['--exact' => TRUE]);
+    $result = $this->executeCommand('review', ['--exact' => TRUE]);
     $this->assertContains('10:58:36', $result->getDisplay());
     $this->assertContains('6:58:36', $result->getDisplay());
     $this->assertContains('3:00:00', $result->getDisplay());

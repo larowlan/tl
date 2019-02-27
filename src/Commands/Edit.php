@@ -1,20 +1,17 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Commands\Edit.php
- */
 
 namespace Larowlan\Tl\Commands;
 
-use Doctrine\DBAL\Driver\Connection;
 use Larowlan\Tl\Connector\Connector;
-use Larowlan\Tl\Formatter;
 use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ *
+ */
 class Edit extends Command implements LogAwareCommand {
 
   /**
@@ -27,6 +24,9 @@ class Edit extends Command implements LogAwareCommand {
    */
   protected $repository;
 
+  /**
+   *
+   */
   public function __construct(Connector $connector, Repository $repository) {
     $this->connector = $connector;
     $this->repository = $repository;

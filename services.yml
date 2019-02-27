@@ -26,10 +26,20 @@ services:
     class: Larowlan\Tl\Repository\DbRepository
     arguments: ["@connection"]
   connector:
+    class: Larowlan\Tl\Connector\Manager
+    arguments: ['@container',  '@cache', '%config%', '%version%']
+    tags:
+      -  { name: configurable }
+  connector.redmine:
     class: Larowlan\Tl\Connector\RedmineConnector
     arguments: ['@http_client', '@cache', '%config%', '%version%']
     tags:
-      -  { name: configurable }
+      - { name: connector }
+  connector.jira:
+    class: Larowlan\Tl\Connector\JiraConnector
+    arguments: ['%config%', '@cache', '%config%', '%version%', '@http_client']
+    tags:
+    - { name: connector }
   reviewer:
     class: Larowlan\Tl\Reviewer
     arguments: ["@connector", "@repository"]

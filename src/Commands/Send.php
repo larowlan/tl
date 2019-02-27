@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Commands\Send.php
- */
 
 namespace Larowlan\Tl\Commands;
 
@@ -17,6 +13,9 @@ use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ *
+ */
 class Send extends Command {
 
   /**
@@ -43,6 +42,9 @@ class Send extends Command {
    */
   protected $logger;
 
+  /**
+   *
+   */
   public function __construct(Connector $connector, Repository $repository, Reviewer $reviewer, LoggerInterface $logger) {
     $this->connector = $connector;
     $this->repository = $repository;

@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Commands\Log.php
- */
 
 namespace Larowlan\Tl\Commands;
 
@@ -12,6 +8,9 @@ use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ *
+ */
 class Log extends Command {
 
   /**
@@ -21,6 +20,9 @@ class Log extends Command {
    */
   protected $directory;
 
+  /**
+   *
+   */
   public function __construct($directory) {
     $this->directory = $directory;
     parent::__construct();

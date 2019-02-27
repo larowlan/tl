@@ -1,21 +1,18 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Commands\Stop.php
- */
 
 namespace Larowlan\Tl\Commands;
 
-use Doctrine\DBAL\Driver\Connection;
 use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\Formatter;
 use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
+/**
+ *
+ */
 class Stop extends Command implements LogAwareCommand {
 
   /**
@@ -28,6 +25,9 @@ class Stop extends Command implements LogAwareCommand {
    */
   protected $repository;
 
+  /**
+   *
+   */
   public function __construct(Connector $connector, Repository $repository) {
     $this->connector = $connector;
     $this->repository = $repository;
@@ -54,7 +54,7 @@ class Stop extends Command implements LogAwareCommand {
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
     if ($stop = $this->repository->stop()) {
-      $stopped = $this->connector->ticketDetails($stop->tid);
+      $stopped = $this->connector->ticketDetails($stop->tid, $stop->connector_id);
       $output->writeln(sprintf('<bg=blue;fg=white;options=bold>[%s]</> Closed slot <comment>%d</comment> against ticket <info>%d</info>: %s, duration <info>%s</info>',
         (new \DateTime())->format('h:i'),
         $stop->id,
@@ -63,7 +63,7 @@ class Stop extends Command implements LogAwareCommand {
         Formatter::formatDuration($stop->duration)
       ));
       if (($comment = $input->getOption('comment')) || $input->getOption('pause')) {
-        if ($this->connector->pause($stop->tid, $comment)) {
+        if ($this->connector->pause($stop->tid, $comment, $stop->connector_id)) {
           $output->writeln(sprintf('Ticket <comment>%s</comment> set to paused.', $stop->tid));
         }
         else {

@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains \Larowlan\Tl\Configuration\ConfigurationCollector.
- */
 
 namespace Larowlan\Tl\Configuration;
 
@@ -15,6 +11,7 @@ interface ConfigurationCollector {
    * Sets configurable services on the configuration collector.
    *
    * @param string[] $class_names
+   *   Class names.
    */
   public function setConfigurableServices(array $class_names);
 
