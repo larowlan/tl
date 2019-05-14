@@ -81,6 +81,13 @@ class JiraConnector implements Connector, ConfigurableService {
   protected $nonBillableProjects = [];
 
   /**
+   * Configuration.
+   *
+   * @var array
+   */
+  protected $config = [];
+
+  /**
    * Constructs a new JiraConnector.
    *
    * @param array $configuration
@@ -106,6 +113,7 @@ class JiraConnector implements Connector, ConfigurableService {
     $this->issueService = new IssueService($arrayConfiguration);
     $this->projectService = new ProjectService($arrayConfiguration);
     $this->cache = $cache;
+    $this->config = $configuration;
     $this->userName = $configuration['jira_username'];
     $this->version = $version;
     $this->httpClient = $httpClient;
@@ -222,7 +230,7 @@ class JiraConnector implements Connector, ConfigurableService {
     catch (JiraException $e) {
       try {
         // Check if we're offline.
-        $this->httpClient->request('GET', self::JIRA_URL);
+        $this->httpClient->request('GET', $this->config['jira_url']);
       }
       catch (ConnectException $e) {
         return new Ticket(
@@ -286,7 +294,7 @@ class JiraConnector implements Connector, ConfigurableService {
   public function ticketUrl($id, $connectorId) {
     $id = $this->loadAlias($id, $connectorId);
     $issue = $this->issueService->get($id);
-    return sprintf('%s/browse/%s', self::JIRA_URL, $issue->key);
+    return sprintf('%s/browse/%s', $this->config['jira_url'], $issue->key);
   }
 
   /**
