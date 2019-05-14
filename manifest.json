@@ -100,5 +100,11 @@
     "sha1": "ed6b90731f9c3866908a8d6cc06ed1e58f75a87f",
     "url": "https://github.com/larowlan/tl/releases/download/1.0.0-alpha1/tl-1.0.0-alpha1",
     "version": "1.0.0-alpha2"
+  },
+  {
+    "name": "tl.phar",
+    "sha1": "8d6c4bf9d70b9b8dcf2fa4122c6386e1e7efc18e",
+    "url": "https://github.com/larowlan/tl/releases/download/1.0.0-alpha3/tl-1.0.0-alpha3.phar",
+    "version": "1.0.0-alpha3"
   }
 ]
