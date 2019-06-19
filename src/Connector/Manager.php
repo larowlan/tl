@@ -4,6 +4,7 @@ namespace Larowlan\Tl\Connector;
 
 use Doctrine\Common\Cache\Cache;
 use Larowlan\Tl\Configuration\ConfigurableService;
+use Larowlan\Tl\Reporter\Manager as RepoterManager;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Console\Helper\QuestionHelper;
@@ -43,6 +44,13 @@ class Manager implements ConfigurableService, ConnectorManager {
   protected $version;
 
   /**
+   * Reporter.
+   *
+   * @var \Larowlan\Tl\Reporter\Manager
+   */
+  private $reporter;
+
+  /**
    * {@inheritdoc}
    */
   public static function getName() {
@@ -52,7 +60,7 @@ class Manager implements ConfigurableService, ConnectorManager {
   /**
    * {@inheritdoc}
    */
-  public function __construct(ContainerBuilder $container, Cache $cache, array $config, $version) {
+  public function __construct(ContainerBuilder $container, Cache $cache, array $config, $version, RepoterManager $reporter) {
     if (!empty($config['connector_ids'])) {
       foreach ($config['connector_ids'] as $id) {
         $this->connectors[$id] = $container->get($id);
@@ -60,6 +68,7 @@ class Manager implements ConfigurableService, ConnectorManager {
     }
     $this->cache = $cache;
     $this->version = $version;
+    $this->reporter = $reporter;
   }
 
   /**
@@ -137,7 +146,14 @@ class Manager implements ConfigurableService, ConnectorManager {
    * {@inheritdoc}
    */
   public function sendEntry($entry) {
-    return $this->connector($entry->connector_id)->sendEntry($entry);
+    $connector = $this->connector($entry->connector_id);
+    if ($sendEntry = $connector->sendEntry($entry)) {
+      $details = $connector->ticketDetails($entry->tid, $entry->connector_id);
+      $projects = $connector->projectNames();
+      $categories = $connector->fetchCategories();
+      return $sendEntry && $this->reporter->report($entry, $details, $projects, $categories);
+    }
+    return $sendEntry;
   }
 
   /**

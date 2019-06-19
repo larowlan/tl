@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "content-hash": "2afe9257c203b8242097939279ba9982",
+    "content-hash": "2bc6d74a11c52a57c8999e6db62150a9",
     "packages": [
         {
             "name": "doctrine/annotations",
@@ -1030,6 +1030,54 @@
                 "psr-3"
             ],
             "time": "2017-06-19T01:22:40+00:00"
+        },
+        {
+            "name": "morningtrain/toggl-api",
+            "version": "v1.0.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Morning-Train/toggl-api.git",
+                "reference": "231f9bdb7637652e447829bdee694f205b4b106c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Morning-Train/toggl-api/zipball/231f9bdb7637652e447829bdee694f205b4b106c",
+                "reference": "231f9bdb7637652e447829bdee694f205b4b106c",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^6.3"
+            },
+            "require-dev": {
+                "escapestudios/symfony2-coding-standard": "2.*",
+                "squizlabs/php_codesniffer": "2.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "MorningTrain\\TogglApi\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GNU General Public License v3.0"
+            ],
+            "authors": [
+                {
+                    "name": "Bjarne Bonde",
+                    "email": "bb@morningtain.dk",
+                    "homepage": "http://morningtrain.dk/",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A complete native php wrapper for the Toggl API",
+            "homepage": "http://morningtrain.dk/",
+            "keywords": [
+                "api",
+                "php",
+                "toggl"
+            ],
+            "time": "2019-03-04T07:37:07+00:00"
         },
         {
             "name": "netresearch/jsonmapper",
@@ -3324,7 +3372,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": ">=5.5.23",
+        "php": ">=7.1",
         "ext-sqlite3": "*",
         "ext-pdo_sqlite": "*"
     },
