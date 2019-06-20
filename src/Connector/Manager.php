@@ -122,11 +122,11 @@ class Manager implements ConfigurableService, ConnectorManager {
   /**
    * {@inheritdoc}
    */
-  public function ticketDetails($id, $connectorId) {
-    if (($details = $this->cache->fetch($this->version . ':' . $connectorId . ':' . $id))) {
+  public function ticketDetails($id, $connectorId, $for_reporting = FALSE) {
+    if (($details = $this->cache->fetch($this->version . ':' . $connectorId . ':' . $id . ':' . $for_reporting))) {
       return $details;
     }
-    $ticket = $this->connector($connectorId)->ticketDetails($id, $connectorId);
+    $ticket = $this->connector($connectorId)->ticketDetails($id, $connectorId, $for_reporting);
     $this->cache->save($this->version . ':' . $connectorId . ':' . $id, $ticket, static::LIFETIME);
     return $ticket;
   }
@@ -148,7 +148,7 @@ class Manager implements ConfigurableService, ConnectorManager {
   public function sendEntry($entry) {
     $connector = $this->connector($entry->connector_id);
     if ($sendEntry = $connector->sendEntry($entry)) {
-      $details = $connector->ticketDetails($entry->tid, $entry->connector_id);
+      $details = $connector->ticketDetails($entry->tid, $entry->connector_id, TRUE);
       $projects = $connector->projectNames();
       $categories = $connector->fetchCategories();
       if ($this->reporter->report($entry, $details, $projects, $categories)) {

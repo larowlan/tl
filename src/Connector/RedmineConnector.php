@@ -63,12 +63,16 @@ class RedmineConnector implements Connector, ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  public function ticketDetails($id, $connectorId) {
+  public function ticketDetails($id, $connectorId, $for_reporting = FALSE) {
     $url = $this->url . '/issues/' . $id . '.xml';
     try {
       if ($xml = $this->fetch($url, $this->apiKey)) {
+        $title = $xml->subject . ' (' . $xml->project['name'] . ')';
+        if ($for_reporting) {
+          $title = $xml->subject;
+        }
         $entry = new Ticket(
-          $xml->subject . ' (' . $xml->project['name'] . ')',
+          $title,
           (string) $xml->project['id'],
           $this->isBillable((string) $xml->project['id'])
         );
@@ -472,7 +476,7 @@ class RedmineConnector implements Connector, ConfigurableService {
     $url = sprintf($this->url . '/projects.xml?limit=%s&status=1&offset=%s', $limit, $offset);
     if ($xml = $this->fetch($url, $this->apiKey)) {
       foreach ($xml->project as $node) {
-        $options[(int) $node->id] = (string) $node->name . '::' . (string) $node->id;
+        $options[(int) $node->id] = (string) $node->name;
       }
     }
     return $options;

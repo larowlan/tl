@@ -57,9 +57,9 @@ class StartTest extends TlTestBase {
     $this->getMockConnector()->expects($this->any())
       ->method('ticketDetails')
       ->willReturnMap([
-        [1234, 'connector.redmine', new Ticket('Running tests', 123)],
-        ["1234", 'connector.redmine', new Ticket('Running tests', 123)],
-        [4567, 'connector.redmine', new Ticket('Running more tests', 123)],
+        [1234, 'connector.redmine', FALSE, new Ticket('Running tests', 123)],
+        ["1234", 'connector.redmine', FALSE, new Ticket('Running tests', 123)],
+        [4567, 'connector.redmine', FALSE, new Ticket('Running more tests', 123)],
       ]);
     $this->getMockConnector()->expects($this->any())
       ->method('spotConnector')

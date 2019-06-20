@@ -80,7 +80,7 @@ class Toggl implements Reporter, ConfigurableService {
     }, []);
     $connector_id = $entry->connector_id;
     list(, $connector_id) = explode('.', $connector_id);
-    $project_id = $this->getProjectId($projects[$details->getProjectId()], $connector_id);
+    $project_id = $this->getProjectId(trim($projects[$details->getProjectId()]), $connector_id);
     $task_id = $this->getTaskId($entry->tid, $details->getTitle(), $project_id, $connector_id);
     $result = $this->api->createTimeEntry([
       'description' => $entry->comment,
@@ -172,6 +172,7 @@ class Toggl implements Reporter, ConfigurableService {
     // Create a project.
     $new = $this->api->createProject([
       'wid' => $workspace_id,
+      'is_private' => FALSE,
       'name' => sprintf('%s (%s)', $project_name, $connector_id),
     ]);
     $entries[$connector_id][$project_name] = $new->id;

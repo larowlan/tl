@@ -223,7 +223,7 @@ class JiraConnector implements Connector, ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  public function ticketDetails($id, $connectorId) {
+  public function ticketDetails($id, $connectorId, $for_reporting = FALSE) {
     try {
       $issue = $this->issueService->get($id);
     }

@@ -22,11 +22,13 @@ interface Connector {
    *   The ticket id from the remote system.
    * @param string $connectorId
    *   Connector ID.
+   * @param bool $for_reporting
+   *   TRUE if for reporting sake.
    *
    * @return \Larowlan\Tl\TicketInterface
    *   Ticket object.
    */
-  public function ticketDetails($id, $connectorId);
+  public function ticketDetails($id, $connectorId, $for_reporting = FALSE);
 
   /**
    * Fetch the details of time categories from a remote ticketing system.
