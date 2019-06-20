@@ -151,7 +151,10 @@ class Manager implements ConfigurableService, ConnectorManager {
       $details = $connector->ticketDetails($entry->tid, $entry->connector_id);
       $projects = $connector->projectNames();
       $categories = $connector->fetchCategories();
-      return $sendEntry && $this->reporter->report($entry, $details, $projects, $categories);
+      if ($this->reporter->report($entry, $details, $projects, $categories)) {
+        return $sendEntry;
+      }
+      throw new \Exception('Could not complete reporting');
     }
     return $sendEntry;
   }

@@ -78,11 +78,14 @@ class Toggl implements Reporter, ConfigurableService {
       $carry[$id] = $name;
       return $carry;
     }, []);
-    $project_id = $this->getProjectId($projects[$details->getProjectId()], $entry->connector_id);
-    $task_id = $this->getTaskId($entry->tid, $details->getTitle(), $project_id, $entry->connector_id);
-    $this->api->createTimeEntry([
+    $connector_id = $entry->connector_id;
+    list(, $connector_id) = explode('.', $connector_id);
+    $project_id = $this->getProjectId($projects[$details->getProjectId()], $connector_id);
+    $task_id = $this->getTaskId($entry->tid, $details->getTitle(), $project_id, $connector_id);
+    $result = $this->api->createTimeEntry([
       'description' => $entry->comment,
       'tid' => $task_id,
+      'start' => date('c', $entry->start),
       'billable' => $details->isBillable(),
       'duration' => $entry->duration * 3600,
       'created_with' => 'tl',
@@ -91,6 +94,7 @@ class Toggl implements Reporter, ConfigurableService {
       ],
       'duronly' => TRUE,
     ]);
+    return $result->id;
   }
 
   /**
