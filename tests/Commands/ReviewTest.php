@@ -19,9 +19,9 @@ class ReviewTest extends TlTestBase {
     $this->getMockConnector()->expects($this->any())
       ->method('ticketDetails')
       ->willReturnMap([
-        ['1', 'connector.redmine', FALSE, new Ticket('Do something', 1)],
-        ['2', 'connector.redmine', FALSE, new Ticket('Do something else ', 2)],
-        ['3', 'connector.redmine', FALSE, new Ticket('Do something more', 3)],
+        [1, 'connector.redmine', FALSE, new Ticket('Do something', 1)],
+        [2, 'connector.redmine', FALSE, new Ticket('Do something else ', 2)],
+        [3, 'connector.redmine', FALSE, new Ticket('Do something more', 3)],
       ]);
     $this->getMockConnector()->expects($this->any())
       ->method('spotConnector')

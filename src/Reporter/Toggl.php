@@ -3,8 +3,10 @@
 namespace Larowlan\Tl\Reporter;
 
 use Doctrine\Common\Cache\Cache;
+use Larowlan\Tl\Chunk;
 use Larowlan\Tl\Configuration\ConfigurableService;
-use Larowlan\Tl\Ticket;
+use Larowlan\Tl\Slot;
+use Larowlan\Tl\TicketInterface;
 use MorningTrain\TogglApi\TogglApi;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Console\Helper\QuestionHelper;
@@ -72,28 +74,37 @@ class Toggl implements Reporter, ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  public function report($entry, Ticket $details, array $projects, array $categories) {
+  public function report(Slot $entry, TicketInterface $details, array $projects, array $categories) {
     $categories = array_reduce($categories, function (array $carry, $item) {
       list($name, $id) = explode(':', $item);
       $carry[$id] = $name;
       return $carry;
     }, []);
-    $connector_id = $entry->connector_id;
+    $connector_id = $entry->getConnectorId();
     list(, $connector_id) = explode('.', $connector_id);
     $project_id = $this->getProjectId(trim($projects[$details->getProjectId()]), $connector_id);
-    $task_id = $this->getTaskId($entry->tid, $details->getTitle(), $project_id, $connector_id);
-    $result = $this->api->createTimeEntry([
-      'description' => $entry->comment,
-      'tid' => $task_id,
-      'start' => date('c', $entry->start),
-      'billable' => $details->isBillable(),
-      'duration' => $entry->duration * 3600,
-      'created_with' => 'tl',
-      'tags' => [
-        $categories[$entry->category],
-      ],
-      'duronly' => TRUE,
-    ]);
+    $task_id = $this->getTaskId($entry->getTicketId(), $details->getTitle(), $project_id, $connector_id);
+    $total = $entry->getDuration(FALSE, TRUE);
+    $net = array_sum(array_map(function (Chunk $chunk) {
+      return ($chunk->getEnd() ?: time()) - $chunk->getStart();
+    }, $entry->getChunks()));
+    $difference = $total - round($net / 900) * 900;
+    foreach ($entry->getChunks() as $chunk) {
+      $duration = ($chunk->getEnd() ?: time()) - $chunk->getStart();
+      $result = $this->api->createTimeEntry([
+        'description' => $entry->getComment(),
+        'tid' => $task_id,
+        'start' => date('c', $chunk->getStart()),
+        'billable' => $details->isBillable(),
+        'duration' => $duration + $difference,
+        'created_with' => 'tl',
+        'tags' => [
+          $categories[$entry->getCategory()],
+        ],
+        'duronly' => TRUE,
+      ]);
+      $difference = 0;
+    }
     return $result->id;
   }
 

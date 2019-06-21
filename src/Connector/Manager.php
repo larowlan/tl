@@ -5,6 +5,7 @@ namespace Larowlan\Tl\Connector;
 use Doctrine\Common\Cache\Cache;
 use Larowlan\Tl\Configuration\ConfigurableService;
 use Larowlan\Tl\Reporter\Manager as RepoterManager;
+use Larowlan\Tl\Slot;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Console\Helper\QuestionHelper;
@@ -145,10 +146,10 @@ class Manager implements ConfigurableService, ConnectorManager {
   /**
    * {@inheritdoc}
    */
-  public function sendEntry($entry) {
-    $connector = $this->connector($entry->connector_id);
+  public function sendEntry(Slot $entry) {
+    $connector = $this->connector($entry->getConnectorId());
     if ($sendEntry = $connector->sendEntry($entry)) {
-      $details = $connector->ticketDetails($entry->tid, $entry->connector_id, TRUE);
+      $details = $connector->ticketDetails($entry->getTicketId(), $entry->getConnectorId(), TRUE);
       $projects = $connector->projectNames();
       $categories = $connector->fetchCategories();
       if ($this->reporter->report($entry, $details, $projects, $categories)) {

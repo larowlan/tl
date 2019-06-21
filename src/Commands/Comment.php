@@ -56,23 +56,24 @@ class Comment extends Command {
     $entries = $this->repository->review(Review::ALL, !$input->getOption('recomment'));
     $helper = $this->getHelper('question');
     $last = FALSE;
+    /** @var \Larowlan\Tl\Slot $entry */
     foreach ($entries as $entry) {
-      if ($entry->comment && !$input->getOption('recomment')) {
+      if ($entry->getComment() && !$input->getOption('recomment')) {
         continue;
       }
-      $title = $this->connector->ticketDetails($entry->tid, $entry->connector_id);
+      $title = $this->connector->ticketDetails($entry->getTicketId(), $entry->getConnectorId());
       $question = new Question(
         sprintf('Enter comment for slot <comment>%d</comment> [<info>%d</info>]: %s [<info>%s h</info>] [%s]',
-          $entry->id,
-          $entry->tid,
+          $entry->getId(),
+          $entry->getTicketId(),
           $title->getTitle(),
-          $entry->duration,
+          $entry->getDuration(FALSE, TRUE) / 3600,
           $last ?: static::DEFAULT_COMMENT
         ),
         $last ?: static::DEFAULT_COMMENT
       );
       $comment = $helper->ask($input, $output, $question);
-      $this->repository->comment($entry->id, $comment);
+      $this->repository->comment($entry->getId(), $comment);
       $last = $comment;
     }
     if (!$last) {

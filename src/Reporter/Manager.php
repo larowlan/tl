@@ -4,7 +4,8 @@ namespace Larowlan\Tl\Reporter;
 
 use Doctrine\Common\Cache\Cache;
 use Larowlan\Tl\Configuration\ConfigurableService;
-use Larowlan\Tl\Ticket;
+use Larowlan\Tl\Slot;
+use Larowlan\Tl\TicketInterface;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
@@ -116,7 +117,7 @@ class Manager implements ConfigurableService, Reporter {
   /**
    * {@inheritdoc}
    */
-  public function report($entry, Ticket $details, array $projects, array $categories) {
+  public function report(Slot $entry, TicketInterface $details, array $projects, array $categories) {
     $return = TRUE;
     foreach ($this->reporters as $reporter) {
       $return = $return && $reporter->report($entry, $details, $projects, $categories);

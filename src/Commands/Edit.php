@@ -52,7 +52,7 @@ class Edit extends Command implements LogAwareCommand {
     $slot_id = $input->getArgument('slot_id');
     $duration = $input->getArgument('duration');
     $slot = $this->repository->slot($slot_id);
-    if (isset($slot->teid)) {
+    if ($slot->getRemoteEntryId()) {
       $output->writeln('<error>You cannot edit a slot that has been sent to the backend</error>');
       return 1;
     }

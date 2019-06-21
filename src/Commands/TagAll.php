@@ -67,11 +67,12 @@ class TagAll extends Command {
       $tags[$connector_id] = $tag;
     }
     $tagged = FALSE;
+    /** @var \Larowlan\Tl\Slot $entry */
     foreach ($entries as $entry) {
-      if ($entry->category) {
+      if ($entry->getCategory()) {
         continue;
       }
-      $this->repository->tag($tags[$entry->connector_id], $entry->id);
+      $this->repository->tag($tags[$entry->getConnectorId()], $entry->getId());
       $tagged = TRUE;
     }
     if (!$tagged) {

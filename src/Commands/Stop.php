@@ -54,17 +54,17 @@ class Stop extends Command implements LogAwareCommand {
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
     if ($stop = $this->repository->stop()) {
-      $stopped = $this->connector->ticketDetails($stop->tid, $stop->connector_id);
+      $stopped = $this->connector->ticketDetails($stop->getTicketId(), $stop->getConnectorId());
       $output->writeln(sprintf('<bg=blue;fg=white;options=bold>[%s]</> Closed slot <comment>%d</comment> against ticket <info>%d</info>: %s, duration <info>%s</info>',
         (new \DateTime())->format('h:i'),
-        $stop->id,
-        $stop->tid,
+        $stop->getId(),
+        $stop->getTicketId(),
         $stopped->getTitle(),
-        Formatter::formatDuration($stop->duration)
+        Formatter::formatDuration($stop->getDuration())
       ));
       if (($comment = $input->getOption('comment')) || $input->getOption('pause')) {
-        if ($this->connector->pause($stop->tid, $comment, $stop->connector_id)) {
-          $output->writeln(sprintf('Ticket <comment>%s</comment> set to paused.', $stop->tid));
+        if ($this->connector->pause($stop->getTicketId(), $comment, $stop->getConnectorId())) {
+          $output->writeln(sprintf('Ticket <comment>%s</comment> set to paused.', $stop->getTicketId()));
         }
         else {
           $output->writeln('<error>Could not update ticket status</error>');

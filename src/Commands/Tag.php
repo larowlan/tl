@@ -84,21 +84,22 @@ class Tag extends Command {
       $output->writeln('<error>You are offline, please try again later.</error>');
       return;
     }
+    /** @var \Larowlan\Tl\Slot $entry */
     foreach ($entries as $entry) {
-      $categories = $grouped_categories[$entry->connector_id];
-      if ($entry->category && !$input->getOption('retag')) {
+      $categories = $grouped_categories[$entry->getConnectorId()];
+      if ($entry->getCategory() && !$input->getOption('retag')) {
         continue;
       }
-      $title = $this->connector->ticketDetails($entry->tid, $entry->connector_id);
+      $title = $this->connector->ticketDetails($entry->getTicketId(), $entry->getConnectorId());
       $default = reset($categories);
       $question = new ChoiceQuestion(
         sprintf('Enter tag for slot <comment>%d</comment> [<info>%d</info>]: %s [<info>%s h</info>] [%s] %s',
-          $entry->id,
-          $entry->tid,
+          $entry->getId(),
+          $entry->getTicketId(),
           $title->getTitle(),
-          $entry->duration,
+          $entry->getDuration(FALSE, TRUE) / 3600,
           $last ?: $default,
-          $entry->comment ? '- "' . $entry->comment . '"' : ''
+          $entry->getComment() ? '- "' . $entry->getComment() . '"' : ''
         ),
         $categories,
         $last ?: $default
@@ -106,7 +107,7 @@ class Tag extends Command {
       $tag_id = $helper->ask($input, $output, $question);
       $tag = $categories[$tag_id];
       list(, $tag) = explode(':', $tag);
-      $this->repository->tag($tag, $entry->id);
+      $this->repository->tag($tag, $entry->getId());
       $last = $tag_id;
     }
     if (!$last) {
@@ -125,9 +126,9 @@ class Tag extends Command {
     if ($entry = $this->repository->slot($slot_id)) {
       $helper = $this->getHelper('question');
       try {
-        $title = $this->connector->ticketDetails($entry->tid, $entry->connector_id);
+        $title = $this->connector->ticketDetails($entry->getTicketId(), $entry->getConnectorId());
         $grouped_categories = $this->connector->fetchCategories();
-        $categories = $grouped_categories[$entry->connector_id];
+        $categories = $grouped_categories[$entry->getConnectorId()];
       }
       catch (ConnectException $e) {
         $output->writeln('<error>You are offline, please try again later.</error>');
@@ -136,12 +137,12 @@ class Tag extends Command {
       $default = reset($categories);
       $question = new ChoiceQuestion(
         sprintf('Enter tag for slot <comment>%d</comment> [<info>%d</info>]: %s [<info>%s h</info>] [%s] %s',
-          $entry->id,
-          $entry->tid,
+          $entry->getId(),
+          $entry->getTicketId(),
           $title->getTitle(),
-          Formatter::formatDuration($entry->end - $entry->start),
+          Formatter::formatDuration($entry->getDuration()),
           $default,
-          $entry->comment ? '- "' . $entry->comment . '"' : ''
+          $entry->getComment() ? '- "' . $entry->getComment() . '"' : ''
         ),
         $categories,
         $default
@@ -149,7 +150,7 @@ class Tag extends Command {
       $tag_id = $helper->ask($input, $output, $question);
       $tag = $categories[$tag_id];
       list(, $tag) = explode(':', $tag);
-      $this->repository->tag($tag, $entry->id);
+      $this->repository->tag($tag, $entry->getId());
     }
     else {
       $output->writeln('<error>No such slot - please check your slot ID</error>');

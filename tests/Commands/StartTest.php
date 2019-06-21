@@ -58,7 +58,6 @@ class StartTest extends TlTestBase {
       ->method('ticketDetails')
       ->willReturnMap([
         [1234, 'connector.redmine', FALSE, new Ticket('Running tests', 123)],
-        ["1234", 'connector.redmine', FALSE, new Ticket('Running tests', 123)],
         [4567, 'connector.redmine', FALSE, new Ticket('Running more tests', 123)],
       ]);
     $this->getMockConnector()->expects($this->any())
@@ -67,14 +66,14 @@ class StartTest extends TlTestBase {
     $output = $this->executeCommand('start', ['issue_number' => 1234]);
     $this->assertRegExp('/Started new entry for 1234: Running tests/', $output->getDisplay());
     $active = $this->assertTicketIsOpen(1234);
-    $slot_id = $active->id;
+    $slot_id = $active->getId();
     $output = $this->executeCommand('start', ['issue_number' => 4567]);
     $this->assertRegExp('/Closed slot [0-9]+ against ticket 1234/', $output->getDisplay());
     $this->assertRegExp('/Started new entry for 4567: Running more tests/', $output->getDisplay());
     $this->assertTicketIsOpen('4567');
     $closed = $this->getRepository()->slot($slot_id);
-    $this->assertNotNull($closed->end);
-    $this->assertEquals('1234', $closed->tid);
+    $this->assertFalse($closed->isOpen());
+    $this->assertEquals('1234', $closed->getTicketId());
   }
 
   /**

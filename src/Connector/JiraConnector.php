@@ -12,6 +12,7 @@ use JiraRestApi\Issue\Worklog;
 use JiraRestApi\JiraException;
 use JiraRestApi\Project\ProjectService;
 use Larowlan\Tl\Configuration\ConfigurableService;
+use Larowlan\Tl\Slot;
 use Larowlan\Tl\Ticket;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Console\Helper\QuestionHelper;
@@ -273,18 +274,19 @@ class JiraConnector implements Connector, ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  public function sendEntry($entry) {
-    if ((float) $entry->duration == 0) {
+  public function sendEntry(Slot $entry) {
+    if ((float) $entry->getDuration(FALSE, TRUE) == 0) {
       // Zero time after rounding.
       // Return 0 to ensure doesn't send again.
       return 0;
     }
     $worklog = new Worklog();
 
-    $worklog->setComment($entry->comment)
-      ->setStarted(date('Y-m-d h:m:s', $entry->start))
-      ->setTimeSpent(sprintf('%sh %sm', floor($entry->duration), ($entry->duration - floor($entry->duration)) * 60));
-    $ret = $this->issueService->addWorklog($entry->tid, $worklog);
+    $duration = $entry->getDuration(FALSE, TRUE) / 3600;
+    $worklog->setComment($entry->getComment())
+      ->setStarted(date('Y-m-d h:m:s', $entry->getStart()))
+      ->setTimeSpent(sprintf('%sh %sm', floor($duration), ($duration - floor($duration)) * 60));
+    $ret = $this->issueService->addWorklog($entry->getTicketId(), $worklog);
     return $ret->id;
   }
 

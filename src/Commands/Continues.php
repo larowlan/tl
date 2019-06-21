@@ -51,20 +51,21 @@ class Continues extends Command implements LogAwareCommand {
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
     if ($slot_id = $input->getArgument('slot_id')) {
+      $this->repository->stop();
       $slot = $this->repository->slot($slot_id);
     }
     else {
-      $slot = $this->repository->latest();
+      $slot = $this->repository->stop() ?: $this->repository->latest();
     }
     if ($slot) {
-      $details = $this->connector->ticketDetails($slot->tid, $slot->connector_id);
-      list($slot_id, $continued) = $this->repository->start($slot->tid, $slot->connector_id, $slot->comment, $slot->id);
+      $details = $this->connector->ticketDetails($slot->getTicketId(), $slot->getConnectorId());
+      $start = $this->repository->start($slot->getTicketId(), $slot->getConnectorId(), $slot->getComment(), $slot->getId());
       $output->writeln(sprintf('<bg=blue;fg=white;options=bold>[%s]</> <comment>%s</comment> entry for <info>%d</info>: %s [slot:<comment>%d</comment>]',
         (new \DateTime())->format('h:i'),
-        $continued ? 'Continued' : 'Started new',
-        $slot->tid,
+        $start->isContinued() ? 'Continued' : 'Started new',
+        $slot->getTicketId(),
         $details->getTitle(),
-        $slot_id
+        $slot->getId()
       ));
 
       return;

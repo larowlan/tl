@@ -2,7 +2,8 @@
 
 namespace Larowlan\Tl\Reporter;
 
-use Larowlan\Tl\Ticket;
+use Larowlan\Tl\Slot;
+use Larowlan\Tl\TicketInterface;
 
 /**
  * Defines an interface for reporting on entries.
@@ -12,9 +13,9 @@ interface Reporter {
   /**
    * Reports on an entry.
    *
-   * @param object $entry
+   * @param \Larowlan\Tl\Slot $entry
    *   A time entry corresponding with a record in the {bot_tl_slot} table.
-   * @param \Larowlan\Tl\Ticket $details
+   * @param \Larowlan\Tl\TicketInterface $details
    *   Ticket details.
    * @param array $projects
    *   Project details.
@@ -24,7 +25,7 @@ interface Reporter {
    * @return bool
    *   TRUE if succeeded.
    */
-  public function report($entry, Ticket $details, array $projects, array $categories);
+  public function report(Slot $entry, TicketInterface $details, array $projects, array $categories);
 
   /**
    * Gets the name of the reporter.
