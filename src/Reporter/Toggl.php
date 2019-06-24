@@ -88,7 +88,7 @@ class Toggl implements Reporter, ConfigurableService {
     $net = array_sum(array_map(function (Chunk $chunk) {
       return ($chunk->getEnd() ?: time()) - $chunk->getStart();
     }, $entry->getChunks()));
-    $difference = $total - round($net / 900) * 900;
+    $difference = $total - $net;
     foreach ($entry->getChunks() as $chunk) {
       $duration = ($chunk->getEnd() ?: time()) - $chunk->getStart();
       $result = $this->api->createTimeEntry([
@@ -183,8 +183,17 @@ class Toggl implements Reporter, ConfigurableService {
     // Create a project.
     $new = $this->api->createProject([
       'wid' => $workspace_id,
-      'is_private' => FALSE,
       'name' => sprintf('%s (%s)', $project_name, $connector_id),
+    ]);
+    $me = $this->api->getMe();
+    $this->api->createProjectUsers([
+      'pid' => $new->id,
+      'uid' => implode(',', array_map(function ($item) {
+        return $item->uid;
+      }, array_filter($this->api->getWorkspaceUserRelations($workspace_id), function ($item) use ($me) {
+        return $item->uid !== $me->id;
+      }))),
+      'manager' => TRUE,
     ]);
     $entries[$connector_id][$project_name] = $new->id;
     $this->cache->save($cid, $entries, self::LIFETIME);
