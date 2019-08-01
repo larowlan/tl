@@ -23,7 +23,7 @@ class Manager implements ConfigurableService, Reporter {
    *
    * @var \Larowlan\Tl\Reporter\Reporter[]
    */
-  protected $reporters;
+  protected $reporters = [];
 
   /**
    * Cache backend.

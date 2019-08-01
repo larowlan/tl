@@ -128,7 +128,7 @@ class Manager implements ConfigurableService, ConnectorManager {
       return $details;
     }
     $ticket = $this->connector($connectorId)->ticketDetails($id, $connectorId, $for_reporting);
-    $this->cache->save($this->version . ':' . $connectorId . ':' . $id, $ticket, static::LIFETIME);
+    $this->cache->save($this->version . ':' . $connectorId . ':' . $id . ':' . $for_reporting, $ticket, static::LIFETIME);
     return $ticket;
   }
 
