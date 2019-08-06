@@ -418,15 +418,22 @@ class DbRepository implements Repository {
       ->setParameter(':end', $end)
       ->execute()
       ->fetchAll(\PDO::FETCH_OBJ);
-    $totals = [];
+    $ticket_map = [];
     foreach ($return as $row) {
-      $row->duration = round((($row->end ?: time()) - $row->start) / 900) * 900;
-      if (!isset($totals[$row->connector_id][$row->tid])) {
-        $totals[$row->connector_id][$row->tid] = 0;
+      $ticket_map[$row->sid] = $row->tid;
+      if (!isset($totals[$row->connector_id][$row->sid])) {
+        $totals[$row->connector_id][$row->sid] = 0;
       }
-      $totals[$row->connector_id][$row->tid] += $row->duration;
+      $totals[$row->connector_id][$row->sid] += (($row->end ?: time()) - $row->start);
     }
-    return $totals;
+    $aggregated = [];
+    foreach ($totals as $connector_id => $slots) {
+      $aggregated[$connector_id] = array_reduce(array_keys($slots), function (array $carry, $sid) use ($ticket_map, $slots) {
+        $carry[$ticket_map[$sid]] = ($carry[$ticket_map[$sid]] ?? 0) + round($slots[$sid] / 900) * 900;
+        return $carry;
+      }, []);
+    }
+    return $aggregated;
   }
 
   /**
