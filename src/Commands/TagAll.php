@@ -57,6 +57,12 @@ class TagAll extends Command {
     $categories = $this->connector->fetchCategories();
     $tags = [];
     foreach ($connector_ids as $connector_id) {
+      if (count($categories[$connector_id]) === 1) {
+        $tag = reset($categories);
+        list(, $tag) = explode(':', $tag);
+        $tags[$connector_id] = $tag;
+        continue;
+      }
       $question = new ChoiceQuestion(
         sprintf('Select tag to use for %s tickets', Manager::formatConnectorId($connector_id)),
         $categories[$connector_id]

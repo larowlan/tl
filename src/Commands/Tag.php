@@ -90,6 +90,12 @@ class Tag extends Command {
       if ($entry->getCategory() && !$input->getOption('retag')) {
         continue;
       }
+      if (count($categories) === 1) {
+        $tag = reset($categories);
+        list(, $tag) = explode(':', $tag);
+        $this->repository->tag($tag, $entry->getId());
+        continue;
+      }
       $title = $this->connector->ticketDetails($entry->getTicketId(), $entry->getConnectorId());
       $default = reset($categories);
       $question = new ChoiceQuestion(
@@ -132,6 +138,12 @@ class Tag extends Command {
       }
       catch (ConnectException $e) {
         $output->writeln('<error>You are offline, please try again later.</error>');
+        return;
+      }
+      if (count($categories) === 1) {
+        $tag = reset($categories);
+        list(, $tag) = explode(':', $tag);
+        $this->repository->tag($tag, $entry->getId());
         return;
       }
       $default = reset($categories);
