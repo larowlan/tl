@@ -284,7 +284,7 @@ class JiraConnector implements Connector, ConfigurableService {
 
     $duration = $entry->getDuration(FALSE, TRUE) / 3600;
     $worklog->setComment($entry->getComment())
-      ->setStarted(date('Y-m-d h:m:s', $entry->getStart()))
+      ->setStartedDateTime((new \DateTime('now', new \DateTimeZone('UTC')))->setTimestamp($entry->getStart()))
       ->setTimeSpent(sprintf('%sh %sm', floor($duration), ($duration - floor($duration)) * 60));
     $ret = $this->issueService->addWorklog($entry->getTicketId(), $worklog);
     return $ret->id;
