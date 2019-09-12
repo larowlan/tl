@@ -21,12 +21,39 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
  */
 class RedmineConnector implements Connector, ConfigurableService {
 
+  /**
+   * The http client.
+   *
+   * @var \GuzzleHttp\ClientInterface
+   */
   protected $httpClient;
+  /**
+   * The cache service.
+   *
+   * @var \Doctrine\Common\Cache\Cache
+   */
   protected $cache;
+  /**
+   * The URL.
+   *
+   * @var string
+   */
   protected $url;
+  /**
+   * The API keys.
+   *
+   * @var string
+   */
   protected $apiKey;
+  /**
+   * The list on non-billable projects.
+   *
+   * @var array
+   */
   protected $nonBillableProjects = [];
-  // 7 days cache.
+  /**
+   * Seven days cache.
+   */
   const LIFETIME = 604800;
 
   /**
@@ -102,7 +129,7 @@ class RedmineConnector implements Connector, ConfigurableService {
     }
     $url = $this->url . '/enumerations/time_entry_activities.xml';
     if ($xml = $this->fetch($url, $this->apiKey)) {
-      $categories = array();
+      $categories = [];
       $i = 1;
       foreach ($xml->time_entry_activity as $node) {
         $categories[(string) str_pad($node->id, 3, 0, STR_PAD_LEFT)] = $node->name . ':' . $node->id;
@@ -310,7 +337,7 @@ class RedmineConnector implements Connector, ConfigurableService {
     }
     $url = $this->url . '/issue_statuses.xml';
     if ($xml = $this->fetch($url, $this->apiKey)) {
-      $states = array();
+      $states = [];
       foreach ($xml->issue_status as $node) {
         $states[(string) $node->name] = (string) $node->id;
       }

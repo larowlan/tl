@@ -2,7 +2,6 @@ language: php
 sudo: false
 
 php:
-  - 7.1
   - 7.2
   - 7.3
 
@@ -18,5 +17,5 @@ cache:
 script:
  - composer install
  - ./vendor/bin/phpcs --report=checkstyle
- - phpunit --coverage-text
+ - ./vendor/bin/phpunit --coverage-text
 
