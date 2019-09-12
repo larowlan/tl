@@ -47,6 +47,7 @@ abstract class TlTestBase extends TestCase {
    * {@inheritdoc}
    */
   protected function setUp() {
+    parent::setUp();
     $container = new ContainerBuilder();
     $bin_dir = dirname(__DIR__) . '/';
     $loader = new YamlFileLoader($container, new FileLocator($bin_dir));
