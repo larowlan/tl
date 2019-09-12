@@ -247,9 +247,34 @@ class DbRepository implements Repository {
    */
   public function edit($slot_id, $duration) {
     $slot = $this->slot($slot_id);
+    $chunks = $slot->getChunks();
+    $existing = $slot->getDuration();
+    $difference = $duration * 3600 - $existing;
+    if ($difference < 0) {
+      $remove = abs($difference);
+      // We're reducing the total.
+      while ($remove) {
+        $chunk = array_pop($chunks);
+        if ($chunk->getDuration() > $remove) {
+          $this->qb()->update('chunks')
+            ->set('end', $chunk->getEnd() - $remove)
+            ->where('id = :id')
+            ->setParameter(':id', $chunk->getId())->execute();
+          return;
+        }
+        $remove -= $chunk->getDuration();
+        $this->qb()
+          ->delete('chunks')
+          ->where('id = :id')
+          ->setParameter(':id', $chunk->getId())
+          ->execute();
+      }
+      return;
+    }
+    // We're increasing the total.
     $chunk = $slot->lastChunk();
     return $this->qb()->update('chunks')
-      ->set('end', $chunk->getStart() + $duration * 3600)
+      ->set('end', $chunk->getEnd() + $difference)
       ->where('id = :id')
       ->setParameter(':id', $chunk->getId())->execute();
   }

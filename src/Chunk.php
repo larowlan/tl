@@ -87,4 +87,14 @@ class Chunk {
     return $this;
   }
 
+  /**
+   * Gets duration.
+   *
+   * @return int
+   *   Duration.
+   */
+  public function getDuration() : int {
+    return ($this->end ?: time()) - $this->start;
+  }
+
 }
