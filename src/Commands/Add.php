@@ -15,7 +15,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- *
+ * The add command for tl.
  */
 class Add extends Command implements LogAwareCommand {
 
@@ -30,7 +30,11 @@ class Add extends Command implements LogAwareCommand {
   protected $repository;
 
   /**
-   *
+   * Add command constructor.
+   * @param \Larowlan\Tl\Connector\ConnectorManager $connector
+   *   The connector.
+   * @param \Larowlan\Tl\Repository\Repository $repository
+   *   The repository.
    */
   public function __construct(ConnectorManager $connector, Repository $repository) {
     $this->connector = $connector;
@@ -45,11 +49,11 @@ class Add extends Command implements LogAwareCommand {
     $this
       ->setName('add')
       ->setDescription('Add a time entry')
-      ->setHelp('Add a new entry, for a given that. <comment>Usage:</comment> <info>tl add [ticket number] [duration in hours]</info>')
-      ->addArgument('issue_number', InputArgument::REQUIRED, 'Issue number to start work on')
+      ->setHelp('Add a new entry, for a given task. <comment>Usage:</comment> <info>tl add [ticket number] [duration in hours]</info>')
+      ->addArgument('issue_number', InputArgument::REQUIRED, 'Issue number to log time to')
       ->addArgument('duration', InputArgument::REQUIRED, 'Duration in hours to change slot to')
-      ->addArgument('comment', InputArgument::OPTIONAL, 'Comment to start with')
-      ->addOption('start', 's', InputOption::VALUE_OPTIONAL, 'A date offset', 'now')
+      ->addArgument('comment', InputArgument::OPTIONAL, 'Comment to describe the activity')
+      ->addOption('start', 's', InputOption::VALUE_OPTIONAL, 'An absolute or relative date and time', 'now')
       ->addUsage('tl add 12355 0.5')
       ->addUsage('tl add 12355 1 "Doin stuff"')
       ->addUsage('tl add 12355 .25 "Daily Scrum" -s 11am')
@@ -76,7 +80,12 @@ class Add extends Command implements LogAwareCommand {
     }
     if ($title = $this->connector->ticketDetails($ticket_id, $connector_id)) {
       try {
-        $start_date_time = new \DateTime($start);
+        try {
+          $start_date_time = new \DateTime($start);
+        }
+        catch (\Exception $ex) {
+          $output->writeln(sprintf('<error>Time duration is not correct: %s</error>', $ex->getMessage()));
+        }
         $duration_seconds = $duration * 60 * 60;
         $record = [
           'tid' => $ticket_id,
@@ -90,12 +99,13 @@ class Add extends Command implements LogAwareCommand {
           $params[':comment'] = $comment;
         }
         $slot_id = $this->repository->insert($record, $params);
-        $output->writeln(sprintf('<bg=blue;fg=white;options=bold>[%s]</> Added entry for <info>%d</info>: %s [slot:<comment>%d</comment>] for <info>%s</info>.',
+        $output->writeln(sprintf('<bg=blue;fg=white;options=bold>[%s]</> Added entry for <info>%d</info>: %s on [%s]  for <info>%s</info> [slot:<comment>%d</comment>].',
           $start_date_time->format('Y-m-d h:i'),
           $ticket_id,
           $title->getTitle(),
-          $slot_id,
-          Formatter::formatDuration($duration_seconds)
+          $start_date_time->format('Y-m-d'),
+          Formatter::formatDuration($duration_seconds),
+          $slot_id
         ));
       }
       catch (\Exception $e) {

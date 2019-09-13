@@ -6,12 +6,16 @@ use Larowlan\Tl\Tests\TlTestBase;
 use Larowlan\Tl\Ticket;
 
 /**
+ * The test for tl add command.
+ *
  * @coversDefaultClass \Larowlan\Tl\Commands\Add
  * @group Commands
  */
 class AddTest extends TlTestBase {
 
   /**
+   * Tests add command with minimum params.
+   *
    * @covers ::execute
    */
   public function testAdd() {
@@ -35,6 +39,8 @@ class AddTest extends TlTestBase {
   }
 
   /**
+   * Tests add command with comment argument.
+   *
    * @covers ::execute
    */
   public function testAddWithComment() {
@@ -52,6 +58,8 @@ class AddTest extends TlTestBase {
     $this->assertEquals((int) $now->format('U') + 1 * 60 *60, $slot->end);
   }
   /**
+   * Tests add command with start params.
+   *
    * @covers ::execute
    */
   public function testAddInPast() {
@@ -77,7 +85,14 @@ class AddTest extends TlTestBase {
   }
 
   /**
-   * @return mixed
+   * Asserts that slot is added.
+   *
+   * @param string $ticket_id
+   *   The ticket ID.
+   * @param string $comment
+   *   (Optional) Comment.
+   *
+   * @return object
    */
   protected function assertSlotAdded($ticket_id, $comment = NULL) {
     /** @var \Larowlan\Tl\Repository\Repository $repository */
