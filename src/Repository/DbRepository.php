@@ -257,7 +257,7 @@ class DbRepository implements Repository {
         $chunk = array_pop($chunks);
         if ($chunk->getDuration() > $remove) {
           $this->qb()->update('chunks')
-            ->set('end', $chunk->getEnd() - $remove)
+            ->set('end', ($chunk->getEnd() ?: time()) - $remove)
             ->where('id = :id')
             ->setParameter(':id', $chunk->getId())->execute();
           return;
@@ -274,7 +274,7 @@ class DbRepository implements Repository {
     // We're increasing the total.
     $chunk = $slot->lastChunk();
     return $this->qb()->update('chunks')
-      ->set('end', $chunk->getEnd() + $difference)
+      ->set('end', ($chunk->getEnd() ?: time()) + $difference)
       ->where('id = :id')
       ->setParameter(':id', $chunk->getId())->execute();
   }

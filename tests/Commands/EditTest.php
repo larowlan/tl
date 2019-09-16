@@ -90,4 +90,25 @@ class EditTest extends TlTestBase {
     $this->assertEquals(6 * 3600, $total);
   }
 
+  /**
+   * Test the basic functionality of the edit command when ticket is open
+   */
+  public function testEditWhileOpenCommand() {
+    $this->setUp();
+    $slot = $this->getRepository()->start(2, 'connector.redmine');
+    $slots = $this->getRepository()->review();
+    $this->assertCount(1, end($slots)->getChunks());
+    $result = $this->executeCommand('edit', [
+      'slot_id' => $slot->getId(),
+      'duration' => .25,
+    ]);
+    $this->assertContains(sprintf('Updated slot %d to 0.25 h', $slot->getId()), $result->getDisplay());
+    $slots = $this->getRepository()->review();
+    $total = array_reduce($slots, function (int $carry, Slot $theSlot) use ($slot) {
+      return $carry + $theSlot->getId() === $slot->getId() ? $theSlot->getDuration() : 0;
+    }, 0);
+    $this->assertEquals(0.25 * 3600, $total);
+    $this->assertCount(1, end($slots)->getChunks());
+  }
+
 }
