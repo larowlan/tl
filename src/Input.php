@@ -10,6 +10,15 @@ namespace Larowlan\Tl;
 class Input {
 
   /**
+   * Time unit suffix to seconds.
+   */
+  protected const TIME_UNITS = [
+    's' => 1,
+    'm' => 60,
+    'h' => 3600,
+  ];
+
+  /**
    * Parses a user supplied interval.
    *
    * @param string $rawInterval
@@ -22,7 +31,8 @@ class Input {
    *   When user input could not be parsed.
    */
   public static function parseInterval(string $rawInterval) {
-    $intervals = explode(' ', trim($rawInterval));
+    // Convert a string like "  1h    3h  " to ['1h', '3h'].
+    $intervals = array_filter(array_map('trim', explode(' ', trim($rawInterval))));
 
     $total = 0;
     foreach ($intervals as $interval) {
@@ -43,10 +53,8 @@ class Input {
 
         // Pad single character. Single digit minutes should be prefixed with a
         // zero.
-        if (strlen($minute) === 1) {
-          // For example :5 === 50 minutes.
-          $minute .= '0';
-        }
+        // For example :5 === 50 minutes.
+        $minute = str_pad($minute, 2, '0', \STR_PAD_RIGHT);
 
         $total += ($minute * 60);
 
@@ -54,7 +62,7 @@ class Input {
       }
 
       // Fractions of an hour.
-      elseif (preg_match('/^\d{0,10}\.\d{1,10}$/', $interval, $matches)) {
+      if (preg_match('/^\d{0,10}\.\d{1,10}$/', $interval, $matches)) {
         $total += (int) round((float) ($matches[0]) * 3600);
         continue;
       }
@@ -62,29 +70,14 @@ class Input {
       // Short durations. E.g 10s, 1m, 1h, and concatenations 1h30m, '1h 30m'.
       // First, check without capture groups, in case user added extra junk
       // before or after.
-      elseif (preg_match('/^(\d{1,10}[smhd])+$/', $interval)) {
+      if (preg_match('/^(\d{1,10}[smh])+$/', $interval)) {
         // Re-match with capture groups.
-        preg_match_all('/(?<num>\d{1,10})(?<suffix>[smhd])+/U', $interval, $matches, PREG_SET_ORDER);
+        preg_match_all('/(?<num>\d{1,10})(?<suffix>[smh])+/U', $interval, $matches, PREG_SET_ORDER);
         foreach ($matches as $match) {
           $number = (int) $match['num'];
-          switch ($match['suffix']) {
-            case 's':
-              $total += $number;
-              break;
-
-            case 'm':
-              $total += $number * 60;
-              break;
-
-            case 'h':
-              $total += $number * 3600;
-              break;
-
-            case 'd':
-              $total += $number * 86400;
-              break;
-
-          }
+          $suffix = $match['suffix'];
+          // Regex guarantees index to exist.
+          $total += $number * static::TIME_UNITS[$suffix];
         }
 
         continue;

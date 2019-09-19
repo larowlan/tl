@@ -71,13 +71,11 @@ class InputUtilityTest extends TlTestBase {
     $data['friendly - simple seconds'] = ['40s', 40];
     $data['friendly - simple minutes'] = ['40m', 40 * 60];
     $data['friendly - simple hours'] = ['40h', 40 * 3600];
-    $data['friendly - simple days'] = ['40d', 40 * 3600 * 24];
     $data['friendly - hundreds minutes'] = ['400m', 400 * 60];
     $data['friendly - multiple concat'] = ['40s1m', 100];
     $data['friendly - whitespace'] = ['40s 1m', 100];
     $data['friendly - whitespace and concat'] = ['40s 1m 1s1s', 102];
-    // 3600 + 172800 + 7200 + 3600 + 60 + 40.
-    $data['friendly - disorderly multiple'] = ['1h2d2h1h1m40s', 187300];
+    $data['friendly - disorderly multiple'] = ['1h2h1h1m40s', 3600 + 7200 + 3600 + 60 + 40];
     $data['friendly - junk on side'] = ['ak40s1ma', NULL, 'Unable to parse interval.'];
 
     // Other

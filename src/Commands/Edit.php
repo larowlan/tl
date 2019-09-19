@@ -3,6 +3,7 @@
 namespace Larowlan\Tl\Commands;
 
 use Larowlan\Tl\Connector\Connector;
+use Larowlan\Tl\Formatter;
 use Larowlan\Tl\Input;
 use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Command\Command;
@@ -72,8 +73,10 @@ class Edit extends Command implements LogAwareCommand {
       $output->writeln('<error>You cannot edit a slot that has been sent to the backend</error>');
       return 1;
     }
+
     $this->repository->edit($slot_id, $seconds);
-    $output->writeln(sprintf('Updated slot %s to <info>%sh</info>', $slot_id, round($seconds / 3600, 5)));
+    $output->writeln(sprintf('Updated slot %s to <info>%s</info>', $slot_id, Formatter::formatDuration($seconds)));
+    return 0;
   }
 
 }
