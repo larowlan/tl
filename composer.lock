@@ -1,10 +1,10 @@
 {
     "_readme": [
         "This file locks the dependencies of your project to a known state",
-        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2afe9257c203b8242097939279ba9982",
+    "content-hash": "816c13378857ed822b07c7c66b0219fb",
     "packages": [
         {
             "name": "doctrine/annotations",
@@ -2556,6 +2556,7 @@
                 "mock",
                 "xunit"
             ],
+            "abandoned": true,
             "time": "2018-08-09T05:50:03+00:00"
         },
         {
@@ -3324,7 +3325,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": ">=5.5.23",
+        "php": ">=7.2",
         "ext-sqlite3": "*",
         "ext-pdo_sqlite": "*"
     },
