@@ -223,10 +223,10 @@ class DbRepository implements Repository {
   /**
    * {@inheritdoc}
    */
-  public function edit($slot_id, $duration) {
+  public function edit($slot_id, int $duration) {
     $request_time = $this::requestTime();
     return $this->qb()->update('slots')
-      ->set('start', $request_time - ($duration * 3600))
+      ->set('start', $request_time - $duration)
       ->set('end', $request_time)
       ->where('id = :id')
       ->setParameter(':id', $slot_id)->execute();
