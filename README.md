@@ -75,6 +75,8 @@ tl stop
 tl total
 # edit entry
 tl edit [slot id] [hours]
+# add a new entry
+tl add 3546 [hours]
 # review entries
 tl review
 # comment on entries before sending
