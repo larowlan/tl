@@ -47,7 +47,7 @@ class AddTest extends TlTestBase {
     $this->setupConnector();
     $output = $this->executeCommand('add', [
       'issue_number' => 1234,
-      'duration' => 1,
+      'duration' => '1h',
       'comment' => 'Doing stuff',
     ]);
     $now = new \DateTime();

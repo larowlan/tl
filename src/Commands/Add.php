@@ -5,6 +5,7 @@ namespace Larowlan\Tl\Commands;
 use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\Connector\ConnectorManager;
 use Larowlan\Tl\Formatter;
+use Larowlan\Tl\Input;
 use Larowlan\Tl\Repository\Repository;
 use Stecman\Component\Symfony\Console\BashCompletion\Completion\CompletionAwareInterface;
 use Stecman\Component\Symfony\Console\BashCompletion\CompletionContext;
@@ -67,6 +68,15 @@ class Add extends Command implements LogAwareCommand {
   protected function execute(InputInterface $input, OutputInterface $output) {
     $ticket_id = $input->getArgument('issue_number');
     $duration = $input->getArgument('duration');
+
+    try {
+      $seconds = Input::parseInterval($duration);
+    }
+    catch (\Throwable $e) {
+      $output->writeln('<error>' . $e->getMessage() . '</error>');
+      return 1;
+    }
+
     $start = $input->getOption('start');
     if ($alias = $this->repository->loadAlias($ticket_id)) {
       $ticket_id = $alias;
@@ -86,11 +96,11 @@ class Add extends Command implements LogAwareCommand {
         catch (\Exception $ex) {
           $output->writeln(sprintf('<error>Time duration is not correct: %s</error>', $ex->getMessage()));
         }
-        $duration_seconds = $duration * 60 * 60;
+
         $record = [
           'tid' => $ticket_id,
-          'start' => $start_date_time->format('U'),
-          'end' => (int) $start_date_time->format('U') + $duration_seconds,
+          'start' => $start_date_time->getTimestamp(),
+          'end' => (int) $start_date_time->getTimestamp() + $seconds,
           'connector_id' => ':connector_id',
         ];
         $params = [':connector_id' => $connector_id];
@@ -104,7 +114,7 @@ class Add extends Command implements LogAwareCommand {
           $ticket_id,
           $title->getTitle(),
           $start_date_time->format('Y-m-d'),
-          Formatter::formatDuration($duration_seconds),
+          Formatter::formatDuration($seconds),
           $slot_id
         ));
       }
