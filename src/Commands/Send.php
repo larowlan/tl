@@ -83,6 +83,16 @@ class Send extends Command {
    * {@inheritdoc}
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
+    // Check for any open time logs first.
+    if ($open = $this->repository->getActive()) {
+      $details = $this->connector->ticketDetails($open->getTicketId(), $open->getConnectorId());
+      $output->writeLn(sprintf('<error>Please stop open time logs first: %s [<info>%d</info>]</error>',
+        $details->getTitle(),
+        $open->getTicketId()
+      ));
+      return;
+    }
+
     // Find any untagged items needing review, use an arbitrarily early date.
     $review = $this->reviewer->getSummary(static::ALL, TRUE);
     if (count($review) > 2) {
