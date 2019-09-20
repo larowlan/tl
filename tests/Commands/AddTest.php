@@ -4,7 +4,6 @@ namespace Larowlan\Tl\Tests\Commands;
 
 use Larowlan\Tl\Slot;
 use Larowlan\Tl\Tests\TlTestBase;
-use Larowlan\Tl\Ticket;
 
 /**
  * The test for tl add command.

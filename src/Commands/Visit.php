@@ -59,6 +59,9 @@ class Visit extends Command {
       $output->writeln('<error>No active ticket, please use tl visit {ticket_id} to specifiy a ticket.</error>');
       return;
     }
+    if ($alias = $this->repository->loadAlias($issue_number)) {
+      $issue_number = $alias;
+    }
     $url = $this->connector->ticketUrl($issue_number, isset($data) ? $data->getConnectorId() : $this->getConnector($input, $output, $issue_number));
     $this->open($url, $output);
   }
@@ -84,7 +87,7 @@ class Visit extends Command {
       $browser = 'start';
     }
 
-    if ($browser) {
+    if ($browser && !isset($GLOBALS['__PHPUNIT_BOOTSTRAP'])) {
       shell_exec($browser . ' ' . escapeshellarg($url));
       return;
     }
