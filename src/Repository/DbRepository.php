@@ -245,11 +245,11 @@ class DbRepository implements Repository {
   /**
    * {@inheritdoc}
    */
-  public function edit($slot_id, $duration) {
+  public function edit($slot_id, int $duration) {
     $slot = $this->slot($slot_id);
     $chunks = $slot->getChunks();
     $existing = $slot->getDuration();
-    $difference = $duration * 3600 - $existing;
+    $difference = $duration - $existing;
     if ($difference < 0) {
       $remove = abs($difference);
       // We're reducing the total.

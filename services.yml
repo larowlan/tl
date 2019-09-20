@@ -63,6 +63,11 @@ services:
     arguments: ["@connector", "@repository"]
     tags:
       -  { name: command }
+  app.command.add:
+    class: Larowlan\Tl\Commands\Add
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
   app.command.assigned:
     class: Larowlan\Tl\Commands\Assigned
     arguments: ["@connector", "@repository"]

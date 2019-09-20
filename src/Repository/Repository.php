@@ -29,7 +29,7 @@ interface Repository {
 
   public function store($entries);
 
-  public function edit($slot_id, $duration);
+  public function edit($slot_id, int $duration);
 
   public function tag($tag_id, $slot_id = NULL);
 
