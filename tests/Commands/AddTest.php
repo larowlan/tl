@@ -2,6 +2,7 @@
 
 namespace Larowlan\Tl\Tests\Commands;
 
+use Larowlan\Tl\Slot;
 use Larowlan\Tl\Tests\TlTestBase;
 use Larowlan\Tl\Ticket;
 
@@ -19,23 +20,19 @@ class AddTest extends TlTestBase {
    * @covers ::execute
    */
   public function testAdd() {
-    $this->getMockConnector()->expects($this->any())
-      ->method('ticketDetails')
-      ->with(1234, 'connector.jira')
-      ->willReturn(new Ticket('Running tests', 123));
-    $this->getMockConnector()->expects($this->any())
-      ->method('spotConnector')
-      ->willReturn('connector.jira');
+    $this->setupConnector();
+    $now = new \DateTime();
     $output = $this->executeCommand('add', [
       'issue_number' => 1234,
       'duration' => .25,
     ]);
-    $now = new \DateTime();
     $this->assertRegExp('/' . $now->format('Y-m-d h:i') . '/', $output->getDisplay());
     $this->assertRegExp('/Added entry for 1234: Running tests/', $output->getDisplay());
     $this->assertRegExp('/for 15:00 m/', $output->getDisplay());
     $slot = $this->assertSlotAdded(1234);
-    $this->assertEquals((int) $now->format('U') + .25 * 60 *60, $slot->end);
+    $this->assertEquals(.25 * 60 *60, $slot->getDuration());
+    $this->assertEquals((int) $now->format('U'), $slot->getStart());
+
   }
 
   /**
@@ -45,17 +42,18 @@ class AddTest extends TlTestBase {
    */
   public function testAddWithComment() {
     $this->setupConnector();
+    $now = new \DateTime();
     $output = $this->executeCommand('add', [
       'issue_number' => 1234,
       'duration' => '1h',
       'comment' => 'Doing stuff',
     ]);
-    $now = new \DateTime();
     $this->assertRegExp('/' . $now->format('Y-m-d h:i') . '/', $output->getDisplay());
     $this->assertRegExp('/Added entry for 1234: Running tests/', $output->getDisplay());
     $this->assertRegExp('/for 1:00:00/', $output->getDisplay());
     $slot = $this->assertSlotAdded(1234, 'Doing stuff');
-    $this->assertEquals((int) $now->format('U') + 1 * 60 *60, $slot->end);
+    $this->assertEquals(1 * 60 *60, $slot->getDuration());
+    $this->assertEquals((int) $now->format('U'), $slot->getStart());
   }
   /**
    * Tests add command with start params.
@@ -63,25 +61,20 @@ class AddTest extends TlTestBase {
    * @covers ::execute
    */
   public function testAddInPast() {
+    $this->setupConnector();
     $start = '11 am';
-    $this->getMockConnector()->expects($this->any())
-      ->method('ticketDetails')
-      ->with(1234, 'connector.jira')
-      ->willReturn(new Ticket('Running tests', 123));
-    $this->getMockConnector()->expects($this->any())
-      ->method('spotConnector')
-      ->willReturn('connector.jira');
+    $time = new \DateTime($start);
     $output = $this->executeCommand('add', [
       'issue_number' => 1234,
       'duration' => 3.25,
       '--start' => $start,
     ]);
-    $time = new \DateTime($start);
     $this->assertRegExp('/' . $time->format('Y-m-d h:i') . '/', $output->getDisplay());
     $this->assertRegExp('/Added entry for 1234: Running tests/', $output->getDisplay());
     $this->assertRegExp('/for 3:15:00./', $output->getDisplay());
     $slot = $this->assertSlotAdded(1234);
-    $this->assertEquals((int) $time->format('U') + 3.25 * 60 *60, $slot->end);
+    $this->assertEquals(3.25 * 60 *60, $slot->getDuration());
+    $this->assertEquals((int) $time->format('U'), $slot->getStart());
   }
 
   /**
@@ -92,17 +85,18 @@ class AddTest extends TlTestBase {
    * @param string $comment
    *   (Optional) Comment.
    *
-   * @return object
+   * @return \Larowlan\Tl\Slot
+   *   Slot.
    */
-  protected function assertSlotAdded($ticket_id, $comment = NULL) {
+  protected function assertSlotAdded($ticket_id, $comment = NULL) : Slot {
     /** @var \Larowlan\Tl\Repository\Repository $repository */
     $repository = $this->getRepository();
     $slot = $repository->latest();
-    $this->assertEquals($ticket_id, $slot->tid);
-    $this->assertEquals($comment, $slot->comment);
-    $this->assertNotNull($slot->end);
-    $this->assertNull($slot->category);
-    $this->assertNull($slot->teid);
+    $this->assertEquals($ticket_id, $slot->getTicketId());
+    $this->assertEquals($comment, $slot->getComment());
+    $this->assertNotNull($slot->lastChunk()->getEnd());
+    $this->assertNull($slot->getCategory());
+    $this->assertNull($slot->getRemoteEntryId());
     return $slot;
   }
 
