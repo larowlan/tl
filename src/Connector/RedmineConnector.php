@@ -7,6 +7,7 @@ use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\ConnectException;
 use Larowlan\Tl\Configuration\ConfigurableService;
+use Larowlan\Tl\Slot;
 use Larowlan\Tl\Ticket;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Console\Helper\QuestionHelper;
@@ -90,12 +91,16 @@ class RedmineConnector implements Connector, ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  public function ticketDetails($id, $connectorId) {
+  public function ticketDetails($id, $connectorId, $for_reporting = FALSE) {
     $url = $this->url . '/issues/' . $id . '.xml';
     try {
       if ($xml = $this->fetch($url, $this->apiKey)) {
+        $title = $xml->subject . ' (' . $xml->project['name'] . ')';
+        if ($for_reporting) {
+          $title = $xml->subject;
+        }
         $entry = new Ticket(
-          $xml->subject . ' (' . $xml->project['name'] . ')',
+          $title,
           (string) $xml->project['id'],
           $this->isBillable((string) $xml->project['id'])
         );
@@ -144,21 +149,21 @@ class RedmineConnector implements Connector, ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  public function sendEntry($entry) {
-    if ((float) $entry->duration == 0) {
+  public function sendEntry(Slot $entry) {
+    if ((float) $entry->getDuration(FALSE, TRUE) == 0) {
       // Zero time after rounding.
       // Return 0 to ensure doesn't send again.
       return 0;
     }
     $url = $this->url . '/time_entries.xml';
-    $details = $this->ticketDetails($entry->tid, $entry->connector_id);
+    $details = $this->ticketDetails($entry->getTicketId(), $entry->getConnectorId());
     $data = [
-      'issue_id'    => $entry->tid,
+      'issue_id'    => $entry->getTicketId(),
       'project_id'  => $details->getProjectId(),
-      'spent_on'    => date('Y-m-d', $entry->start),
-      'hours'       => $entry->duration,
-      'activity_id' => $entry->category,
-      'comments'    => $entry->comment,
+      'spent_on'    => date('Y-m-d', $entry->getStart()),
+      'hours'       => $entry->getDuration(FALSE, TRUE) / 3600,
+      'activity_id' => $entry->getCategory(),
+      'comments'    => $entry->getComment(),
     ];
     $xml = new \SimpleXMLElement('<?xml version="1.0"?><time_entry></time_entry>');
     foreach ($data as $key => $value) {
@@ -499,7 +504,7 @@ class RedmineConnector implements Connector, ConfigurableService {
     $url = sprintf($this->url . '/projects.xml?limit=%s&status=1&offset=%s', $limit, $offset);
     if ($xml = $this->fetch($url, $this->apiKey)) {
       foreach ($xml->project as $node) {
-        $options[(int) $node->id] = (string) $node->name . '::' . (string) $node->id;
+        $options[(int) $node->id] = (string) $node->name;
       }
     }
     return $options;

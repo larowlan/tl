@@ -3,18 +3,12 @@
 namespace Larowlan\Tl\Repository;
 
 use Doctrine\DBAL\Connection;
+use Larowlan\Tl\Slot;
 
 /**
  * Repository backed by a database.
  */
 class DbRepository implements Repository {
-
-  /**
-   * Array of user details keyed by irc nick.
-   *
-   * @var array
-   */
-  protected $userDetails = [];
 
   /**
    * The active database connection.
@@ -40,28 +34,31 @@ class DbRepository implements Repository {
   /**
    * {@inheritdoc}
    */
-  public function stop($slot_id = NULL) {
+  public function stop($slot_id = NULL): ?Slot {
     if ($open = $this->getActive($slot_id)) {
       $end = $this::requestTime();
-      $this->qb()->update('slots')
+      $this->qb()->update('chunks')
         ->set('end', $end)
         ->where('id = :id')
-        ->setParameter('id', $open->id)
+        ->setParameter('tid', $open->getId())
+        ->setParameter('id', $open->lastChunk()->getId())
         ->execute();
-      $open->end = $end;
-      $open->duration = $open->end - $open->start;
+      $open->lastChunk()->setEnd($end);
+      $open->getDuration(TRUE);
       return $open;
     }
-    return FALSE;
+    return NULL;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getActive($slot_id = NULL) {
-    $q = $this->qb()->select('*')
+  public function getActive($slot_id = NULL): ?Slot {
+    $q = $this->qb()
+      ->select('s.id', 's.tid', 's.comment', 's.category', 's.connector_id', 's.teid')
       ->from('slots', 's')
-      ->where('s.end IS NULL');
+      ->innerJoin('s', 'chunks', 'c', 'c.sid = s.id')
+      ->where('c.end IS NULL');
     if ($slot_id) {
       $q = $q->andWhere('s.id = :id')
         ->setParameter('id', $slot_id);
@@ -69,33 +66,54 @@ class DbRepository implements Repository {
     if ($open = $q
       ->execute()
       ->fetch(\PDO::FETCH_OBJ)) {
-      return $open;
+      return Slot::fromRecord($open, $this->chunksForSlot($open->id));
     }
-    return FALSE;
+    return NULL;
+  }
+
+  /**
+   * Gets chunks for a slot.
+   *
+   * @param int $slot_id
+   *   Slot ID.
+   *
+   * @return array
+   *   Chunk records.
+   */
+  protected function chunksForSlot(int $slot_id): array {
+    return $this->qb()->select('*')
+      ->from('chunks', 'c')
+      ->where('c.sid = :sid')
+      ->setParameter('sid', $slot_id)
+      ->execute()
+      ->fetchAll(\PDO::FETCH_OBJ);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function latest() {
-    $q = $this->qb()->select('*')
+  public function latest(): ?Slot {
+    $q = $this->qb()
+      ->select('s.id', 's.tid', 's.comment', 's.category', 's.connector_id', 's.teid')
       ->from('slots', 's')
-      ->orderBy('s.end', 'DESC');
+      ->innerJoin('s', 'chunks', 'c', 'c.sid = s.id')
+      ->orderBy('c.end', 'DESC');
     if ($open = $q
       ->execute()
       ->fetch(\PDO::FETCH_OBJ)) {
-      return $open;
+      return Slot::fromRecord($open, $this->chunksForSlot($open->id));
     }
-    return FALSE;
+    return NULL;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function start($ticket_id, $connectorId, $comment = '', $force_continue = FALSE) {
-    $continue_query = $continue = $this->qb()->select('*')
+  public function start($ticket_id, $connectorId, $comment = '', $force_continue = FALSE): ?Slot {
+    $continue_query = $this->qb()->select('*')
       ->from('slots', 's')
       ->where('s.connector_id = :connector_id')
+      ->where('s.teid is NULL')
       ->where('s.tid = :tid');
     if (!$force_continue) {
       $continue_query->andWhere('s.comment IS NULL')
@@ -110,14 +128,8 @@ class DbRepository implements Repository {
       ->execute()
       ->fetch(\PDO::FETCH_OBJ);
     if ((!$comment || $force_continue) && $continue) {
-      $this->qb()->update('slots')
-        ->where('id = :id')
-        ->setParameter('id', $continue->id)
-        ->set('start', $this::requestTime() + $continue->start - $continue->end)
-        ->set('end', ':end')
-        ->setParameter(':end', NULL)
-        ->execute();
-      return [$continue->id, TRUE];
+      $this->insertChunk($this::requestTime(), NULL, $continue->id);
+      return Slot::fromRecord($continue, $this->chunksForSlot($continue->id));
     }
     $record = [
       'tid' => $ticket_id,
@@ -130,46 +142,54 @@ class DbRepository implements Repository {
       $params[':comment'] = $comment;
     }
 
-    return [$this->insert($record, $params), FALSE];
+    return $this->slot($this->insert($record, $params));
   }
 
   /**
    * {@inheritdoc}
    */
-  public function insert($slot, $params = []) {
+  public function insert($slot, $params = []): int {
+    $start = $slot['start'];
+    $end = $slot['end'] ?? NULL;
+    unset($slot['start'], $slot['end']);
     $query = $this->qb()->insert('slots')
       ->values($slot);
     foreach ($params as $key => $value) {
       $query->setParameter($key, $value);
     }
     $query->execute();
-    return $this->connection()->lastInsertId();
+    $slot_id = $this->connection()->lastInsertId();
+    $this->insertChunk($start, $end, $slot_id);
+    return $slot_id;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function status($date = NULL) {
+  public function status($date = NULL): array {
     if (!$date) {
       $stamp = mktime('0', '0');
     }
     else {
       $stamp = strtotime($date);
     }
-    $return = $this->qb()->select('id', 'tid', 'end', 'start', 'connector_id')
-      ->from('slots')
-      ->where('start > :start AND start < :end')
+    return array_map(function ($record) {
+      return Slot::fromRecord($record, $this->chunksForSlot($record->id));
+    }, $this->qb()->select('s.id', 's.tid', 's.connector_id', 's.teid', 's.category', 's.comment')
+      ->from('slots', 's')
+      ->innerJoin('s', 'chunks', 'c', 'c.sid = s.id')
+      ->having('c.start > :start AND c.start < :end')
+      ->groupBy('s.id', 's.tid', 's.connector_id', 's.teid', 's.category', 's.comment')
       ->setParameter(':start', $stamp)
       ->setParameter(':end', $stamp + (60 * 60 * 24))
       ->execute()
-      ->fetchAll(\PDO::FETCH_OBJ);
-    return $return;
+      ->fetchAll(\PDO::FETCH_OBJ));
   }
 
   /**
    * {@inheritdoc}
    */
-  public function review($date = NULL, $check = FALSE) {
+  public function review($date = NULL, $check = FALSE): array {
     if (!$date) {
       $stamp = mktime('0', '0');
     }
@@ -177,11 +197,12 @@ class DbRepository implements Repository {
       $stamp = strtotime($date);
     }
     $query = $this->qb()
-      ->select('end', 'tid', 'category', 'comment', 'id', 'start', 'connector_id')
-      ->from('slots');
+      ->select('s.id', 's.tid', 's.connector_id', 's.teid', 's.category', 's.comment', 'c.end', 'c.start', 'c.sid')
+      ->from('slots', 's')
+      ->innerJoin('s', 'chunks', 'c', 'c.sid = s.id');
     $where = $this->qb()->expr()->andX(
       $this->qb()->expr()->isNull('teid'),
-      $this->qb()->expr()->gt('start', ':stamp')
+      $this->qb()->expr()->gt('c.start', ':stamp')
     );
     $query->setParameter(':stamp', $stamp);
     if ($check) {
@@ -191,18 +212,19 @@ class DbRepository implements Repository {
         $this->qb()->expr()->isNull('category')
       ));
     }
-    $return = $query->where($where)->execute()->fetchAll(\PDO::FETCH_OBJ);
-    foreach ($return as &$row) {
-      $row->duration = round((($row->end ?: time()) - $row->start) / 900) * 900 / 3600;
-      $row->active = empty($row->end);
-    }
-    return $return;
+    return array_map(function (array $record) {
+      return Slot::fromRecord($record['record'], $record['chunks']);
+    }, array_reduce($query->where($where)->execute()->fetchAll(\PDO::FETCH_OBJ), function (array $carry, $record) {
+      $carry[$record->sid]['record'] = $record;
+      $carry[$record->sid]['chunks'][] = $record;
+      return $carry;
+    }, []));
   }
 
   /**
    * {@inheritdoc}
    */
-  public function send() {
+  public function send(): array {
     return $this->review('19780101');
   }
 
@@ -224,12 +246,37 @@ class DbRepository implements Repository {
    * {@inheritdoc}
    */
   public function edit($slot_id, int $duration) {
-    $request_time = $this::requestTime();
-    return $this->qb()->update('slots')
-      ->set('start', $request_time - $duration)
-      ->set('end', $request_time)
+    $slot = $this->slot($slot_id);
+    $chunks = $slot->getChunks();
+    $existing = $slot->getDuration();
+    $difference = $duration - $existing;
+    if ($difference < 0) {
+      $remove = abs($difference);
+      // We're reducing the total.
+      while ($remove) {
+        $chunk = array_pop($chunks);
+        if ($chunk->getDuration() > $remove) {
+          $this->qb()->update('chunks')
+            ->set('end', ($chunk->getEnd() ?: time()) - $remove)
+            ->where('id = :id')
+            ->setParameter(':id', $chunk->getId())->execute();
+          return;
+        }
+        $remove -= $chunk->getDuration();
+        $this->qb()
+          ->delete('chunks')
+          ->where('id = :id')
+          ->setParameter(':id', $chunk->getId())
+          ->execute();
+      }
+      return;
+    }
+    // We're increasing the total.
+    $chunk = $slot->lastChunk();
+    return $this->qb()->update('chunks')
+      ->set('end', ($chunk->getEnd() ?: time()) + $difference)
       ->where('id = :id')
-      ->setParameter(':id', $slot_id)->execute();
+      ->setParameter(':id', $chunk->getId())->execute();
   }
 
   /**
@@ -272,39 +319,51 @@ class DbRepository implements Repository {
   /**
    * {@inheritdoc}
    */
-  public function frequent() {
-    return $this->qb()
+  public function frequent(): array {
+    return array_map(function ($record) {
+      return Slot::fromRecord($record, $this->chunksForSlot($record->id));
+    }, $this->qb()
       ->select('tid', 'connector_id')
       ->from('slots', 's')
       ->groupBy('tid')
       ->orderBy('COUNT(*)', 'DESC')
       ->setMaxResults(10)
       ->execute()
-      ->fetchAll(\PDO::FETCH_OBJ);
+      ->fetchAll(\PDO::FETCH_OBJ));
   }
 
   /**
    * {@inheritdoc}
    */
-  public function slot($slot_id) {
-    return $this->qb()->select('*')
+  public function slot($slot_id): ?Slot {
+    $slot = $this->qb()->select('*')
       ->from('slots')
       ->where('id = :id')
       ->setParameter(':id', $slot_id)
       ->execute()
       ->fetch(\PDO::FETCH_OBJ);
+    if ($slot) {
+      return Slot::fromRecord($slot, $this->chunksForSlot($slot->id));
+    }
+    return NULL;
   }
 
   /**
    * {@inheritdoc}
    */
   public function delete($slot_id) {
-    return $this->qb()->delete('slots')
+    $return = $this->qb()->delete('slots')
       ->where('id = :id')
       // Can't delete sent entries.
       ->andWhere('teid IS NULL')
       ->setParameter(':id', $slot_id)
       ->execute();
+    if ($return) {
+      $this->qb()->delete('chunks')->where('sid = :sid')
+        ->setParameter('sid', $slot_id)
+        ->execute();
+    }
+    return $return;
   }
 
   /**
@@ -371,27 +430,66 @@ class DbRepository implements Repository {
   /**
    * {@inheritdoc}
    */
-  public function totalByTicket($start, $end = NULL) {
+  public function totalByTicket($start, $end = NULL): array {
     if (!$end) {
       // Some time in the future.
       $end = time() + 86400;
     }
-    $return = $this->qb()->select('tid', 'end', 'start', 'connector_id')
-      ->from('slots')
-      ->where('start > :start AND start < :end')
+    $return = $this->qb()->select('s.tid', 's.category', 's.comment', 's.connector_id', 's.teid', 'c.start', 'c.end', 'c.sid')
+      ->from('slots', 's')
+      ->innerJoin('s', 'chunks', 'c', 'c.sid = s.id')
+      ->where('c.start > :start AND c.start < :end')
       ->setParameter(':start', $start)
       ->setParameter(':end', $end)
       ->execute()
       ->fetchAll(\PDO::FETCH_OBJ);
-    $totals = [];
+    $ticket_map = [];
     foreach ($return as $row) {
-      $row->duration = round((($row->end ?: time()) - $row->start) / 900) * 900;
-      if (!isset($totals[$row->connector_id][$row->tid])) {
-        $totals[$row->connector_id][$row->tid] = 0;
+      $ticket_map[$row->sid] = $row->tid;
+      if (!isset($totals[$row->connector_id][$row->sid])) {
+        $totals[$row->connector_id][$row->sid] = 0;
       }
-      $totals[$row->connector_id][$row->tid] += $row->duration;
+      $totals[$row->connector_id][$row->sid] += (($row->end ?: time()) - $row->start);
     }
-    return $totals;
+    $aggregated = [];
+    foreach ($totals as $connector_id => $slots) {
+      $aggregated[$connector_id] = array_reduce(array_keys($slots), function (array $carry, $sid) use ($ticket_map, $slots) {
+        $carry[$ticket_map[$sid]] = ($carry[$ticket_map[$sid]] ?? 0) + round($slots[$sid] / 900) * 900;
+        return $carry;
+      }, []);
+    }
+    return $aggregated;
+  }
+
+  /**
+   * Inserts a chunk.
+   *
+   * @param int $start
+   *   Start.
+   * @param int $end
+   *   End.
+   * @param int $slot_id
+   *   Slot ID.
+   */
+  protected function insertChunk(int $start, ?int $end, int $slot_id) {
+    $chunk = [
+      'start' => $start,
+      'end' => $end,
+      'sid' => $slot_id,
+    ];
+    $this->qb()->insert('chunks')->values(array_filter($chunk))->execute();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function combine(Slot $slot1, Slot $slot2) {
+    $this->qb()->update('chunks')
+      ->where('sid = :sid2')
+      ->set('sid', ':sid1')
+      ->setParameter('sid2', $slot2->getId())
+      ->setParameter('sid1', $slot1->getId())->execute();
+    $this->delete($slot2->getId());
   }
 
 }

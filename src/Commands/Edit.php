@@ -63,13 +63,13 @@ class Edit extends Command implements LogAwareCommand {
     }
 
     $slot = $this->repository->slot($slot_id);
-    if ($slot === FALSE) {
+    if ($slot === NULL) {
       $output->writeln('<error>Slot does not exist.</error>');
       return 1;
     }
 
 
-    if (isset($slot->teid)) {
+    if ($slot->getRemoteEntryId()) {
       $output->writeln('<error>You cannot edit a slot that has been sent to the backend</error>');
       return 1;
     }

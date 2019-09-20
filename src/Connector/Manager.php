@@ -4,6 +4,8 @@ namespace Larowlan\Tl\Connector;
 
 use Doctrine\Common\Cache\Cache;
 use Larowlan\Tl\Configuration\ConfigurableService;
+use Larowlan\Tl\Reporter\Manager as RepoterManager;
+use Larowlan\Tl\Slot;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Console\Helper\QuestionHelper;
@@ -43,6 +45,13 @@ class Manager implements ConfigurableService, ConnectorManager {
   protected $version;
 
   /**
+   * Reporter.
+   *
+   * @var \Larowlan\Tl\Reporter\Manager
+   */
+  private $reporter;
+
+  /**
    * {@inheritdoc}
    */
   public static function getName() {
@@ -52,7 +61,7 @@ class Manager implements ConfigurableService, ConnectorManager {
   /**
    * {@inheritdoc}
    */
-  public function __construct(ContainerBuilder $container, Cache $cache, array $config, $version) {
+  public function __construct(ContainerBuilder $container, Cache $cache, array $config, $version, RepoterManager $reporter) {
     if (!empty($config['connector_ids'])) {
       foreach ($config['connector_ids'] as $id) {
         $this->connectors[$id] = $container->get($id);
@@ -60,6 +69,7 @@ class Manager implements ConfigurableService, ConnectorManager {
     }
     $this->cache = $cache;
     $this->version = $version;
+    $this->reporter = $reporter;
   }
 
   /**
@@ -113,12 +123,12 @@ class Manager implements ConfigurableService, ConnectorManager {
   /**
    * {@inheritdoc}
    */
-  public function ticketDetails($id, $connectorId) {
-    if (($details = $this->cache->fetch($this->version . ':' . $connectorId . ':' . $id))) {
+  public function ticketDetails($id, $connectorId, $for_reporting = FALSE) {
+    if (($details = $this->cache->fetch($this->version . ':' . $connectorId . ':' . $id . ':' . $for_reporting))) {
       return $details;
     }
-    $ticket = $this->connector($connectorId)->ticketDetails($id, $connectorId);
-    $this->cache->save($this->version . ':' . $connectorId . ':' . $id, $ticket, static::LIFETIME);
+    $ticket = $this->connector($connectorId)->ticketDetails($id, $connectorId, $for_reporting);
+    $this->cache->save($this->version . ':' . $connectorId . ':' . $id . ':' . $for_reporting, $ticket, static::LIFETIME);
     return $ticket;
   }
 
@@ -136,8 +146,18 @@ class Manager implements ConfigurableService, ConnectorManager {
   /**
    * {@inheritdoc}
    */
-  public function sendEntry($entry) {
-    return $this->connector($entry->connector_id)->sendEntry($entry);
+  public function sendEntry(Slot $entry) {
+    $connector = $this->connector($entry->getConnectorId());
+    if ($sendEntry = $connector->sendEntry($entry)) {
+      $details = $connector->ticketDetails($entry->getTicketId(), $entry->getConnectorId(), TRUE);
+      $projects = $connector->projectNames();
+      $categories = $connector->fetchCategories();
+      if ($this->reporter->report($entry, $details, $projects, $categories)) {
+        return $sendEntry;
+      }
+      throw new \Exception('Could not complete reporting');
+    }
+    return $sendEntry;
   }
 
   /**

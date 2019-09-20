@@ -96,36 +96,37 @@ class Reviewer {
       $offline = TRUE;
     }
     $exact_total = 0;
+    /** @var \Larowlan\Tl\Slot $record */
     foreach ($data as $record) {
-      $total += $record->duration;
-      $details = $this->connector->ticketDetails($record->tid, $record->connector_id);
-      $category_id = str_pad($record->category, 3, 0, STR_PAD_LEFT);
+      $total += $record->getDuration(FALSE, TRUE);
+      $details = $this->connector->ticketDetails($record->getTicketId(), $record->getConnectorId());
+      $category_id = str_pad($record->getCategory(), 3, 0, STR_PAD_LEFT);
       $category = '';
-      if ($record->category) {
+      if ($record->getCategory()) {
         if ($offline) {
           $category = 'Offline';
         }
-        elseif (isset($categories[$record->connector_id][$category_id])) {
-          $category = $categories[$record->connector_id][$category_id];
+        elseif (isset($categories[$record->getConnectorId()][$category_id])) {
+          $category = $categories[$record->getConnectorId()][$category_id];
         }
         else {
           $category = 'Unknown';
         }
       }
-      $duration = sprintf('<fg=%s>%s</>', $details->isBillable() ? 'default' : 'yellow', $record->duration);
+      $duration = sprintf('<fg=%s>%s</>', $details->isBillable() ? 'default' : 'yellow', $record->getDuration(FALSE, TRUE) / 3600);
       $row = [
-        $record->id,
-        sprintf('<fg=%s>%s</>', $record->active ? 'green' : 'default', $record->tid),
+        $record->getId(),
+        sprintf('<fg=%s>%s</>', $record->isOpen() ? 'green' : 'default', $record->getTicketId()),
         $duration,
       ];
       if ($exact) {
-        $row[] = Formatter::formatDuration(($record->end ?: time()) - $record->start);
-        $exact_total += (($record->end ?: time()) - $record->start);
+        $row[] = Formatter::formatDuration($record->getDuration());
+        $exact_total += $record->getDuration();
       }
       $row = array_merge($row, [
         substr($details->getTitle(), 0, 25) . '...',
         $category,
-        $record->comment,
+        $record->getComment(),
       ]);
       $rows[] = $row;
     }
@@ -134,7 +135,7 @@ class Reviewer {
       $rows[] = [
         '',
         '<comment>Total</comment>',
-        '<info>' . $total . ' h</info>',
+        '<info>' . $total / 3600 . ' h</info>',
         '<info>' . Formatter::formatDuration($exact_total) . '</info>',
         '',
         '',
@@ -145,7 +146,7 @@ class Reviewer {
       $rows[] = [
         '',
         '<comment>Total</comment>',
-        '<info>' . $total . ' h</info>',
+        '<info>' . $total / 3600 . ' h</info>',
         '',
         '',
         '',

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "816c13378857ed822b07c7c66b0219fb",
+    "content-hash": "674ae05c182538ff13c42977a20423a3",
     "packages": [
         {
             "name": "doctrine/annotations",
@@ -1032,6 +1032,54 @@
             "time": "2017-06-19T01:22:40+00:00"
         },
         {
+            "name": "morningtrain/toggl-api",
+            "version": "v1.0.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Morning-Train/toggl-api.git",
+                "reference": "231f9bdb7637652e447829bdee694f205b4b106c"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Morning-Train/toggl-api/zipball/231f9bdb7637652e447829bdee694f205b4b106c",
+                "reference": "231f9bdb7637652e447829bdee694f205b4b106c",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^6.3"
+            },
+            "require-dev": {
+                "escapestudios/symfony2-coding-standard": "2.*",
+                "squizlabs/php_codesniffer": "2.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "MorningTrain\\TogglApi\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GNU General Public License v3.0"
+            ],
+            "authors": [
+                {
+                    "name": "Bjarne Bonde",
+                    "email": "bb@morningtain.dk",
+                    "homepage": "http://morningtrain.dk/",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A complete native php wrapper for the Toggl API",
+            "homepage": "http://morningtrain.dk/",
+            "keywords": [
+                "api",
+                "php",
+                "toggl"
+            ],
+            "time": "2019-03-04T07:37:07+00:00"
+        },
+        {
             "name": "netresearch/jsonmapper",
             "version": "v1.4.0",
             "source": {
@@ -1769,7 +1817,7 @@
             "version": "8.3.1",
             "source": {
                 "type": "git",
-                "url": "https://git.drupal.org/project/coder.git",
+                "url": "https://git.drupalcode.org/project/coder.git",
                 "reference": "29a25627e7148b3119c84f18e087fc3b8c85b959"
             },
             "require": {

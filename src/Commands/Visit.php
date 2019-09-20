@@ -52,14 +52,14 @@ class Visit extends Command {
   protected function execute(InputInterface $input, OutputInterface $output) {
     if (!($issue_number = $input->getArgument('issue'))) {
       if ($data = $this->repository->getActive()) {
-        $issue_number = $data->tid;
+        $issue_number = $data->getTicketId();
       }
     }
     if (!$issue_number) {
       $output->writeln('<error>No active ticket, please use tl visit {ticket_id} to specifiy a ticket.</error>');
       return;
     }
-    $url = $this->connector->ticketUrl($issue_number, isset($data) ? $data->connector_id : $this->getConnector($input, $output, $issue_number));
+    $url = $this->connector->ticketUrl($issue_number, isset($data) ? $data->getConnectorId() : $this->getConnector($input, $output, $issue_number));
     $this->open($url, $output);
   }
 

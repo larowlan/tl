@@ -60,12 +60,12 @@ class Delete extends Command {
 
     $confirm = NULL;
     if (($slot = $this->repository->slot($slot_id)) && ($confirm = ($input->getOption('confirm') || $helper->ask($input, $output, $question))) && $this->repository->delete($slot_id)) {
-      $deleted = $this->connector->ticketDetails($slot->tid, $slot->connector_id);
+      $deleted = $this->connector->ticketDetails($slot->getTicketId(), $slot->getConnectorId());
       $output->writeln(sprintf('Deleted slot <comment>%d</comment> against ticket <info>%d</info>: %s, duration <info>%s</info>',
-        $slot->id,
-        $slot->tid,
+        $slot->getId(),
+        $slot->getTicketId(),
         $deleted->getTitle(),
-        Formatter::formatDuration($slot->end - $slot->start)
+        Formatter::formatDuration($slot->getDuration())
       ));
       return;
     }

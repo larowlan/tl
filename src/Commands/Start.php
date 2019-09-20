@@ -87,16 +87,18 @@ class Start extends Command implements CompletionAwareInterface, LogAwareCommand
     }
     if ($title = $this->connector->ticketDetails($ticket_id, $connector_id)) {
       if ($stop = $this->repository->stop()) {
-        $stopped = $this->connector->ticketDetails($stop->tid, $stop->connector_id);
+        $stopped = $this->connector->ticketDetails($stop->getTicketId(), $stop->getConnectorId());
         $output->writeln(sprintf('Closed slot <comment>%d</comment> against ticket <info>%d</info>: %s, duration <info>%s</info>',
-          $stop->id,
-          $stop->tid,
+          $stop->getId(),
+          $stop->getTicketId(),
           $stopped->getTitle(),
-          Formatter::formatDuration($stop->duration)
+          Formatter::formatDuration($stop->getDuration())
         ));
       }
       try {
-        list($slot_id, $continued) = $this->repository->start($ticket_id, $connector_id, $input->getArgument('comment'));
+        $started = $this->repository->start($ticket_id, $connector_id, $input->getArgument('comment'));
+        $slot_id = $started->getId();
+        $continued = $started->isContinued();
         $output->writeln(sprintf('<bg=blue;fg=white;options=bold>[%s]</> <comment>%s</comment> entry for <info>%d</info>: %s [slot:<comment>%d</comment>]',
           (new \DateTime())->format('h:i'),
           $continued ? 'Continued' : 'Started new',
