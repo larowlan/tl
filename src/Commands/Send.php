@@ -85,10 +85,10 @@ class Send extends Command {
   protected function execute(InputInterface $input, OutputInterface $output) {
     // Check for any open time logs first.
     if ($open = $this->repository->getActive()) {
-      $details = $this->connector->ticketDetails($open->tid);
+      $details = $this->connector->ticketDetails($open->getTicketId(), $open->getConnectorId());
       $output->writeLn(sprintf('<error>Please stop open time logs first: %s [<info>%d</info>]</error>',
         $details->getTitle(),
-        $open->tid
+        $open->getTicketId()
       ));
       return;
     }
