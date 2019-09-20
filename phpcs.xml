@@ -17,6 +17,10 @@
   <rule ref="Drupal.Commenting.FunctionComment.Missing">
     <exclude-pattern>Repository.php</exclude-pattern>
   </rule>
+  <rule ref="Drupal.Commenting.FunctionComment.IncorrectTypeHint">
+    <exclude-pattern>Chunk.php</exclude-pattern>
+    <exclude-pattern>DbRepository.php</exclude-pattern>
+  </rule>
   <rule ref="Generic.NamingConventions.UpperCaseConstantName.ClassConstantNotUpperCase">
     <exclude-pattern>Schema.php</exclude-pattern>
   </rule>

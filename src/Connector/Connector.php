@@ -2,6 +2,8 @@
 
 namespace Larowlan\Tl\Connector;
 
+use Larowlan\Tl\Slot;
+
 /**
  * An interface for backend connectors.
  */
@@ -22,11 +24,13 @@ interface Connector {
    *   The ticket id from the remote system.
    * @param string $connectorId
    *   Connector ID.
+   * @param bool $for_reporting
+   *   TRUE if for reporting sake.
    *
    * @return \Larowlan\Tl\TicketInterface
    *   Ticket object.
    */
-  public function ticketDetails($id, $connectorId);
+  public function ticketDetails($id, $connectorId, $for_reporting = FALSE);
 
   /**
    * Fetch the details of time categories from a remote ticketing system.
@@ -39,14 +43,14 @@ interface Connector {
   /**
    * Send a time entry to the remote ticketing system.
    *
-   * @param object $entry
+   * @param \Larowlan\Tl\Slot $entry
    *   A time entry corresponding with a record in the {bot_tl_slot} table.
    *
    * @return int|null
    *   The time entry id from the remote system or NULL if the entry was not
    *   able to be saved.
    */
-  public function sendEntry($entry);
+  public function sendEntry(Slot $entry);
 
   /**
    * Gets the URL for the given ticket ID.

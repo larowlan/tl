@@ -11,7 +11,7 @@ class Formatter {
    * Formats a duration.
    *
    * @param int $duration
-   *   Duration.
+   *   Duration in seconds.
    *
    * @return string
    *   Formatted duration.

@@ -111,19 +111,20 @@ class Send extends Command {
     $progress->setFormat('custom');
     $progress->setProgressCharacter("\xF0\x9F\x8D\xBA");
     $errors = FALSE;
+    /** @var \Larowlan\Tl\Slot $entry */
     foreach ($entries as $entry) {
       try {
-        if ((float) $entry->duration == 0) {
+        if ((float) $entry->getDuration(FALSE, TRUE) == 0) {
           // Nothing to send, but mark sent so it doesn't show up tomorrow.
-          $this->repository->store([$entry->tid => 0]);
-          $this->progress($progress, sprintf('Marked entry for <info>%d</info> as sent, < 15 minutes', $entry->tid));
+          $this->repository->store([$entry->getTicketId() => 0]);
+          $this->progress($progress, sprintf('Marked entry for <info>%d</info> as sent, < 15 minutes', $entry->getTicketId()));
           $progress->advance();
           continue;
         }
         if ($saved = $this->connector->sendEntry($entry)) {
-          $entry_ids[$entry->tid] = $saved;
+          $entry_ids[$entry->getTicketId()] = $saved;
           // A real entry, give some output.
-          $this->progress($progress, sprintf('Stored entry for <info>%d</info>, remote id <comment>%d</comment>', $entry->tid, $entry_ids[$entry->tid]));
+          $this->progress($progress, sprintf('Stored entry for <info>%d</info>, remote id <comment>%d</comment>', $entry->getTicketId(), $entry_ids[$entry->getTicketId()]));
           $progress->advance();
         }
       }

@@ -6,9 +6,9 @@
 
 ## Requirements
 
-* PHP 7.1+
-* php7.1-sqlite3
-* php7.1-pdo_sqlite
+* PHP 7.2+
+* php7.2-sqlite3
+* php7.2-pdo_sqlite
 
 
 ## Installation
@@ -24,7 +24,7 @@ wget http://larowlan.github.io/tl/tl.phar
 
 ```bash
 # Get the phar
-curl -O http://larowlan.github.io/tl/tl.phar
+curl -O https://github.com/larowlan/tl/raw/master/tl.phar
 ```
 
 ## Setup
@@ -75,6 +75,8 @@ tl stop
 tl total
 # edit entry
 tl edit [slot id] [hours]
+# add a new entry
+tl add 3546 [hours]
 # review entries
 tl review
 # comment on entries before sending
