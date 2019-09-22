@@ -51,14 +51,15 @@ class TagAll extends Command {
   protected function execute(InputInterface $input, OutputInterface $output) {
     $entries = $this->repository->review(Review::ALL, TRUE);
     $connector_ids = array_unique(array_map(function ($entry) {
-      return $entry->connector_id;
+      /** @var \Larowlan\Tl\Slot $entry */
+      return $entry->getConnectorId();
     }, $entries));
     $helper = $this->getHelper('question');
     $categories = $this->connector->fetchCategories();
     $tags = [];
     foreach ($connector_ids as $connector_id) {
       if (count($categories[$connector_id]) === 1) {
-        $tag = reset($categories);
+        $tag = reset($categories[$connector_id]);
         list(, $tag) = explode(':', $tag);
         $tags[$connector_id] = $tag;
         continue;
