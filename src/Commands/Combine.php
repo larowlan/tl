@@ -54,24 +54,13 @@ class Combine extends Command {
   protected function execute(InputInterface $input, OutputInterface $output) {
     $slot1 = $input->getArgument('slot1');
     $slot2 = $input->getArgument('slot2');
+
+    /** @var \Larowlan\Tl\Slot $entry1 */
+    /** @var \Larowlan\Tl\Slot $entry2 */
     list($entry1, $entry2) = $this->validateSlots($slot1, $slot2, $output);
+    $this->repository->combine($entry1, $entry2);
 
-    // Create a new combined entry and then remove fields we don't want to keep
-    // around in the new entry.
-    $combined_entry = clone $entry1;
-    unset($combined_entry->id, $combined_entry->category, $combined_entry->comment, $combined_entry->teid, $combined_entry->connector_id);
-    $combined_entry->connector_id = ':connector_id';
-
-    // Extend the entry date by the amount of time logged in the second entry.
-    $combined_entry->end = $entry1->end + ($entry2->end - $entry2->start);
-
-    // Insert the new entry, if all is well delete the two existing ones.
-    if ($new_slot = $this->repository->insert((array) $combined_entry, [':connector_id' => $entry1->connector_id])) {
-      $this->repository->delete($entry1->id);
-      $this->repository->delete($entry2->id);
-
-      $output->writeln(sprintf('Combined %s and %s into new slot %s', $slot1, $slot2, $new_slot));
-    }
+    $output->writeln(sprintf('Combined %s and %s into new slot %s', $slot1, $slot2, $slot1));
   }
 
   /**
@@ -92,15 +81,15 @@ class Combine extends Command {
     if (!$entry2 = $this->repository->slot($slot2)) {
       throw new \InvalidArgumentException(sprintf('Invalid slot id %s', $slot2));
     }
-    if ($entry1->connector_id !== $entry2->connector_id) {
-      throw new \InvalidArgumentException(sprintf('You cannot combine slots from %s backend with slots from %s backend', Manager::formatConnectorId($entry2->connector_id), Manager::formatConnectorId($entry1->connector_id)));
+    if ($entry1->getConnectorId() !== $entry2->getConnectorId()) {
+      throw new \InvalidArgumentException(sprintf('You cannot combine slots from %s backend with slots from %s backend', Manager::formatConnectorId($entry2->getConnectorId()), Manager::formatConnectorId($entry1->getConnectorId())));
     }
     // Ensure we've not already sent the slots.
-    if (!empty($entry1->teid) || !empty($entry1->teid)) {
+    if (!empty($entry1->getRemoteEntryId()) || !empty($entry1->getRemoteEntryId())) {
       throw new \InvalidArgumentException('You cannot combine entries that have already been sent.');
     }
     // Ensure the slots are both against the same job.
-    if ($entry1->tid != $entry2->tid) {
+    if ($entry1->getTicketId() != $entry2->getTicketId()) {
       throw new \InvalidArgumentException('You cannot combine entries from separate issues.');
     }
     return [$entry1, $entry2];
@@ -111,12 +100,12 @@ class Combine extends Command {
    */
   protected function stopTicket($slot_id, OutputInterface $output) {
     if ($stop = $this->repository->stop($slot_id)) {
-      $stopped = $this->connector->ticketDetails($stop->tid, $stop->connector_id);
+      $stopped = $this->connector->ticketDetails($stop->getTicketId(), $stop->getConnectorId());
       $output->writeln(sprintf('Closed slot <comment>%d</comment> against ticket <info>%d</info>: %s, duration <info>%s</info>',
-        $stop->id,
-        $stop->tid,
+        $stop->getId(),
+        $stop->getTicketId(),
         $stopped->getTitle(),
-        Formatter::formatDuration($stop->duration)
+        Formatter::formatDuration($stop->getDuration())
       ));
     }
   }

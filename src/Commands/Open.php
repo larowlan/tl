@@ -48,12 +48,12 @@ class Open extends Command {
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
     if ($data = $this->repository->getActive()) {
-      $details = $this->connector->ticketDetails($data->tid, $data->connector_id);
+      $details = $this->connector->ticketDetails($data->getTicketId(), $data->getConnectorId());
       $output->writeLn(sprintf('%s [<info>%d</info>] - <comment>%s</comment> [slot: <comment>%d</comment>]',
         $details->getTitle(),
-        $data->tid,
-        Formatter::formatDuration(time() - $data->start),
-        $data->id
+        $data->getTicketId(),
+        Formatter::formatDuration($data->getDuration()),
+        $data->getId()
       ));
       return;
     }

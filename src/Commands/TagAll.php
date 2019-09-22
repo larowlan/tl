@@ -51,12 +51,19 @@ class TagAll extends Command {
   protected function execute(InputInterface $input, OutputInterface $output) {
     $entries = $this->repository->review(Review::ALL, TRUE);
     $connector_ids = array_unique(array_map(function ($entry) {
-      return $entry->connector_id;
+      /** @var \Larowlan\Tl\Slot $entry */
+      return $entry->getConnectorId();
     }, $entries));
     $helper = $this->getHelper('question');
     $categories = $this->connector->fetchCategories();
     $tags = [];
     foreach ($connector_ids as $connector_id) {
+      if (count($categories[$connector_id]) === 1) {
+        $tag = reset($categories[$connector_id]);
+        list(, $tag) = explode(':', $tag);
+        $tags[$connector_id] = $tag;
+        continue;
+      }
       $question = new ChoiceQuestion(
         sprintf('Select tag to use for %s tickets', Manager::formatConnectorId($connector_id)),
         $categories[$connector_id]
@@ -67,11 +74,12 @@ class TagAll extends Command {
       $tags[$connector_id] = $tag;
     }
     $tagged = FALSE;
+    /** @var \Larowlan\Tl\Slot $entry */
     foreach ($entries as $entry) {
-      if ($entry->category) {
+      if ($entry->getCategory()) {
         continue;
       }
-      $this->repository->tag($tags[$entry->connector_id], $entry->id);
+      $this->repository->tag($tags[$entry->getConnectorId()], $entry->getId());
       $tagged = TRUE;
     }
     if (!$tagged) {

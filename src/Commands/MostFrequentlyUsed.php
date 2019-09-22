@@ -53,11 +53,12 @@ class MostFrequentlyUsed extends Command {
       $table->setHeaders(['JobId', 'Title']);
 
       $rows = [];
+      /** @var \Larowlan\Tl\Slot $entry */
       foreach ($entries as $entry) {
-        if (!$details = $this->connector->ticketDetails($entry->tid, $entry->connector_id)) {
+        if (!$details = $this->connector->ticketDetails($entry->getTicketId(), $entry->getConnectorId())) {
           continue;
         }
-        $rows[] = [$entry->tid, $details->getTitle()];
+        $rows[] = [$entry->getTicketId(), $details->getTitle()];
       }
       $table->setRows($rows);
       $table->render();

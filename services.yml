@@ -20,16 +20,26 @@ services:
   http_client:
     class: GuzzleHttp\Client
   cache:
-    class: Doctrine\Common\Cache\FileSystemCache
+    class: Doctrine\Common\Cache\FilesystemCache
     factory: [Larowlan\Tl\CacheFactory, create]
   repository:
     class: Larowlan\Tl\Repository\DbRepository
     arguments: ["@connection"]
   connector:
     class: Larowlan\Tl\Connector\Manager
-    arguments: ['@container',  '@cache', '%config%', '%version%']
+    arguments: ['@container',  '@cache', '%config%', '%version%', '@reporter']
     tags:
       -  { name: configurable }
+  reporter:
+    class: Larowlan\Tl\Reporter\Manager
+    arguments: ['@container',  '@cache', '%config%', '%version%']
+    tags:
+    - { name: configurable }
+  reporter.toggl:
+    class: Larowlan\Tl\Reporter\Toggl
+    arguments: ['%config%',  '@cache', '%version%']
+    tags:
+      - { name: reporter }
   connector.redmine:
     class: Larowlan\Tl\Connector\RedmineConnector
     arguments: ['@http_client', '@cache', '%config%', '%version%']
@@ -50,6 +60,11 @@ services:
       -  { name: command }
   app.command.start:
     class: Larowlan\Tl\Commands\Start
+    arguments: ["@connector", "@repository"]
+    tags:
+      -  { name: command }
+  app.command.add:
+    class: Larowlan\Tl\Commands\Add
     arguments: ["@connector", "@repository"]
     tags:
       -  { name: command }

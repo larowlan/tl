@@ -49,16 +49,17 @@ class Bitbar extends Command {
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
     if ($open = $this->repository->getActive()) {
-      $text = $open->tid . ': ' . Formatter::formatDuration(time() - $open->start) . ' ';
+      $text = $open->getTicketId() . ': ' . Formatter::formatDuration($open->getDuration()) . ' ';
     }
     else {
       $text = 'Inactive ';
     }
     $total = 0;
+    /** @var \Larowlan\Tl\Slot $data */
     foreach ($this->repository->review(Total::ALL) as $data) {
-      $total += $data->duration;
+      $total += $data->getDuration(FALSE, TRUE);
     }
-    $text .= '(' . $total . 'h)';
+    $text .= '(' . $total / 3600 . 'h)';
     $output->writeln($text);
   }
 

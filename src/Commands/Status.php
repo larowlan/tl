@@ -62,15 +62,12 @@ class Status extends Command {
     $table->setHeaders(['Slot', 'JobId', 'Time', 'Title']);
     $rows = [];
     $total = 0;
+    /** @var \Larowlan\Tl\Slot $record */
     foreach ($data as $record) {
-      $record->duration = ($record->end ?: time()) - $record->start;
-      $total += $record->duration;
-      $details = $this->connector->ticketDetails($record->tid, $record->connector_id);
-      if (empty($record->end)) {
-        $record->tid .= ' *';
-      }
-      $duration = sprintf('<fg=%s>%s</>', $details->isBillable() ? 'default' : 'yellow', Formatter::formatDuration($record->duration));
-      $rows[] = [$record->id, $record->tid, $duration, $details->getTitle()];
+      $total += $record->getDuration();
+      $details = $this->connector->ticketDetails($record->getTicketId(), $record->getConnectorId());
+      $duration = sprintf('<fg=%s>%s</>', $details->isBillable() ? 'default' : 'yellow', Formatter::formatDuration($record->getDuration()));
+      $rows[] = [$record->getId(), $record->isOpen() ? sprintf('%s *', $record->getTicketId()) : $record->getTicketId(), $duration, $details->getTitle()];
     }
     $rows[] = new TableSeparator();
     $rows[] = ['', '<comment>Total</comment>', '<info>' . Formatter::formatDuration($total) . '</info>', ''];

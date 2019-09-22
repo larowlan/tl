@@ -4,6 +4,7 @@ namespace Larowlan\Tl\Tests;
 
 use Larowlan\Tl\Application;
 use Larowlan\Tl\Connector\ConnectorManager;
+use Larowlan\Tl\Slot;
 use Larowlan\Tl\Tests\Commands\AliasTest;
 use Larowlan\Tl\Ticket;
 use PHPUnit\Framework\TestCase;
@@ -46,6 +47,7 @@ abstract class TlTestBase extends TestCase {
    * {@inheritdoc}
    */
   protected function setUp() {
+    parent::setUp();
     $container = new ContainerBuilder();
     $bin_dir = dirname(__DIR__) . '/';
     $loader = new YamlFileLoader($container, new FileLocator($bin_dir));
@@ -66,7 +68,7 @@ abstract class TlTestBase extends TestCase {
     if ($this->installSchema) {
       $install = $container->get('app.command.install');
       $install->setApplication($this->application);
-      $input = new ArrayInput(['command' => 'install']);
+      $input = new ArrayInput(['command' => 'install', '--skip-post' => TRUE]);
       $output = $this->createMock(OutputInterface::class);
       $install->run($input, $output);
     }
@@ -128,17 +130,17 @@ abstract class TlTestBase extends TestCase {
   }
 
   /**
-   * @return mixed
+   * @return \Larowlan\Tl\Slot
    */
-  protected function assertTicketIsOpen($ticket_id, $comment = NULL) {
+  protected function assertTicketIsOpen($ticket_id, $comment = NULL) : Slot {
     /** @var \Larowlan\Tl\Repository\Repository $repository */
     $repository = $this->getRepository();
     $active = $repository->getActive();
-    $this->assertEquals($ticket_id, $active->tid);
-    $this->assertEquals($comment, $active->comment);
-    $this->assertNull($active->end);
-    $this->assertNull($active->category);
-    $this->assertNull($active->teid);
+    $this->assertEquals($ticket_id, $active->getTicketId());
+    $this->assertEquals($comment, $active->getComment());
+    $this->assertNull($active->lastChunk()->getEnd());
+    $this->assertNull($active->getCategory());
+    $this->assertNull($active->getRemoteEntryId());
     return $active;
   }
 

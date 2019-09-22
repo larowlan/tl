@@ -23,9 +23,9 @@ class ContinueTest extends TlTestBase {
     $this->getMockConnector()->expects($this->any())
       ->method('ticketDetails')
       ->willReturnMap([
-        ['1', 'connector.redmine', new Ticket('Do something', 1)],
-        ['2', 'connector.redmine', new Ticket('Do something else', 2)],
-        ['3', 'connector.redmine', new Ticket('Do something more', 3)],
+        [1, 'connector.redmine', FALSE, new Ticket('Do something', 1)],
+        [2, 'connector.redmine', FALSE, new Ticket('Do something else', 2)],
+        [3, 'connector.redmine', FALSE, new Ticket('Do something more', 3)],
       ]);
     $this->getMockConnector()->expects($this->any())
       ->method('spotConnector')
@@ -73,8 +73,8 @@ class ContinueTest extends TlTestBase {
     $this->assertTicketIsOpen(3);
     $this->getRepository()->stop();
     $slot = $this->getRepository()->slot($this->slotId3);
-    $this->assertGreaterThanOrEqual(3600 * 9, $slot->end - $slot->start);
-    $this->assertLessThanOrEqual((3600 * 9) + 60, $slot->end - $slot->start);
+    $this->assertGreaterThanOrEqual(3600 * 9, $slot->getDuration());
+    $this->assertLessThanOrEqual((3600 * 9) + 60, $slot->getDuration());
   }
 
   /**
@@ -87,8 +87,8 @@ class ContinueTest extends TlTestBase {
     $this->assertTicketIsOpen(2);
     $this->getRepository()->stop();
     $slot = $this->getRepository()->slot($this->slotId2);
-    $this->assertGreaterThanOrEqual(3600, $slot->end - $slot->start);
-    $this->assertLessThanOrEqual(3600 + 60, $slot->end - $slot->start);
+    $this->assertGreaterThanOrEqual(3600, $slot->getDuration());
+    $this->assertLessThanOrEqual(3600 + 60, $slot->getDuration());
   }
 
 }
