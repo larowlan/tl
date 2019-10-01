@@ -73,7 +73,7 @@ class Add extends Command implements LogAwareCommand {
       $seconds = Input::parseInterval($duration);
     }
     catch (\Throwable $e) {
-      $output->writeln('<error>' . $e->getMessage() . '</error>');
+      $output->writeln(sprintf('<error>%s: %s</error>', $e->getMessage(), $duration));
       return 1;
     }
 
