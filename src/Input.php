@@ -61,8 +61,8 @@ class Input {
         continue;
       }
 
-      // Fractions of an hour.
-      if (preg_match('/^\d{0,10}\.\d{1,10}$/', $interval, $matches)) {
+      // Fractions of an hour and whole hours: .5, 1, 1.5, etc.
+      if (preg_match('/^\d{0,10}(?>\.\d{1,10}){0,1}$/', $interval, $matches)) {
         $total += (int) round((float) ($matches[0]) * 3600);
         continue;
       }

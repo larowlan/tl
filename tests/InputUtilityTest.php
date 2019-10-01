@@ -62,6 +62,9 @@ class InputUtilityTest extends TlTestBase {
     // Test fractions.
     $data['fraction - double digit'] = ['.25', 900];
     $data['fraction - single digit'] = ['.5', 1800];
+    $data['fraction - no decimal 1'] = ['1', 3600];
+    $data['fraction - no decimal 2'] = ['2', 7200];
+    $data['fraction - whole hour'] = ['1.0', 3600];
     $data['fraction - multi hour'] = ['1.5', 5400];
     $data['fraction - rounded'] = ['.55', 1980];
     $data['fraction - long'] = ['.75555', 2720];
