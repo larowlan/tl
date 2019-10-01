@@ -83,7 +83,7 @@ class Input {
         continue;
       }
 
-      throw new \InvalidArgumentException('Unable to parse interval.');
+      throw new \InvalidArgumentException('Unable to parse interval');
     }
 
     return $total;
