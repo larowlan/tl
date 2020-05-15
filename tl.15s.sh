@@ -1,5 +1,5 @@
 #!/bin/bash
-# Put this in your bitbar plugins folder 🥃
+# Put this in your bitbar plugins folder
 # Make sure it is executable
 # Make sure tl is available in your path from /usr/local/bin or /usr/bin
 export PATH='/usr/local/bin:/usr/bin:$PATH'
