@@ -8,6 +8,15 @@ if [[ "$1" = "stop" ]]; then
   output=`tl stop`
   osascript -e "display notification \"$output\" with title \"Stopped timer\"" &> /dev/null
 fi
-tl bitbar
+OUTPUT="$(tl bitbar)"
+COLOR="green"
+ICON="🎫"
+if [[ ${OUTPUT:0:8} = "Inactive" ]]; then
+	COLOR="red"
+	# ICON="☠"
+	ICON="🎟"
+fi
+echo "${ICON} ${OUTPUT} | color=${COLOR}"
 echo "---"
-echo "◾  Stop |bash=$0 param1=stop terminal=false refresh=true"
+echo "Stop|bash=$0 param1=stop terminal=false refresh=true"
+echo "Refresh|refresh=true"
