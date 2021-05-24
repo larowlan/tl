@@ -17,5 +17,5 @@ cache:
 script:
  - composer install
  - ./vendor/bin/phpcs --report=checkstyle
- - ./vendor/bin/phpunit --coverage-text
+ - XDEBUG_MODE=coverage ./vendor/bin/phpunit --coverage-text
 
