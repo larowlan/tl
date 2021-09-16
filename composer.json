@@ -15,7 +15,7 @@
         "php": ">=7.2",
         "ext-sqlite3": "*",
         "ext-pdo_sqlite": "*",
-        "lesstif/php-jira-rest-client": "^1.35",
+        "lesstif/php-jira-rest-client": "~2",
         "morningtrain/toggl-api": "^1.0",
         "phpunit/phpunit": "~9"
     },
