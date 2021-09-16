@@ -29,7 +29,7 @@ class EditTest extends TlTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->getMockConnector()->expects($this->any())
       ->method('ticketDetails')
@@ -65,7 +65,7 @@ class EditTest extends TlTestBase {
       'slot_id' => $this->slot->getId(),
       'duration' => '8h',
     ]);
-    $this->assertContains(sprintf('Updated slot %d to 8:00:00', $this->slot->getId()), $result->getDisplay());
+    $this->assertStringContainsString(sprintf('Updated slot %d to 8:00:00', $this->slot->getId()), $result->getDisplay());
     $slots = $this->getRepository()->review();
     $total = array_reduce($slots, function (int $carry, Slot $slot) {
       return $carry + $slot->getDuration();
@@ -82,7 +82,7 @@ class EditTest extends TlTestBase {
       'slot_id' => $this->slot->getId(),
       'duration' => '6h',
     ]);
-    $this->assertContains(sprintf('Updated slot %d to 6:00:00', $this->slot->getId()), $result->getDisplay());
+    $this->assertStringContainsString(sprintf('Updated slot %d to 6:00:00', $this->slot->getId()), $result->getDisplay());
     $slots = $this->getRepository()->review();
     $total = array_reduce($slots, function (int $carry, Slot $slot) {
       return $carry + $slot->getDuration();
@@ -102,7 +102,7 @@ class EditTest extends TlTestBase {
       'slot_id' => $slot->getId(),
       'duration' => .25,
     ]);
-    $this->assertContains(sprintf('Updated slot %d to 15:00 m', $slot->getId()), $result->getDisplay());
+    $this->assertStringContainsString(sprintf('Updated slot %d to 15:00 m', $slot->getId()), $result->getDisplay());
     $slots = $this->getRepository()->review();
     $total = array_reduce($slots, function (int $carry, Slot $theSlot) use ($slot) {
       return $carry + $theSlot->getId() === $slot->getId() ? $theSlot->getDuration() : 0;

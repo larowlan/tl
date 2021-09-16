@@ -14,7 +14,7 @@ class ReviewTest extends TlTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->getMockConnector()->expects($this->any())
       ->method('ticketDetails')
@@ -58,10 +58,10 @@ class ReviewTest extends TlTestBase {
   public function testReviewCommand() {
     $this->setUp();
     $result = $this->executeCommand('review');
-    $this->assertContains('11 h', $result->getDisplay());
-    $this->assertContains('Do something', $result->getDisplay());
-    $this->assertContains('Do something else', $result->getDisplay());
-    $this->assertContains('Do something more', $result->getDisplay());
+    $this->assertStringContainsString('11 h', $result->getDisplay());
+    $this->assertStringContainsString('Do something', $result->getDisplay());
+    $this->assertStringContainsString('Do something else', $result->getDisplay());
+    $this->assertStringContainsString('Do something more', $result->getDisplay());
   }
 
   /**
@@ -70,12 +70,12 @@ class ReviewTest extends TlTestBase {
   public function testReviewExact() {
     $this->setUp();
     $result = $this->executeCommand('review', ['--exact' => TRUE]);
-    $this->assertContains('10:58:36', $result->getDisplay());
-    $this->assertContains('6:58:36', $result->getDisplay());
-    $this->assertContains('3:00:00', $result->getDisplay());
-    $this->assertContains('Do something', $result->getDisplay());
-    $this->assertContains('Do something else', $result->getDisplay());
-    $this->assertContains('Do something more', $result->getDisplay());
+    $this->assertStringContainsString('10:58:36', $result->getDisplay());
+    $this->assertStringContainsString('6:58:36', $result->getDisplay());
+    $this->assertStringContainsString('3:00:00', $result->getDisplay());
+    $this->assertStringContainsString('Do something', $result->getDisplay());
+    $this->assertStringContainsString('Do something else', $result->getDisplay());
+    $this->assertStringContainsString('Do something more', $result->getDisplay());
   }
 
 }

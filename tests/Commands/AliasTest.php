@@ -20,12 +20,12 @@ class AliasTest extends TlTestBase {
       'ticket_id' => 1234,
       'alias' => 'pony',
     ]);
-    $this->assertRegExp('/Created new alias/', $output->getDisplay());
+    $this->assertMatchesRegularExpression('/Created new alias/', $output->getDisplay());
     $output = $this->executeCommand('start', [
       'issue_number' => 'pony',
     ]);
     $this->assertTicketIsOpen(1234);
-    $this->assertRegExp('/Started new entry for 1234: Running tests/', $output->getDisplay());
+    $this->assertMatchesRegularExpression('/Started new entry for 1234: Running tests/', $output->getDisplay());
   }
 
   /**
@@ -37,13 +37,13 @@ class AliasTest extends TlTestBase {
       'ticket_id' => 1234,
       'alias' => 'pony',
     ]);
-    $this->assertRegExp('/Created new alias/', $output->getDisplay());
+    $this->assertMatchesRegularExpression('/Created new alias/', $output->getDisplay());
     $output = $this->executeCommand('alias', [
       'ticket_id' => 1234,
       'alias' => 'pony',
       '--delete' => TRUE,
     ]);
-    $this->assertRegExp('/Removed alias/', $output->getDisplay());
+    $this->assertMatchesRegularExpression('/Removed alias/', $output->getDisplay());
   }
 
   /**
@@ -59,23 +59,23 @@ class AliasTest extends TlTestBase {
     $output = $this->executeCommand('alias', [
       'ticket_id' => 1234,
     ]);
-    $this->assertRegExp('/Missing alias/', $output->getDisplay());
+    $this->assertMatchesRegularExpression('/Missing alias/', $output->getDisplay());
     $output = $this->executeCommand('alias', [
       'alias' => 1234,
     ]);
-    $this->assertRegExp('/Missing ticket number/', $output->getDisplay());
+    $this->assertMatchesRegularExpression('/Missing ticket number/', $output->getDisplay());
     foreach ($aliases as $alias) {
       $output = $this->executeCommand('alias', [
         'ticket_id' => 1234,
         'alias' => $alias,
       ]);
-      $this->assertRegExp('/Created new alias/', $output->getDisplay());
+      $this->assertMatchesRegularExpression('/Created new alias/', $output->getDisplay());
     }
     $output = $this->executeCommand('alias', [
       '--list' => TRUE,
     ]);
     foreach ($aliases as $alias) {
-      $this->assertRegExp('/' . $alias . '/', $output->getDisplay());
+      $this->assertMatchesRegularExpression('/' . $alias . '/', $output->getDisplay());
     }
   }
 

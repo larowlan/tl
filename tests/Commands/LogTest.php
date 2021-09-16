@@ -29,7 +29,7 @@ class LogTest extends TlTestBase {
     ]), $output);
     $this->assertTicketIsOpen(1234);
     $output = $this->executeCommand('log');
-    $this->assertRegExp('/Started new entry for 1234: Running tests/', $output->getDisplay());
+    $this->assertMatchesRegularExpression('/Started new entry for 1234: Running tests/', $output->getDisplay());
   }
 
 }

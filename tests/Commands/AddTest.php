@@ -25,9 +25,9 @@ class AddTest extends TlTestBase {
       'issue_number' => 1234,
       'duration' => .25,
     ]);
-    $this->assertRegExp('/' . $now->format('Y-m-d h:i') . '/', $output->getDisplay());
-    $this->assertRegExp('/Added entry for 1234: Running tests/', $output->getDisplay());
-    $this->assertRegExp('/for 15:00 m/', $output->getDisplay());
+    $this->assertMatchesRegularExpression('/' . $now->format('Y-m-d h:i') . '/', $output->getDisplay());
+    $this->assertMatchesRegularExpression('/Added entry for 1234: Running tests/', $output->getDisplay());
+    $this->assertMatchesRegularExpression('/for 15:00 m/', $output->getDisplay());
     $slot = $this->assertSlotAdded(1234);
     $this->assertEquals(.25 * 60 *60, $slot->getDuration());
     $this->assertEquals((int) $now->format('U'), $slot->getStart());
@@ -47,9 +47,9 @@ class AddTest extends TlTestBase {
       'duration' => '1h',
       'comment' => 'Doing stuff',
     ]);
-    $this->assertRegExp('/' . $now->format('Y-m-d h:i') . '/', $output->getDisplay());
-    $this->assertRegExp('/Added entry for 1234: Running tests/', $output->getDisplay());
-    $this->assertRegExp('/for 1:00:00/', $output->getDisplay());
+    $this->assertMatchesRegularExpression('/' . $now->format('Y-m-d h:i') . '/', $output->getDisplay());
+    $this->assertMatchesRegularExpression('/Added entry for 1234: Running tests/', $output->getDisplay());
+    $this->assertMatchesRegularExpression('/for 1:00:00/', $output->getDisplay());
     $slot = $this->assertSlotAdded(1234, 'Doing stuff');
     $this->assertEquals(1 * 60 *60, $slot->getDuration());
     $this->assertEquals((int) $now->format('U'), $slot->getStart());
@@ -68,9 +68,9 @@ class AddTest extends TlTestBase {
       'duration' => 3.25,
       '--start' => $start,
     ]);
-    $this->assertRegExp('/' . $time->format('Y-m-d h:i') . '/', $output->getDisplay());
-    $this->assertRegExp('/Added entry for 1234: Running tests/', $output->getDisplay());
-    $this->assertRegExp('/for 3:15:00./', $output->getDisplay());
+    $this->assertMatchesRegularExpression('/' . $time->format('Y-m-d h:i') . '/', $output->getDisplay());
+    $this->assertMatchesRegularExpression('/Added entry for 1234: Running tests/', $output->getDisplay());
+    $this->assertMatchesRegularExpression('/for 3:15:00./', $output->getDisplay());
     $slot = $this->assertSlotAdded(1234);
     $this->assertEquals(3.25 * 60 *60, $slot->getDuration());
     $this->assertEquals((int) $time->format('U'), $slot->getStart());

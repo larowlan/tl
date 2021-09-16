@@ -19,7 +19,7 @@ class InputUtilityTest extends TlTestBase {
    *
    * @dataProvider providerTestInterval
    */
-  public function testInterval($string, ?string $assertValue, ?string $exceptionMessage = NULL): void {
+  public function testInterval($string, ?int $assertValue, ?string $exceptionMessage = NULL): void {
     if (!isset($assertValue)) {
       $this->expectException(\InvalidArgumentException::class);
       $this->expectExceptionMessage($exceptionMessage);

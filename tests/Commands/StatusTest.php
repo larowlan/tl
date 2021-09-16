@@ -14,7 +14,7 @@ class StatusTest extends TlTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->getMockConnector()->expects($this->any())
       ->method('ticketDetails')
@@ -41,15 +41,15 @@ class StatusTest extends TlTestBase {
 
     // Today should have 7hrs.
     $result = $this->executeCommand('status');
-    $this->assertContains('7:00:00', $result->getDisplay());
+    $this->assertStringContainsString('7:00:00', $result->getDisplay());
 
     // Yesterday should be 4hrs.
     $result = $this->executeCommand('status', ['date' => '_1']);
-    $this->assertContains('4:00:00', $result->getDisplay());
+    $this->assertStringContainsString('4:00:00', $result->getDisplay());
 
     // Day before yesterday, 1hr.
     $result = $this->executeCommand('status', ['date' => '_2']);
-    $this->assertContains('1:00:00', $result->getDisplay());
+    $this->assertStringContainsString('1:00:00', $result->getDisplay());
   }
 
   /**
@@ -68,11 +68,11 @@ class StatusTest extends TlTestBase {
 
     // Day 1 should have two hours.
     $result = $this->executeCommand('status', ['date' => '2014-12-10']);
-    $this->assertContains('2:00:00', $result->getDisplay());
+    $this->assertStringContainsString('2:00:00', $result->getDisplay());
 
     // Day 2 should have 3hrs exactly.
     $result = $this->executeCommand('status', ['date' => '2014-12-11']);
-    $this->assertContains('3:00:00', $result->getDisplay());
+    $this->assertStringContainsString('3:00:00', $result->getDisplay());
   }
 
 }
