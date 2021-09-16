@@ -18,7 +18,7 @@ class ContinueTest extends TlTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->getMockConnector()->expects($this->any())
       ->method('ticketDetails')
@@ -69,7 +69,7 @@ class ContinueTest extends TlTestBase {
   public function testContinueCommand() {
     $this->setUp();
     $result = $this->executeCommand('continue');
-    $this->assertContains('Continued entry for 3: Do something more [slot:' . $this->slotId3 . ']', $result->getDisplay());
+    $this->assertStringContainsString('Continued entry for 3: Do something more [slot:' . $this->slotId3 . ']', $result->getDisplay());
     $this->assertTicketIsOpen(3);
     $this->getRepository()->stop();
     $slot = $this->getRepository()->slot($this->slotId3);
@@ -83,7 +83,7 @@ class ContinueTest extends TlTestBase {
   public function testContinueCommandWithSlotId() {
     $this->setUp();
     $result = $this->executeCommand('continue', ['slot_id' => $this->slotId2]);
-    $this->assertContains('Continued entry for 2: Do something else [slot:' . $this->slotId2 . ']', $result->getDisplay());
+    $this->assertStringContainsString('Continued entry for 2: Do something else [slot:' . $this->slotId2 . ']', $result->getDisplay());
     $this->assertTicketIsOpen(2);
     $this->getRepository()->stop();
     $slot = $this->getRepository()->slot($this->slotId2);

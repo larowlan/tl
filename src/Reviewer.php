@@ -8,7 +8,7 @@ use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Helper\TableSeparator;
 
 /**
- * Reviewer helper.
+ * Defines a class for common reviewing functionality.
  */
 class Reviewer {
 

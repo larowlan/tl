@@ -53,7 +53,7 @@ class Application extends BaseApplication {
    * @param \Symfony\Component\DependencyInjection\ContainerBuilder $container
    *   DI Container.
    */
-  public function __construct($name = 'UNKNOWN', $version = 'UNKNOWN', ContainerBuilder $container) {
+  public function __construct($name, $version, ContainerBuilder $container) {
     parent::__construct($name, $version);
     $this->container = $container;
     $this->container->setParameter('version', $this->getVersion());

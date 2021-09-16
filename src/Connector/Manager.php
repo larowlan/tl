@@ -98,7 +98,10 @@ class Manager implements ConfigurableService, ConnectorManager {
       foreach ($this->connectors as $connector_id => $connector) {
         if ($connector->ticketDetails($id, $connector_id)) {
           list(, $connector_id) = explode('.', $connector_id);
-          $backends[$connector_id] = call_user_func([get_class($connector), 'getName']);
+          $backends[$connector_id] = call_user_func([
+            get_class($connector),
+            'getName',
+          ]);
         }
       }
       // Cache result.

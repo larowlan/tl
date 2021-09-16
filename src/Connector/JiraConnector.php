@@ -37,7 +37,7 @@ class JiraConnector implements Connector, ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  const JIRA_URL = 'https://jiramigration.cd.pnx.com.au';
+  const JIRA_URL = 'https://previousnext.atlassian.net';
 
   /**
    * Issue service.

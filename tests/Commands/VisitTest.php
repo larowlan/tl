@@ -19,7 +19,7 @@ class VisitTest extends TlTestBase {
    */
   public function testNoActiveVisit() {
     $output = $this->executeCommand('visit');
-    $this->assertContains('No active ticket, please use tl visit {ticket_id} to specifiy a ticket.', $output->getDisplay());
+    $this->assertStringContainsString('No active ticket, please use tl visit {ticket_id} to specifiy a ticket.', $output->getDisplay());
   }
 
   /**
@@ -38,7 +38,7 @@ class VisitTest extends TlTestBase {
     ]);
     $this->assertTicketIsOpen(1234);
     $output = $this->executeCommand('visit');
-    $this->assertContains('Could not find a browser helper.', $output->getDisplay());
+    $this->assertStringContainsString('Could not find a browser helper.', $output->getDisplay());
   }
 
   /**
@@ -55,7 +55,7 @@ class VisitTest extends TlTestBase {
     $output = $this->executeCommand('visit', [
       'issue' => '1234',
     ]);
-    $this->assertContains('Could not find a browser helper.', $output->getDisplay());
+    $this->assertStringContainsString('Could not find a browser helper.', $output->getDisplay());
   }
 
   /**
@@ -73,11 +73,11 @@ class VisitTest extends TlTestBase {
       'ticket_id' => 1234,
       'alias' => 'pony',
     ]);
-    $this->assertRegExp('/Created new alias/', $output->getDisplay());
+    $this->assertMatchesRegularExpression('/Created new alias/', $output->getDisplay());
     $output = $this->executeCommand('visit', [
       'issue' => 'pony',
     ]);
-    $this->assertContains('Could not find a browser helper.', $output->getDisplay());
+    $this->assertStringContainsString('Could not find a browser helper.', $output->getDisplay());
   }
 
   /**

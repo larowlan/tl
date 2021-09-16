@@ -2,8 +2,8 @@ language: php
 sudo: false
 
 php:
-  - 7.2
-  - 7.3
+  - 7.4
+  - 8.0
 
 matrix:
   # Don't wait for the allowed failures to build.
@@ -17,5 +17,5 @@ cache:
 script:
  - composer install
  - ./vendor/bin/phpcs --report=checkstyle
- - ./vendor/bin/phpunit --coverage-text
+ - XDEBUG_MODE=coverage ./vendor/bin/phpunit --coverage-text
 
