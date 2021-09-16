@@ -11,6 +11,7 @@ use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Helper\Table;
+use Symfony\Component\Console\Helper\TableCell;
 use Symfony\Component\Console\Helper\TableSeparator;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -191,7 +192,11 @@ class Billable extends Command implements ConfigurableService {
     }
     $table = new Table($output);
     if (!$project) {
-      $table->setHeaders(['Type', 'Hours', 'Percent']);
+      $headers = ['Type', 'Hours', 'Percent'];
+      if ($period === static::MONTH) {
+        $headers[] = 'Tracking';
+      }
+      $table->setHeaders($headers);
     }
     else {
       $table->setHeaders(['Type', 'Project', 'Hours', 'Percent']);
@@ -289,10 +294,16 @@ class Billable extends Command implements ConfigurableService {
       if ($no_weekdays_in_month > 0) {
         $expected = $days_passed / $no_weekdays_in_month;
       }
+      $fraction_of_month = $days_passed / $no_weekdays_in_month;
+      if (date('G') < 15 && $reference_point->format('Y-m-t') > date('Y-m-d')) {
+        // If it's before 3pm, days_passed doesn't include the current day, add
+        // it back.
+        $fraction_of_month = (1 + $days_passed) / $no_weekdays_in_month;
+      }
       $rows[] = $this->formatProgressRow('No. Days', $days_passed, $no_weekdays_in_month);
-      $rows[] = $this->formatProgressRow('Billable Hrs', $billable_hrs, $total_billable_hrs, $expected);
-      $rows[] = $this->formatProgressRow('Non-billable Hrs', $non_billable_hrs, $total_non_billable_hrs);
-      $rows[] = $this->formatProgressRow('Total Hrs', $completed_hrs, $total_hrs, $expected);
+      $rows[] = $this->formatProgressRow('Billable Hrs', $billable_hrs, $total_billable_hrs, $fraction_of_month, $expected);
+      $rows[] = $this->formatProgressRow('Non-billable Hrs', $non_billable_hrs, $total_non_billable_hrs, $fraction_of_month);
+      $rows[] = $this->formatProgressRow('Total Hrs', $completed_hrs, $total_hrs, $fraction_of_month, $expected);
     }
 
     $table->setRows($rows);
@@ -321,7 +332,7 @@ class Billable extends Command implements ConfigurableService {
     $total_hrs = 0;
     foreach (explode(',', $this->targets[$target_key]) as $day) {
       if (strpos($day, ':') !== FALSE) {
-        list(, $hrs_per_day) = explode(':', $day);
+        [, $hrs_per_day] = explode(':', $day);
       }
       else {
         $hrs_per_day = $this->hoursPerDay;
@@ -340,13 +351,15 @@ class Billable extends Command implements ConfigurableService {
    *   Numerator for progress.
    * @param float $denominator
    *   Denominator for progress.
-   * @param float $expected
+   * @param float $fraction_of_month
+   *   Percentage of the month passed.
+   * @param null $expected
    *   Expected progress.
    *
    * @return array
    *   Formatted row.
    */
-  protected function formatProgressRow($caption, $numerator, $denominator, $expected = NULL) {
+  protected function formatProgressRow($caption, $numerator, $denominator, float $fraction_of_month = NULL, $expected = NULL) {
     if ($denominator < 0) {
       return [$caption, "$numerator/$denominator", '0%'];
     }
@@ -354,17 +367,23 @@ class Billable extends Command implements ConfigurableService {
     if ($numerator > $denominator) {
       $difference = sprintf('-%s', $numerator - $denominator);
     }
+    $available = NULL;
+    if ($fraction_of_month) {
+      $available = sprintf('%8.2f', -1 * (($denominator * $fraction_of_month) - $numerator));
+    }
     if ($expected && ($numerator / $denominator) < $expected) {
       return [
         $caption,
         "$numerator/$denominator ($difference)",
         '<error>' . round(100 * $numerator / $denominator, 2) . '%' . '</error>',
+        $available,
       ];
     }
     return [
       $caption,
       "$numerator/$denominator ($difference)",
       round(100 * $numerator / $denominator, 2) . '%',
+      $available,
     ];
   }
 
@@ -406,6 +425,9 @@ class Billable extends Command implements ConfigurableService {
       $target = $this->targets[$target_key];
       if (strpos($target, ',') !== FALSE) {
         $passed = array_filter(explode(',', $target), function ($item) use ($days_passed) {
+          if (strpos($item, ':') !== FALSE) {
+            [$item, $partial] = explode(':', $item);
+          }
           return $item <= $days_passed;
         });
         $weekdays = count($passed);
