@@ -54,7 +54,7 @@ class Status extends Command {
     // Allow special date param in the form of _1 for back one day, _2 for two
     // days etc.
     $date = $input->getArgument('date');
-    if (preg_match('/_(\d+)/', $date, $matches)) {
+    if (!empty($date) && preg_match('/_(\d+)/', $date, $matches)) {
       $date = date('Y-m-d', time() - 86400 * $matches[1]);
     }
     $data = $this->repository->status($date);
