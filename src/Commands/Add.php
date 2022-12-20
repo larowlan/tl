@@ -125,6 +125,8 @@ class Add extends Command implements LogAwareCommand {
     else {
       $output->writeln('<error>Error: no such ticket id or access denied</error>');
     }
+
+    return 0;
   }
 
 }

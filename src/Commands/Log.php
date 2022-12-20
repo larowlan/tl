@@ -46,6 +46,7 @@ class Log extends Command {
   protected function execute(InputInterface $input, OutputInterface $output) {
     $records = $input->getArgument('records');
     $output->writeln(LogHelper::tail($this->directory . '/.tl.log', $records));
+    return 0;
   }
 
 }

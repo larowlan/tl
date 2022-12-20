@@ -59,12 +59,11 @@ class Tag extends Command {
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
     if ($slot_id = $input->getArgument('slot_id')) {
-      $this->tagOne($input, $output, $slot_id);
+      return $this->tagOne($input, $output, $slot_id);
     }
     else {
-      $this->tagAll($input, $output);
+      return $this->tagAll($input, $output);
     }
-
   }
 
   /**
@@ -72,8 +71,10 @@ class Tag extends Command {
    *
    * @param \Symfony\Component\Console\Input\InputInterface $input
    * @param \Symfony\Component\Console\Output\OutputInterface $output
+   *
+   * @return int
    */
-  protected function tagAll(InputInterface $input, OutputInterface $output) {
+  protected function tagAll(InputInterface $input, OutputInterface $output): int {
     $helper = $this->getHelper('question');
     $last = FALSE;
     try {
@@ -82,7 +83,7 @@ class Tag extends Command {
     }
     catch (ConnectException $e) {
       $output->writeln('<error>You are offline, please try again later.</error>');
-      return;
+      return 1;
     }
     /** @var \Larowlan\Tl\Slot $entry */
     foreach ($entries as $entry) {
@@ -118,7 +119,9 @@ class Tag extends Command {
     }
     if (!$last) {
       $output->writeln('<error>All items already tagged, use --retag to retag</error>');
+      return 1;
     }
+    return 0;
   }
 
   /**
@@ -127,8 +130,10 @@ class Tag extends Command {
    * @param \Symfony\Component\Console\Input\InputInterface $input
    * @param \Symfony\Component\Console\Output\OutputInterface $output
    * @param $slot_id
+   *
+   * @return int
    */
-  protected function tagOne(InputInterface $input, OutputInterface $output, $slot_id) {
+  protected function tagOne(InputInterface $input, OutputInterface $output, $slot_id): int {
     if ($entry = $this->repository->slot($slot_id)) {
       $helper = $this->getHelper('question');
       try {
@@ -138,13 +143,13 @@ class Tag extends Command {
       }
       catch (ConnectException $e) {
         $output->writeln('<error>You are offline, please try again later.</error>');
-        return;
+        return 1;
       }
       if (count($categories) === 1) {
         $tag = reset($categories);
         list(, $tag) = explode(':', $tag);
         $this->repository->tag($tag, $entry->getId());
-        return;
+        return 1;
       }
       $default = reset($categories);
       $question = new ChoiceQuestion(
@@ -166,7 +171,9 @@ class Tag extends Command {
     }
     else {
       $output->writeln('<error>No such slot - please check your slot ID</error>');
+      return 1;
     }
+    return 0;
   }
 
 }

@@ -68,9 +68,10 @@ class Continues extends Command implements LogAwareCommand {
         $slot->getId()
       ));
 
-      return;
+      return 0;
     }
     $output->writeln('<error>Could not find the slot to continue</error>');
+    return 1;
   }
 
 }

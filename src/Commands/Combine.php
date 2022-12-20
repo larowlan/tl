@@ -61,6 +61,7 @@ class Combine extends Command {
     $this->repository->combine($entry1, $entry2);
 
     $output->writeln(sprintf('Combined %s and %s into new slot %s', $slot1, $slot2, $slot1));
+    return 0;
   }
 
   /**

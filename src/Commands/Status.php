@@ -73,6 +73,8 @@ class Status extends Command {
     $rows[] = ['', '<comment>Total</comment>', '<info>' . Formatter::formatDuration($total) . '</info>', ''];
     $table->setRows($rows);
     $table->render();
+
+    return 0;
   }
 
 }

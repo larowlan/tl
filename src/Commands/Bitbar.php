@@ -61,6 +61,7 @@ class Bitbar extends Command {
     }
     $text .= '(' . $total / 3600 . 'h)';
     $output->writeln($text);
+    return 0;
   }
 
 }
