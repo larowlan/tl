@@ -6,9 +6,9 @@
 
 ## Requirements
 
-* PHP 7.2+
-* php7.2-sqlite3
-* php7.2-pdo_sqlite
+* PHP 8.1+
+* php8.1-sqlite3
+* php8.1-pdo_sqlite
 
 
 ## Installation
