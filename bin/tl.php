@@ -20,5 +20,6 @@ $home = $_SERVER['HOME'];
 $container->setParameter('directory', $home);
 $container->set('container', $container);
 
-$application = new Application('Time logger', '@package_version@', $container);
+$application = new Application('Time logger ⏰🪵✨', '@package_version@', $container);
+$application->setDefaultCommand('list');
 $application->run();
