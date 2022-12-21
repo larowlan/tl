@@ -128,13 +128,13 @@
   {
     "name": "tl.phar",
     "sha1": "cfb42b235f46320cd1411f23c5826a34eb04abd8",
-    "url": "https://github.com/larowlan/tl/releases/download/1.0.0-alpha6/tl-1.0.0-alpha7.phar",
+    "url": "https://github.com/larowlan/tl/releases/download/1.0.0-alpha7/tl-1.0.0-alpha7.phar",
     "version": "1.0.0-alpha7"
   },
   {
     "name": "tl.phar",
     "sha1": "7fef2e0fb17db914e3e0280ddff77c28cd8a44ac",
-    "url": "https://github.com/larowlan/tl/releases/download/1.0.0-alpha6/tl-1.0.0-alpha8.phar",
+    "url": "https://github.com/larowlan/tl/releases/download/1.0.0-alpha8/tl-1.0.0-alpha8.phar",
     "version": "1.0.0-alpha8"
   }
 ]
