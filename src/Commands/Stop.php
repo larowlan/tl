@@ -68,11 +68,13 @@ class Stop extends Command implements LogAwareCommand {
         }
         else {
           $output->writeln('<error>Could not update ticket status</error>');
+          return 1;
         }
       }
-      return;
+      return 0;
     }
     $output->writeln('<error>No active slot</error>');
+    return 1;
   }
 
 }

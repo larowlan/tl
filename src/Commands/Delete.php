@@ -67,11 +67,13 @@ class Delete extends Command {
         $deleted->getTitle(),
         Formatter::formatDuration($slot->getDuration())
       ));
-      return;
+      return 0;
     }
     if ($confirm !== FALSE) {
       $output->writeln('<error>Cannot delete slot, either does not exist or has been sent to back end.</error>');
+      return 1;
     }
+    return 0;
   }
 
 }

@@ -69,7 +69,7 @@ class Alias extends Command {
       }
       $table->setRows($rows);
       $table->render();
-      return;
+      return 0;
     }
     $alias = $input->getArgument('alias');
     $tid = $input->getArgument('ticket_id');
@@ -79,24 +79,28 @@ class Alias extends Command {
       }
       else {
         $output->writeln('<error>Unable to delete alias</error>');
+        return 1;
       }
     }
     else {
       if (!$alias) {
         $output->writeln('<error>Missing alias</error>');
-        return;
+        return 1;
       }
       if (!$tid) {
         $output->writeln('<error>Missing ticket number</error>');
-        return;
+        return 1;
       }
       if ($this->repository->addAlias($tid, $alias)) {
         $output->writeln('Created new alias');
       }
       else {
         $output->writeln('<error>Unable to create alias</error>');
+        return 1;
       }
     }
+
+    return 0;
   }
 
 }

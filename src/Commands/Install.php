@@ -75,6 +75,7 @@ class Install extends Command implements PreinstallCommand {
     else {
       $output->writeln('<comment>Schema is already up to date.</comment>');
     }
+    return 0;
   }
 
   /**

@@ -77,9 +77,10 @@ class Assigned extends Command {
       }
       $table->setRows($rows);
       $table->render();
-      return;
+      return 0;
     }
     $output->writeln('<error>No assigned tickets.</error>');
+    return 1;
   }
 
 }

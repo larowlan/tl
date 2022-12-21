@@ -118,6 +118,7 @@ class Start extends Command implements CompletionAwareInterface, LogAwareCommand
             if ($assign) {
               $output->writeln('<error>Could not assign ticket</error>');
             }
+            return 1;
           }
         }
         elseif ($input->getOption('assign')) {
@@ -127,20 +128,24 @@ class Start extends Command implements CompletionAwareInterface, LogAwareCommand
           }
           else {
             $output->writeln('<error>Could not assign ticket</error>');
+            return 1;
           }
         }
         elseif ($input->getOption('redmine-comment')) {
           $output->writeln('<error>You cannot provide a comment if you do not provide the --assign or --status flags</error>');
-          exit(1);
+          return 1;
         }
       }
       catch (\Exception $e) {
         $output->writeln(sprintf('<error>Error creating slot: %s</error>', $e->getMessage()));
+        return 1;
       }
     }
     else {
       $output->writeln('<error>Error: no such ticket id or access denied</error>');
+      return 1;
     }
+    return 0;
   }
 
   /**

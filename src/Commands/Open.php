@@ -55,9 +55,10 @@ class Open extends Command {
         Formatter::formatDuration($data->getDuration()),
         $data->getId()
       ));
-      return;
+      return 0;
     }
     $output->writeln('<error>No active slot</error>');
+    return 1;
   }
 
 }

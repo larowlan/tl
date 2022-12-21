@@ -90,7 +90,7 @@ class Send extends Command {
         $details->getTitle(),
         $open->getTicketId()
       ));
-      return;
+      return 1;
     }
 
     // Find any untagged items needing review, use an arbitrarily early date.
@@ -102,7 +102,7 @@ class Send extends Command {
       $table->setHeaders(Reviewer::headers());
       $table->setRows($review);
       $table->render();
-      return;
+      return 1;
     }
     $entry_ids = $return = [];
     $entries = $this->repository->send();
@@ -139,8 +139,10 @@ class Send extends Command {
     $output->writeln("Stored remote entries \xF0\x9F\x8E\x89");
     if ($errors) {
       $output->writeln('<error>Errors occurred during sending, run "tl log" for more information.');
+      return 1;
     }
     $this->repository->store($entry_ids);
+    return 0;
   }
 
 }

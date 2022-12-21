@@ -78,7 +78,9 @@ class Comment extends Command {
     }
     if (!$last) {
       $output->writeln('<error>All items already commented, use --recomment to recomment</error>');
+      return 1;
     }
+    return 0;
   }
 
 }

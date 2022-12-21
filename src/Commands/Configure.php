@@ -69,6 +69,7 @@ class Configure extends Command implements ContainerAwareCommand {
     $this->container->setParameter('config', $config);
     file_put_contents($file, Yaml::dump($config));
     $output->writeln(sprintf('<info>Wrote configuration to file %s</info>', $file));
+    return 0;
   }
 
   /**

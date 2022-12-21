@@ -100,7 +100,7 @@ class Reviewer {
     foreach ($data as $record) {
       $total += $record->getDuration(FALSE, TRUE);
       $details = $this->connector->ticketDetails($record->getTicketId(), $record->getConnectorId());
-      $category_id = str_pad($record->getCategory(), 3, 0, STR_PAD_LEFT);
+      $category_id = str_pad($record->getCategory() ?? '', 3, 0, STR_PAD_LEFT);
       $category = '';
       if ($record->getCategory()) {
         if ($offline) {
