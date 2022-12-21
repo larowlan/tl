@@ -1,5 +1,4 @@
 {
-    "chmod": "0755",
     "directories": [
         "src"
     ],
@@ -19,6 +18,5 @@
     ],
     "git-version": "package_version",
     "main": "bin/tl.php",
-    "output": "tl.phar",
-    "stub": true
+    "output": "tl.phar"
 }

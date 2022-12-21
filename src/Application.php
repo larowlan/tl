@@ -69,7 +69,7 @@ class Application extends BaseApplication {
    * {@inheritdoc}
    */
   public function doRun(InputInterface $input, OutputInterface $output) {
-    $name = $this->getCommandName($input);
+    $name = $this->getCommandName($input) ?: 'list';
     $installing = FALSE;
     if ($name !== 'install' && $name !== 'configure') {
       if ($result = $this->setupCheck($output)) {

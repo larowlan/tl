@@ -2,25 +2,26 @@
     "name": "larowlan/tl",
     "description": "Time logger for redmine",
     "require": {
-        "symfony/console": "^2.7",
+        "symfony/console": "^6.2",
         "doctrine/dbal": "^2.5",
-        "symfony/yaml": "^2.7",
-        "symfony/dependency-injection": "^2.7",
-        "symfony/config": "^2.7",
+        "symfony/yaml": "^6.2",
+        "symfony/dependency-injection": "^6.2",
+        "symfony/config": "^6.2",
         "guzzlehttp/guzzle": "^6.1",
         "doctrine/cache": "^1.4",
         "herrera-io/phar-update": "^2.0",
-        "stecman/symfony-console-completion": "^0.6.0",
-        "monolog/monolog": "^1.17",
-        "php": ">=7.2",
+        "stecman/symfony-console-completion": "^0.12.0",
+        "monolog/monolog": "^2.0",
+        "php": "^8.1",
         "ext-sqlite3": "*",
         "ext-pdo_sqlite": "*",
-        "lesstif/php-jira-rest-client": "~2",
-        "morningtrain/toggl-api": "^1.0",
-        "phpunit/phpunit": "~9"
+        "lesstif/php-jira-rest-client": "^5.0",
+        "morningtrain/toggl-api": "^1.0"
     },
     "require-dev": {
-        "drupal/coder": "~8"
+        "phpunit/phpunit": "~9",
+        "drupal/coder": "~8",
+        "bamarni/composer-bin-plugin": "^1.8"
     },
     "license": "GPL2",
     "autoload": {
@@ -38,5 +39,11 @@
             "name": "Lee Rowlands",
             "email": "lee.rowlands@previousnext.com.au"
         }
-    ]
+    ],
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "bamarni/composer-bin-plugin": true
+        }
+    }
 }

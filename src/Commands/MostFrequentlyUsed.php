@@ -63,6 +63,7 @@ class MostFrequentlyUsed extends Command {
       $table->setRows($rows);
       $table->render();
     }
+    return 0;
   }
 
 }

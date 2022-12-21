@@ -30,6 +30,7 @@ class Update extends Command {
   protected function execute(InputInterface $input, OutputInterface $output) {
     $manager = new Manager(Manifest::loadFile(self::MANIFEST_FILE));
     $manager->update($this->getApplication()->getVersion(), FALSE, TRUE);
+    return 0;
   }
 
 }

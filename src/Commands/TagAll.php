@@ -84,7 +84,9 @@ class TagAll extends Command {
     }
     if (!$tagged) {
       $output->writeln('<error>All items already tagged, use --retag to retag</error>');
+      return 1;
     }
+    return 0;
   }
 
 }

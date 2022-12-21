@@ -37,6 +37,7 @@ class CacheClear extends Command {
   protected function execute(InputInterface $input, OutputInterface $output) {
     $this->cache->flushAll();
     $output->writeln('<info>Caches cleared</info>');
+    return 0;
   }
 
 }

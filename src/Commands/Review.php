@@ -50,6 +50,7 @@ class Review extends Command {
     $table->setHeaders(Reviewer::headers($input->getOption('exact')));
     $table->setRows($review);
     $table->render();
+    return 0;
   }
 
 }

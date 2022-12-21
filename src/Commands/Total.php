@@ -44,6 +44,7 @@ class Total extends Command {
     $review = $this->reviewer->getSummary(static::ALL);
     $total = end($review);
     $output->writeln(sprintf('<comment>Total:</comment> %s', $total[2]));
+    return 0;
   }
 
 }

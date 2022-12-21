@@ -129,7 +129,7 @@ class Billable extends Command implements ConfigurableService {
     ], TRUE)) {
       $output->writeln('<error>Period must be one of day|week|month|fortnight</error>');
       $output->writeln('E.g. <comment>tl billable week</comment>');
-      return;
+      return 1;
     }
     switch ($period) {
       case static::WEEK:
@@ -297,6 +297,8 @@ class Billable extends Command implements ConfigurableService {
 
     $table->setRows($rows);
     $table->render();
+
+    return 0;
   }
 
   /**
