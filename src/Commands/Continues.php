@@ -58,6 +58,10 @@ class Continues extends Command implements LogAwareCommand {
       $slot = $this->repository->stop() ?: $this->repository->latest();
     }
     if ($slot) {
+      if ($slot->getRemoteEntryId()) {
+        $output->writeln('<error>You cannot continue a slot that has been sent to the backend</error>');
+        return 1;
+      }
       $details = $this->connector->ticketDetails($slot->getTicketId(), $slot->getConnectorId());
       $start = $this->repository->start($slot->getTicketId(), $slot->getConnectorId(), $slot->getComment(), $slot->getId());
       $output->writeln(sprintf('<bg=blue;fg=white;options=bold>[%s]</> <comment>%s</comment> entry for <info>%d</info>: %s [slot:<comment>%d</comment>]',
