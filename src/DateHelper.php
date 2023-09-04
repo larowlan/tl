@@ -37,6 +37,38 @@ class DateHelper {
   }
 
   /**
+   * Gets the start of the year.
+   *
+   * @param \DateTime|null $start_date
+   *   Date to get offset from.
+   *
+   * @return \DateTime
+   *   Start of the week.
+   */
+  public static function startOfYear($start_date = NULL) {
+    $date = $start_date ?: new \DateTime();
+    $date->setDate($date->format('Y'), 1, 1)->setTime(0, 0);
+    return $date;
+  }
+
+  /**
+   * Gets the start of the financial year.
+   *
+   * @param \DateTime|null $start_date
+   *   Date to get offset from.
+   *
+   * @return \DateTime
+   *   Start of the week.
+   */
+  public static function startOfFinancialYear($start_date = NULL) {
+    $date = $start_date ?: new \DateTime();
+    $month = (int) $date->format('m');
+    $year = (int) $date->format('Y');
+    $date->setDate($month < 7 ? $year - 1 : $year, 7, 1)->setTime(0, 0);
+    return $date;
+  }
+
+  /**
    * Gets the start of the day.
    *
    * @param \DateTime|null $start_date
