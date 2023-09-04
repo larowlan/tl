@@ -30,6 +30,10 @@ class Billable extends Command implements ConfigurableService {
   const DAY = 'day';
   const MONTH = 'month';
   const FORTNIGHT = 'fortnight';
+
+  const YEAR = 'year';
+
+  const FINYEAR = 'financial';
   const SATURDAY = 6;
   const SUNDAY = 0;
 
@@ -93,7 +97,7 @@ class Billable extends Command implements ConfigurableService {
       ->setName('billable')
       ->setDescription('Shows billable breakdown for a given date')
       ->setHelp('Shows billable percentage for a given date range. <comment>Usage:</comment> <info>tl billable [day|week|month|fortnight]</info>')
-      ->addArgument('period', InputArgument::OPTIONAL, 'One of day|week|month|fortnight', static::WEEK)
+      ->addArgument('period', InputArgument::OPTIONAL, 'One of day|week|month|fortnight|year|financial', static::WEEK)
       ->addOption('start', 's', InputOption::VALUE_OPTIONAL, 'A date offset', NULL)
       ->addOption('project', 'p', InputOption::VALUE_NONE, 'Group by project', NULL)
       ->addOption('set-target-days', 't', InputOption::VALUE_OPTIONAL, 'Set target days for month', NULL)
@@ -127,8 +131,10 @@ class Billable extends Command implements ConfigurableService {
       static::DAY,
       static::WEEK,
       static::FORTNIGHT,
+      static::FINYEAR,
+      static::YEAR,
     ], TRUE)) {
-      $output->writeln('<error>Period must be one of day|week|month|fortnight</error>');
+      $output->writeln('<error>Period must be one of day|week|month|fortnight|year|financial</error>');
       $output->writeln('E.g. <comment>tl billable week</comment>');
       return 1;
     }
@@ -154,11 +160,24 @@ class Billable extends Command implements ConfigurableService {
         $end->modify('+14 days');
         break;
 
+      case static::YEAR:
+        $date = DateHelper::startOfYear($start);
+        $end = clone $date;
+        $end->modify('+1 year')->modify('-1 second');
+        break;
+
+      case static::FINYEAR:
+        $date = DateHelper::startOfFinancialYear($start);
+        $end = clone $date;
+        $end->modify('+1 year')->modify('-1 second');
+        break;
+
       default:
         $date = DateHelper::startOfDay($start);
         $end = clone $date;
         $end->modify('+1 day');
     }
+    $output->writeln(sprintf('Showing data from <info>%s</info> to <info>%s</info>', $date->format('Y-m-d'), $end->format('Y-m-d')));
     $billable = 0;
     $non_billable = 0;
     $unknown = 0;
