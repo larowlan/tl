@@ -14,6 +14,7 @@ class ContinueTest extends TlTestBase {
   protected $slotId1;
   protected $slotId2;
   protected $slotId3;
+  protected $slotId4;
 
   /**
    * {@inheritdoc}
@@ -26,6 +27,7 @@ class ContinueTest extends TlTestBase {
         [1, 'connector.redmine', FALSE, new Ticket('Do something', 1)],
         [2, 'connector.redmine', FALSE, new Ticket('Do something else', 2)],
         [3, 'connector.redmine', FALSE, new Ticket('Do something more', 3)],
+        [4, 'connector.redmine', FALSE, new Ticket('Do something more still', 4)],
       ]);
     $this->getMockConnector()->expects($this->any())
       ->method('spotConnector')
@@ -61,6 +63,14 @@ class ContinueTest extends TlTestBase {
       'end' => $start - 86400 + 3600 * 9,
       'connector_id' => ':connector_id',
     ], [':connector_id' => 'connector.redmine']);
+    // Sent.
+    $this->slotId4 = $repository->insert([
+      'tid' => 4,
+      'start' => $start,
+      'end' => $start,
+      'connector_id' => ':connector_id',
+    ], [':connector_id' => 'connector.redmine']);
+    $repository->store([4 => 123]);
   }
 
   /**
@@ -89,6 +99,16 @@ class ContinueTest extends TlTestBase {
     $slot = $this->getRepository()->slot($this->slotId2);
     $this->assertGreaterThanOrEqual(3600, $slot->getDuration());
     $this->assertLessThanOrEqual(3600 + 60, $slot->getDuration());
+  }
+
+  /**
+   * Test the basic functionality of the continue command.
+   */
+  public function testContinueCommandWithSentSlotId() {
+    $this->setUp();
+    $result = $this->executeCommand('continue', ['slot_id' => $this->slotId4]);
+    $this->assertStringContainsString('You cannot continue a slot that has been sent to the backend', $result->getDisplay());
+    $this->assertNull($this->getRepository()->getActive());
   }
 
 }
