@@ -16,7 +16,7 @@
         "ext-sqlite3": "*",
         "ext-pdo_sqlite": "*",
         "morningtrain/toggl-api": "^1.0",
-        "lesstif/jira-cloud-restapi": "^1.0"
+        "lesstif/php-jira-rest-client": "^5.5"
     },
     "require-dev": {
         "phpunit/phpunit": "~9",
