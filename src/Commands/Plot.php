@@ -76,43 +76,41 @@ class Plot extends Command {
     /** @var \Larowlan\Tl\Slot $record */
     foreach ($data as $record) {
       $details = $this->connector->ticketDetails($record->getTicketId(), $record->getConnectorId());
-      $job_id = sprintf('<fg=%s>%s</>', $details->isBillable() ? 'default' : 'yellow', $record->getId());
       /** @var \Larowlan\Tl\Chunk $chunk */
       foreach ($record->getChunks() as $chunk) {
-        $chunks[] = [$job_id, substr($details->getTitle(), 0, 10) . '...', $chunk->getStart(), $chunk->getEnd(), $details->isBillable() ? 'green' : 'yellow'];
+        $chunks[] = [$record->getId(), $details->getTitle(), $chunk->getStart(), $chunk->getEnd(), $details->isBillable() ? 'green' : 'yellow'];
       }
     }
     uasort($chunks, fn(array $a, array $b) => $a[2] <=> $b[2]);
-    $start = reset($chunks)[2];
-    $end = end($chunks)[3];
+    $start = floor(reset($chunks)[2] / 900) * 900;
+    $end = ceil(end($chunks)[3] ?: time() /  900) * 900;
     $range = $end - $start;
 
-    // Assuming average terminal width of 80 chars, remove 8 for the ticket ID
-    // and we have a nice 72 chars for the chart.
-    $col_duration = floor($range / 72);
+    // Assuming average terminal width of 80 chars we can split 10 hours into
+    // 7.5 min intervals.
+    $col_duration = 450;
     $rows = [];
     $comparisons = [];
-    foreach (range(0, 71) as $ix) {
+    foreach (range(0, 79) as $ix) {
       $comparisons[] = $start + ($ix * $col_duration);
 
     }
     foreach ($chunks as $chunk) {
-      $row = $rows[$chunk[0]] ?? array_pad([$chunk[0], $chunk[1]], 74, ' ');
+      $row = $rows[$chunk[0]] ?? array_pad(str_split(substr(sprintf('%s %s', $chunk[0], $chunk[1]), 0, 80)), 80, ' ');
       foreach ($comparisons as $ix => $stamp) {
         if ($stamp >= $chunk[2] && $stamp <= $chunk[3]) {
-          $row[$ix + 2] = '<bg=' . $chunk[4] . '> </>';
+          $row[$ix] = sprintf('<bg=%s;fg=white>%s</>', $chunk[4], $row[$ix]);
         }
       }
       $rows[$chunk[0]] = $row;
     }
 
     // We allow 6 chars per time, so lets derive 12 timestamps for headers.
-    $headers = ['#', 'Title'];
     $start_date = new \DateTime('@' . $start);
     $start_date->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-    $headers[] = new TableCell($start_date->format('h:i'), ['colspan' => 6]);
-    foreach (range(0, 10) as $ix) {
-      $headers[] = new TableCell($start_date->modify(sprintf('+%d seconds', 6 * $col_duration))->format('h:i'), ['colspan' => 6]);
+    $headers[] = new TableCell($start_date->format('G:i'), ['colspan' => 8]);
+    foreach (range(0, 9) as $ix) {
+      $headers[] = new TableCell($start_date->modify(sprintf('+%d seconds', 8 * $col_duration))->format('G:i'), ['colspan' => 8]);
     }
     $table->setHeaders($headers);
     $table->setRows($rows);
