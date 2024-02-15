@@ -67,7 +67,7 @@ class Plot extends Command {
     $table = new Table($output);
     $compact = new TableStyle();
     $compact
-      ->setHorizontalBorderChars('')
+      ->setHorizontalBorderChars('-')
       ->setVerticalBorderChars('')
       ->setDefaultCrossingChar('')
       ->setCellRowContentFormat('%s');
@@ -78,16 +78,15 @@ class Plot extends Command {
       $details = $this->connector->ticketDetails($record->getTicketId(), $record->getConnectorId());
       /** @var \Larowlan\Tl\Chunk $chunk */
       foreach ($record->getChunks() as $chunk) {
-        $chunks[] = [$record->getId(), $details->getTitle(), $chunk->getStart(), $chunk->getEnd(), $details->isBillable() ? 'green' : 'yellow'];
+        $chunks[] = [$record->getId(), $details->getTitle(), $chunk->getStart(), $chunk->getEnd() ?: time(), $details->isBillable() ? 'green' : 'yellow'];
       }
     }
     uasort($chunks, fn(array $a, array $b) => $a[2] <=> $b[2]);
     $start = floor(reset($chunks)[2] / 900) * 900;
-    $end = ceil(end($chunks)[3] ?: time() /  900) * 900;
-    $range = $end - $start;
 
     // Assuming average terminal width of 80 chars we can split 10 hours into
     // 7.5 min intervals.
+    // @todo What if there's more than 10 hours of logging?
     $col_duration = 450;
     $rows = [];
     $comparisons = [];
