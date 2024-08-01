@@ -3,7 +3,7 @@
 namespace Larowlan\Tl\Commands;
 
 use Larowlan\Tl\Connector\Connector;
-use Larowlan\Tl\Formatter;
+use Larowlan\Tl\DurationFormatter;
 use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -65,7 +65,7 @@ class Delete extends Command {
         $slot->getId(),
         $slot->getTicketId(),
         $deleted->getTitle(),
-        Formatter::formatDuration($slot->getDuration())
+        DurationFormatter::formatDuration($slot->getDuration())
       ));
       return 0;
     }

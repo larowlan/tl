@@ -5,7 +5,6 @@ namespace Larowlan\Tl;
 use GuzzleHttp\Exception\ConnectException;
 use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\Repository\Repository;
-use Symfony\Component\Console\Helper\TableSeparator;
 
 /**
  * Defines a class for common reviewing functionality.
@@ -13,56 +12,12 @@ use Symfony\Component\Console\Helper\TableSeparator;
 class Reviewer {
 
   /**
-   * Connector.
-   *
-   * @var \Larowlan\Tl\Connector\Connector
-   */
-  protected $connector;
-
-  /**
-   * Repository.
-   *
-   * @var \Larowlan\Tl\Repository\Repository
-   */
-  protected $repository;
-
-  /**
    * Constructs a new Reviewer.
-   *
-   * @param \Larowlan\Tl\Connector\Connector $connector
-   *   Connector.
-   * @param \Larowlan\Tl\Repository\Repository $repository
-   *   Repository.
    */
-  public function __construct(Connector $connector, Repository $repository) {
-    $this->connector = $connector;
-    $this->repository = $repository;
-  }
-
-  /**
-   * Gets table headers.
-   *
-   * @param bool $exact
-   *   TRUE to include exact column.
-   *
-   * @return array
-   *   Headers.
-   */
-  public static function headers($exact = FALSE) {
-    $headers = [
-      'SlotID',
-      'JobID',
-      'Tallied',
-    ];
-    if ($exact) {
-      $headers[] = 'Exact';
-    }
-    $headers = array_merge($headers, [
-      'Title',
-      'Tag',
-      'Comment',
-    ]);
-    return $headers;
+  public function __construct(
+    readonly protected Connector $connector,
+    readonly protected Repository $repository,
+  ) {
   }
 
   /**
@@ -72,22 +27,20 @@ class Reviewer {
    *   Start date.
    * @param bool $check
    *   Check if stored remotely already.
-   * @param bool $exact
-   *   TRUE to include exact column.
    *
-   * @return array
-   *   Rows.
+   * @return \Larowlan\Tl\Summary
+   *   The summary.
    *
    * @throws \Exception
    *   When all entries already stored and check is TRUE.
    */
-  public function getSummary($date = 19780101, $check = FALSE, $exact = FALSE) {
+  public function getSummary(int $date = 19780101, bool $check = FALSE): Summary {
     $data = $this->repository->review($date, $check);
     if (count($data) == 0 && !$check) {
       throw new \Exception("All entries stored in remote system \xF0\x9F\x8D\xBA \xF0\x9F\x8D\xBA \xF0\x9F\x8D\xBA");
     }
 
-    $total = 0;
+    $roundedTotal = 0;
     $offline = FALSE;
     try {
       $categories = $this->connector->fetchCategories();
@@ -95,10 +48,11 @@ class Reviewer {
     catch (ConnectException $e) {
       $offline = TRUE;
     }
-    $exact_total = 0;
+    $exactTotal = 0;
+    $items = [];
     /** @var \Larowlan\Tl\Slot $record */
     foreach ($data as $record) {
-      $total += $record->getDuration(FALSE, TRUE);
+      $roundedTotal += $record->getDuration(FALSE, TRUE);
       $details = $this->connector->ticketDetails($record->getTicketId(), $record->getConnectorId());
       $category_id = str_pad($record->getCategory() ?? '', 3, 0, STR_PAD_LEFT);
       $category = '';
@@ -113,46 +67,21 @@ class Reviewer {
           $category = 'Unknown';
         }
       }
-      $duration = sprintf('<fg=%s>%s</>', $details->isBillable() ? 'default' : 'yellow', $record->getDuration(FALSE, TRUE) / 3600);
-      $row = [
-        $record->getId(),
-        sprintf('<fg=%s>%s</>', $record->isOpen() ? 'green' : 'default', $record->getTicketId()),
-        $duration,
-      ];
-      if ($exact) {
-        $row[] = Formatter::formatDuration($record->getDuration());
-        $exact_total += $record->getDuration();
-      }
-      $row = array_merge($row, [
-        substr($details->getTitle(), 0, 25) . '...',
+      $roundedDuration = $record->getDuration(FALSE, TRUE) / 3600;
+      $exactDuration = $record->getDuration();
+      $duration = sprintf('<fg=%s>%s</>', $details->isBillable() ? 'default' : 'yellow', $roundedDuration);
+      $item = new SummaryItem(
+        $record,
+        $details,
         $category,
-        $record->getComment(),
-      ]);
-      $rows[] = $row;
+        $exactDuration,
+        $roundedDuration
+      );
+      $items[] = $item;
+      $exactTotal += $record->getDuration();
     }
-    $rows[] = new TableSeparator();
-    if ($exact) {
-      $rows[] = [
-        '',
-        '<comment>Total</comment>',
-        '<info>' . $total / 3600 . ' h</info>',
-        '<info>' . Formatter::formatDuration($exact_total) . '</info>',
-        '',
-        '',
-        '',
-      ];
-    }
-    else {
-      $rows[] = [
-        '',
-        '<comment>Total</comment>',
-        '<info>' . $total / 3600 . ' h</info>',
-        '',
-        '',
-        '',
-      ];
-    }
-    return $rows;
+    return new Summary($items, $roundedTotal, $exactTotal);
+
   }
 
 }

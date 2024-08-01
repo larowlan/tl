@@ -3,6 +3,7 @@
 namespace Larowlan\Tl\Commands;
 
 use Larowlan\Tl\Reviewer;
+use Larowlan\Tl\SummaryTableFormatter;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputInterface;
@@ -33,9 +34,20 @@ class Review extends Command {
    * {@inheritdoc}
    */
   protected function configure() {
-    $this
-      ->setName('review')
-      ->addOption('exact', 'e', InputOption::VALUE_NONE, 'Show exact times too (without rounding)')
+    $this->setName('review')
+      ->addOption(
+        'exact',
+        'e',
+        InputOption::VALUE_NONE,
+        'Show exact times too (without rounding)'
+      )
+      ->addOption(
+        'format',
+        'f',
+        InputOption::VALUE_REQUIRED,
+        'Output format [text,json]',
+        'text',
+      )
       ->setDescription('Reviews time entries to be sent to the backend')
       ->setHelp('Review unsent entries. <comment>Usage:</comment> <info>tl review</info>');
   }
@@ -43,14 +55,16 @@ class Review extends Command {
   /**
    * {@inheritdoc}
    */
-  protected function execute(InputInterface $input, OutputInterface $output) {
-    // Find any untagged items needing review, use an arbitrarily early date.
-    $review = $this->reviewer->getSummary(static::ALL, FALSE, $input->getOption('exact'));
+  protected function execute(InputInterface $input, OutputInterface $output): int {
+    // Find any untagged items needing summary, use an arbitrarily early date.
+    $exact = $input->getOption('exact') ?? FALSE;
+    $summary = $this->reviewer->getSummary(static::ALL);
+    $rows = SummaryTableFormatter::formatTableRows($summary, $exact);
     $table = new Table($output);
-    $table->setHeaders(Reviewer::headers($input->getOption('exact')));
-    $table->setRows($review);
+    $table->setHeaders(SummaryTableFormatter::getHeaders($exact));
+    $table->setRows($rows);
     $table->render();
-    return 0;
+    return self::SUCCESS;
   }
 
 }

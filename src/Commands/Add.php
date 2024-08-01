@@ -4,7 +4,7 @@ namespace Larowlan\Tl\Commands;
 
 use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\Connector\ConnectorManager;
-use Larowlan\Tl\Formatter;
+use Larowlan\Tl\DurationFormatter;
 use Larowlan\Tl\Input;
 use Larowlan\Tl\Repository\Repository;
 use Stecman\Component\Symfony\Console\BashCompletion\Completion\CompletionAwareInterface;
@@ -114,7 +114,7 @@ class Add extends Command implements LogAwareCommand {
           $ticket_id,
           $title->getTitle(),
           $start_date_time->format('Y-m-d'),
-          Formatter::formatDuration($seconds),
+          DurationFormatter::formatDuration($seconds),
           $slot_id
         ));
       }

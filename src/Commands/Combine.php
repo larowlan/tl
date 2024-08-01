@@ -4,7 +4,7 @@ namespace Larowlan\Tl\Commands;
 
 use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\Connector\Manager;
-use Larowlan\Tl\Formatter;
+use Larowlan\Tl\DurationFormatter;
 use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -57,7 +57,7 @@ class Combine extends Command {
 
     /** @var \Larowlan\Tl\Slot $entry1 */
     /** @var \Larowlan\Tl\Slot $entry2 */
-    list($entry1, $entry2) = $this->validateSlots($slot1, $slot2, $output);
+    [$entry1, $entry2] = $this->validateSlots($slot1, $slot2, $output);
     $this->repository->combine($entry1, $entry2);
 
     $output->writeln(sprintf('Combined %s and %s into new slot %s', $slot1, $slot2, $slot1));
@@ -106,7 +106,7 @@ class Combine extends Command {
         $stop->getId(),
         $stop->getTicketId(),
         $stopped->getTitle(),
-        Formatter::formatDuration($stop->getDuration())
+        DurationFormatter::formatDuration($stop->getDuration())
       ));
     }
   }

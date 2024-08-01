@@ -3,7 +3,7 @@
 namespace Larowlan\Tl\Commands;
 
 use Larowlan\Tl\Connector\Connector;
-use Larowlan\Tl\Formatter;
+use Larowlan\Tl\DurationFormatter;
 use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
@@ -66,11 +66,11 @@ class Status extends Command {
     foreach ($data as $record) {
       $total += $record->getDuration();
       $details = $this->connector->ticketDetails($record->getTicketId(), $record->getConnectorId());
-      $duration = sprintf('<fg=%s>%s</>', $details->isBillable() ? 'default' : 'yellow', Formatter::formatDuration($record->getDuration()));
+      $duration = sprintf('<fg=%s>%s</>', $details->isBillable() ? 'default' : 'yellow', DurationFormatter::formatDuration($record->getDuration()));
       $rows[] = [$record->getId(), $record->isOpen() ? sprintf('%s *', $record->getTicketId()) : $record->getTicketId(), $duration, $details->getTitle()];
     }
     $rows[] = new TableSeparator();
-    $rows[] = ['', '<comment>Total</comment>', '<info>' . Formatter::formatDuration($total) . '</info>', ''];
+    $rows[] = ['', '<comment>Total</comment>', '<info>' . DurationFormatter::formatDuration($total) . '</info>', ''];
     $table->setRows($rows);
     $table->render();
 
