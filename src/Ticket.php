@@ -2,6 +2,8 @@
 
 namespace Larowlan\Tl;
 
+use Symfony\Component\Serializer\Attribute\Groups;
+
 /**
  * Ticket value object.
  */
@@ -47,6 +49,7 @@ class Ticket implements TicketInterface {
   /**
    * {@inheritdoc}
    */
+  #[Groups(['summary'])]
   public function getTitle() {
     return $this->title;
   }
@@ -61,6 +64,7 @@ class Ticket implements TicketInterface {
   /**
    * {@inheritdoc}
    */
+  #[Groups(['summary'])]
   public function isBillable() {
     return $this->isBillable;
   }

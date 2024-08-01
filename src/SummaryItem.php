@@ -2,9 +2,12 @@
 
 namespace Larowlan\Tl;
 
+use Symfony\Component\Serializer\Attribute\Groups;
+
 /**
  * Value object to represent a summary item.
  */
+#[Groups(['summary'])]
 class SummaryItem {
 
   /**

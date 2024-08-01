@@ -2,9 +2,12 @@
 
 namespace Larowlan\Tl;
 
+use Symfony\Component\Serializer\Attribute\Groups;
+
 /**
  * Value object to represent a review summary.
  */
+#[Groups(['summary'])]
 class Summary {
 
   /**

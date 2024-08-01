@@ -1,0 +1,36 @@
+{
+    "items": [
+        {
+            "slot": {
+                "id": 1,
+                "ticketId": 101,
+                "comment": "comment1",
+                "open": false
+            },
+            "ticket": {
+                "title": "ticket1",
+                "billable": true
+            },
+            "category": "category1",
+            "exactDuration": 10,
+            "roundedDuration": 10
+        },
+        {
+            "slot": {
+                "id": 2,
+                "ticketId": 102,
+                "comment": "comment2",
+                "open": true
+            },
+            "ticket": {
+                "title": "ticket2",
+                "billable": true
+            },
+            "category": "category2",
+            "exactDuration": 20,
+            "roundedDuration": 20
+        }
+    ],
+    "roundedTotal": 30,
+    "exactTotal": 30
+}

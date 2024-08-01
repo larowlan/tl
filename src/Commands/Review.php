@@ -3,6 +3,7 @@
 namespace Larowlan\Tl\Commands;
 
 use Larowlan\Tl\Reviewer;
+use Larowlan\Tl\SummaryJsonFormatter;
 use Larowlan\Tl\SummaryTableFormatter;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\Table;
@@ -59,6 +60,10 @@ class Review extends Command {
     // Find any untagged items needing summary, use an arbitrarily early date.
     $exact = $input->getOption('exact') ?? FALSE;
     $summary = $this->reviewer->getSummary(static::ALL);
+    if ($input->getOption('format') == 'json') {
+      $output->writeln(SummaryJsonFormatter::formatJson($summary), OutputInterface::OUTPUT_RAW);
+      return self::SUCCESS;
+    }
     $rows = SummaryTableFormatter::formatTableRows($summary, $exact);
     $table = new Table($output);
     $table->setHeaders(SummaryTableFormatter::getHeaders($exact));
