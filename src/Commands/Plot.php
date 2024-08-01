@@ -67,7 +67,7 @@ class Plot extends Command {
     $table = new Table($output);
     $compact = new TableStyle();
     $compact
-      ->setHorizontalBorderChars('-')
+      ->setHorizontalBorderChars('')
       ->setVerticalBorderChars('')
       ->setDefaultCrossingChar('')
       ->setCellRowContentFormat('%s');
@@ -103,18 +103,40 @@ class Plot extends Command {
       }
       $rows[$chunk[0]] = $row;
     }
+    foreach ($rows as &$row) {
+      foreach ($row as $cell_ix => $cell) {
+        if ($cell_ix % 4 >= 2) {
+          continue;
+        }
+        if (!str_starts_with($cell, '<bg')) {
+          $row[$cell_ix] = sprintf('<bg=#111>%s</>', $cell);
+        }
+      }
+    }
 
     // We allow 6 chars per time, so lets derive 12 timestamps for headers.
     $start_date = new \DateTime('@' . $start);
     $start_date->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-    $headers[] = new TableCell($start_date->format('G:i'), ['colspan' => 8]);
+    $headers[] = new TableCell($this->formatDate($start_date->format('h:i')), ['colspan' => 8]);
     foreach (range(0, 9) as $ix) {
-      $headers[] = new TableCell($start_date->modify(sprintf('+%d seconds', 8 * $col_duration))->format('G:i'), ['colspan' => 8]);
+      $headers[] = new TableCell($this->formatDate($start_date->modify(sprintf('+%d seconds', 8 * $col_duration))->format('h:i')), ['colspan' => 8]);
     }
     $table->setHeaders($headers);
     $table->setRows($rows);
     $table->render();
     return 0;
+  }
+
+  protected function formatDate(string $date): string {
+    $parts = array_chunk(str_split(str_pad($date, 8, ' ')), 2);
+    foreach ($parts as $ix => $part) {
+      if ($ix % 2 === 0) {
+        $parts[$ix] = sprintf('<bg=#111;fg=green>%s</>', implode('', $part));
+        continue;
+      }
+      $parts[$ix] = implode('', $part);
+    }
+    return implode('', $parts);
   }
 
 }
