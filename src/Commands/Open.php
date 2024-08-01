@@ -50,11 +50,11 @@ class Open extends Command {
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
     if ($data = $this->repository->getActive()) {
-      $details = $this->connector->ticketDetails($data->getTicketId(), $data->getConnectorId());
       if ($input->getOption('slot')) {
         $output->writeLn($data->getId());
         return 0;
       }
+      $details = $this->connector->ticketDetails($data->getTicketId(), $data->getConnectorId());
       $output->writeLn(sprintf('%s [<info>%d</info>] - <comment>%s</comment> [slot: <comment>%d</comment>]',
         $details->getTitle(),
         $data->getTicketId(),
