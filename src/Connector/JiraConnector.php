@@ -149,9 +149,9 @@ class JiraConnector implements Connector, ConfigurableService {
    * {@inheritdoc}
    */
   public static function askPreBootQuestions(QuestionHelper $helper, InputInterface $input, OutputInterface $output, array $config, ContainerBuilder $container) {
-    $default_url = isset($config['jira_url']) ? $config['jira_url'] : self::JIRA_URL;
-    $default_key = isset($config['jira_api_token']) ? $config['jira_api_token'] : '';
-    $default_username = isset($config['jira_username']) ? $config['jira_username'] : '';
+    $default_url = $config['jira_url'] ?? self::JIRA_URL;
+    $default_key = $config['jira_api_token'] ?? '';
+    $default_username = $config['jira_username'] ?? '';
     // Reset.
     $config = [
       'jira_url' => '',
@@ -182,7 +182,7 @@ class JiraConnector implements Connector, ConfigurableService {
    * {@inheritdoc}
    */
   public function askPostBootQuestions(QuestionHelper $helper, InputInterface $input, OutputInterface $output, array $config) {
-    $default_non_billable = isset($config['jira_non_billable_projects']) ? $config['jira_non_billable_projects'] : [];
+    $default_non_billable = $config['jira_non_billable_projects'] ?? [];
     // Reset.
     $config = ['jira_non_billable_projects' => []] + $config;
     try {

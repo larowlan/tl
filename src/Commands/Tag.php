@@ -4,7 +4,7 @@ namespace Larowlan\Tl\Commands;
 
 use GuzzleHttp\Exception\ConnectException;
 use Larowlan\Tl\Connector\Connector;
-use Larowlan\Tl\Formatter;
+use Larowlan\Tl\DurationFormatter;
 use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -93,7 +93,7 @@ class Tag extends Command {
       }
       if (count($categories) === 1) {
         $tag = reset($categories);
-        list(, $tag) = explode(':', $tag);
+        [, $tag] = explode(':', $tag);
         $this->repository->tag($tag, $entry->getId());
         continue;
       }
@@ -113,7 +113,7 @@ class Tag extends Command {
       );
       $tag_id = $helper->ask($input, $output, $question);
       $tag = $categories[$tag_id];
-      list(, $tag) = explode(':', $tag);
+      [, $tag] = explode(':', $tag);
       $this->repository->tag($tag, $entry->getId());
       $last = $tag_id;
     }
@@ -147,7 +147,7 @@ class Tag extends Command {
       }
       if (count($categories) === 1) {
         $tag = reset($categories);
-        list(, $tag) = explode(':', $tag);
+        [, $tag] = explode(':', $tag);
         $this->repository->tag($tag, $entry->getId());
         return 1;
       }
@@ -157,7 +157,7 @@ class Tag extends Command {
           $entry->getId(),
           $entry->getTicketId(),
           $title->getTitle(),
-          Formatter::formatDuration($entry->getDuration()),
+          DurationFormatter::formatDuration($entry->getDuration()),
           $default,
           $entry->getComment() ? '- "' . $entry->getComment() . '"' : ''
         ),
@@ -166,7 +166,7 @@ class Tag extends Command {
       );
       $tag_id = $helper->ask($input, $output, $question);
       $tag = $categories[$tag_id];
-      list(, $tag) = explode(':', $tag);
+      [, $tag] = explode(':', $tag);
       $this->repository->tag($tag, $entry->getId());
     }
     else {

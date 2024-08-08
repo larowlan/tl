@@ -3,7 +3,7 @@
 namespace Larowlan\Tl\Commands;
 
 use Larowlan\Tl\Connector\Connector;
-use Larowlan\Tl\Formatter;
+use Larowlan\Tl\DurationFormatter;
 use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -58,7 +58,7 @@ class Open extends Command {
       $output->writeLn(sprintf('%s [<info>%d</info>] - <comment>%s</comment> [slot: <comment>%d</comment>]',
         $details->getTitle(),
         $data->getTicketId(),
-        Formatter::formatDuration($data->getDuration()),
+        DurationFormatter::formatDuration($data->getDuration()),
         $data->getId()
       ));
       return 0;

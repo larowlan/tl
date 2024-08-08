@@ -3,7 +3,7 @@
 namespace Larowlan\Tl\Commands;
 
 use Larowlan\Tl\Connector\Connector;
-use Larowlan\Tl\Formatter;
+use Larowlan\Tl\DurationFormatter;
 use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -49,7 +49,7 @@ class Bitbar extends Command {
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
     if ($open = $this->repository->getActive()) {
-      $text = $open->getTicketId() . ': ' . Formatter::formatDuration($open->getDuration()) . ' ';
+      $text = $open->getTicketId() . ': ' . DurationFormatter::formatDuration($open->getDuration()) . ' ';
     }
     else {
       $text = 'Inactive ';

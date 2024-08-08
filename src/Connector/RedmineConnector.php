@@ -422,8 +422,8 @@ class RedmineConnector implements Connector, ConfigurableService {
    * {@inheritdoc}
    */
   public static function askPreBootQuestions(QuestionHelper $helper, InputInterface $input, OutputInterface $output, array $config, ContainerBuilder $container) {
-    $default_url = isset($config['url']) ? $config['url'] : 'https://redmine.previousnext.com.au';
-    $default_key = isset($config['api_key']) ? $config['api_key'] : '';
+    $default_url = $config['url'] ?? 'https://redmine.previousnext.com.au';
+    $default_key = $config['api_key'] ?? '';
     // Reset.
     $config = ['url' => '', 'api_key' => ''] + $config;
     $question = new Question(sprintf('Enter your redmine URL: <comment>[%s]</comment>', $default_url), $default_url);
@@ -440,7 +440,7 @@ class RedmineConnector implements Connector, ConfigurableService {
    * {@inheritdoc}
    */
   public function askPostBootQuestions(QuestionHelper $helper, InputInterface $input, OutputInterface $output, array $config) {
-    $default_non_billable = isset($config['non_billable_projects']) ? $config['non_billable_projects'] : [];
+    $default_non_billable = $config['non_billable_projects'] ?? [];
     // Reset.
     $config = ['non_billable_projects' => []] + $config;
     try {
