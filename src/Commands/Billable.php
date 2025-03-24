@@ -209,7 +209,7 @@ class Billable extends Command implements ConfigurableService {
         }
       }
     }
-    $table = new Table($output);
+//    $table = new Table($output);
     if (!$project) {
       $headers = ['Type', 'Hours', 'Percent'];
       if ($period === static::MONTH) {
