@@ -46,7 +46,7 @@ final class Show extends Command {
       ->setName('show')
       ->setDescription('Shows detailed entry for a given slot')
       ->setHelp('Shows details for a given slot ID')
-      ->addArgument('slot', InputArgument::REQUIRED, 'Slot ID to show detail for');
+      ->addArgument('slot', InputArgument::OPTIONAL, 'Slot ID to show detail for. If omitted defaults to current ticket.');
   }
 
   /**
@@ -54,10 +54,22 @@ final class Show extends Command {
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
     $slot_id = $input->getArgument('slot');
-    $slot = $this->repository->slot($slot_id);
-    if (!$slot) {
-      $output->writeln('<error>Slot not found</error>');
-      exit(1);
+    if (!$slot_id) {
+      $slot = $this->repository->getActive();
+      if (!$slot) {
+        $slot = $this->repository->latest();
+      }
+      if (!$slot) {
+        $output->writeln('<info>No active or latest slot</info>');
+        exit(1);
+      }
+    }
+    else {
+      $slot = $this->repository->slot($slot_id);
+      if (!$slot) {
+        $output->writeln('<error>Slot not found</error>');
+        exit(1);
+      }
     }
     $table = new Table($output);
     try {
@@ -89,7 +101,7 @@ final class Show extends Command {
       $rows[] = [
         $chunk->getId(),
         (new \DateTime('@' . $chunk->getStart()))->format('Y-m-d H:i:s'),
-        (new \DateTime('@' . $chunk->getEnd()))->format('Y-m-d H:i:s'),
+        $chunk->getEnd() ? (new \DateTime('@' . $chunk->getEnd()))->format('Y-m-d H:i:s') : '-',
         Formatter::formatDuration($chunk->getDuration()),
       ];
     }
