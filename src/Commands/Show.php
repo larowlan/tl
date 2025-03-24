@@ -78,12 +78,13 @@ final class Show extends Command {
     catch (\InvalidArgumentException $e) {
       $ticket = new Ticket(\sprintf('Connector %s no longer available', $slot->getConnectorId()), 'N/A', TRUE);
     }
+    $tz = new \DateTimeZone(date_default_timezone_get());
     $rows[] = ['<info>Ticket ID</info>', $slot->getTicketId()];
     $rows[] = ['<info>Title</info>', $ticket->getTitle()];
     $projectNames = $this->connector->projectNames();
     $rows[] = ['<info>Project name</info>', $projectNames[$slot->getConnectorId()][(int) $ticket->getProjectId()] ?? 'N/A'];
-    $rows[] = ['<info>Start</info>', (new \DateTime('@' . $slot->getStart()))->format('Y-m-d H:i:s')];
-    $rows[] = ['<info>End</info>', (new \DateTime('@' . $slot->getEnd()))->format('Y-m-d H:i:s')];
+    $rows[] = ['<info>Start</info>', (new \DateTime('@' . $slot->getStart()))->setTimezone($tz)->format('Y-m-d H:i:s')];
+    $rows[] = ['<info>End</info>', (new \DateTime('@' . $slot->getEnd()))->setTimezone($tz)->format('Y-m-d H:i:s')];
     $rows[] = ['<info>Duration</info>', Formatter::formatDuration($slot->getDuration())];
     $rows[] = ['<info>Comment</info>', $slot->getComment()];
     $table->setRows($rows);
@@ -100,8 +101,8 @@ final class Show extends Command {
     foreach ($slot->getChunks() as $chunk) {
       $rows[] = [
         $chunk->getId(),
-        (new \DateTime('@' . $chunk->getStart()))->format('Y-m-d H:i:s'),
-        $chunk->getEnd() ? (new \DateTime('@' . $chunk->getEnd()))->format('Y-m-d H:i:s') : '-',
+        (new \DateTime('@' . $chunk->getStart()))->setTimezone($tz)->format('Y-m-d H:i:s'),
+        $chunk->getEnd() ? (new \DateTime('@' . $chunk->getEnd()))->setTimezone($tz)->format('Y-m-d H:i:s') : '-',
         Formatter::formatDuration($chunk->getDuration()),
       ];
     }
