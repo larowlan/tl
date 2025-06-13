@@ -82,7 +82,7 @@ final class Show extends Command {
     $rows[] = ['<info>Ticket ID</info>', $slot->getTicketId()];
     $rows[] = ['<info>Title</info>', $ticket->getTitle()];
     $projectNames = $this->connector->projectNames();
-    $rows[] = ['<info>Project name</info>', $projectNames[$slot->getConnectorId()][(int) $ticket->getProjectId()] ?? 'N/A'];
+    $rows[] = ['<info>Project name</info>', ($projectNames[$slot->getConnectorId()][(int) $ticket->getProjectId()] ?? 'N/A') . ' (' . (int) $ticket->getProjectId() . ')'];
     $rows[] = ['<info>Start</info>', (new \DateTime('@' . $slot->getStart()))->setTimezone($tz)->format('Y-m-d H:i:s')];
     $rows[] = ['<info>End</info>', (new \DateTime('@' . $slot->getEnd()))->setTimezone($tz)->format('Y-m-d H:i:s')];
     $rows[] = ['<info>Duration</info>', Formatter::formatDuration($slot->getDuration())];
