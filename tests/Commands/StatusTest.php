@@ -6,7 +6,7 @@ use Larowlan\Tl\Tests\TlTestBase;
 use Larowlan\Tl\Ticket;
 
 /**
- * @coversDefaultClass \Larowlan\Tl\Commands\StatusTest
+ * @coversDefaultClass \Larowlan\Tl\Commands\Status
  * @group Commands
  */
 class StatusTest extends TlTestBase {

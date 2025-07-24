@@ -65,7 +65,7 @@ class Manager implements ConfigurableService, ConnectorManager {
     if (!empty($config['connector_ids'])) {
       foreach ($config['connector_ids'] as $id) {
         $this->connectors[$id] = $container->get($id);
-      };
+      }
     }
     $this->cache = $cache;
     $this->version = $version;
