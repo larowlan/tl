@@ -144,6 +144,11 @@ services:
     arguments: ["@connector", "@repository"]
     tags:
       -  { name: command }
+  app.command.show:
+    class: Larowlan\Tl\Commands\Show
+    arguments: [ "@connector", "@repository" ]
+    tags:
+      - { name: command }
   app.command.plot:
     class: Larowlan\Tl\Commands\Plot
     arguments: [ "@connector", "@repository" ]

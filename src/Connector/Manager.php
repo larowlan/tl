@@ -82,7 +82,7 @@ class Manager implements ConfigurableService, ConnectorManager {
    *   Connector.
    */
   protected function connector($connector_id) {
-    if (!$this->connectors[$connector_id]) {
+    if (!\array_key_exists($connector_id, $this->connectors)) {
       throw new \InvalidArgumentException('No such backend connector');
     }
     return $this->connectors[$connector_id];

@@ -212,7 +212,7 @@ class Slot {
    * @return string
    *   Value of ProjectName.
    */
-  public function getProjectName(): string {
+  public function getProjectName(): ?string {
     return $this->projectName;
   }
 
