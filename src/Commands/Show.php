@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Larowlan\Tl\Commands;
 
 use Larowlan\Tl\Connector\Connector;
-use Larowlan\Tl\Formatter;
+use Larowlan\Tl\DurationFormatter;
 use Larowlan\Tl\Repository\Repository;
 use Larowlan\Tl\Ticket;
 use Symfony\Component\Console\Command\Command;
@@ -85,7 +85,7 @@ final class Show extends Command {
     $rows[] = ['<info>Project name</info>', ($projectNames[$slot->getConnectorId()][(int) $ticket->getProjectId()] ?? 'N/A') . ' (' . (int) $ticket->getProjectId() . ')'];
     $rows[] = ['<info>Start</info>', (new \DateTime('@' . $slot->getStart()))->setTimezone($tz)->format('Y-m-d H:i:s')];
     $rows[] = ['<info>End</info>', (new \DateTime('@' . $slot->getEnd()))->setTimezone($tz)->format('Y-m-d H:i:s')];
-    $rows[] = ['<info>Duration</info>', Formatter::formatDuration($slot->getDuration())];
+    $rows[] = ['<info>Duration</info>', DurationFormatter::formatDuration($slot->getDuration())];
     $rows[] = ['<info>Comment</info>', $slot->getComment()];
     $table->setRows($rows);
     $output->writeln('<info>Details</info>');
@@ -103,7 +103,7 @@ final class Show extends Command {
         $chunk->getId(),
         (new \DateTime('@' . $chunk->getStart()))->setTimezone($tz)->format('Y-m-d H:i:s'),
         $chunk->getEnd() ? (new \DateTime('@' . $chunk->getEnd()))->setTimezone($tz)->format('Y-m-d H:i:s') : '-',
-        Formatter::formatDuration($chunk->getDuration()),
+        DurationFormatter::formatDuration($chunk->getDuration()),
       ];
     }
     $chunks->setRows($rows);
