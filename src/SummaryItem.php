@@ -17,8 +17,8 @@ class SummaryItem {
     readonly protected Slot $slot,
     readonly protected TicketInterface $ticket,
     readonly protected string $category,
-    readonly protected int $exactDuration,
-    readonly protected int $roundedDuration,
+    readonly protected float $exactDuration,
+    readonly protected float $roundedDuration,
   ) {}
 
   /**
@@ -45,14 +45,14 @@ class SummaryItem {
   /**
    * Gets the exact duration.
    */
-  public function getExactDuration(): int {
+  public function getExactDuration(): float {
     return $this->exactDuration;
   }
 
   /**
    * Gets the rounded duration.
    */
-  public function getRoundedDuration(): int {
+  public function getRoundedDuration(): float {
     return $this->roundedDuration;
   }
 

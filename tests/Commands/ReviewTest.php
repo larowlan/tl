@@ -50,6 +50,13 @@ class ReviewTest extends TlTestBase {
       'end' => $start + 3600 * 3,
       'connector_id' => ':connector_id',
     ], [':connector_id' => 'connector.redmine']);
+    // 30 mins.
+    $repository->insert([
+      'tid' => 3,
+      'start' => $start,
+      'end' => $start + 1800,
+      'connector_id' => ':connector_id',
+    ], [':connector_id' => 'connector.redmine']);
   }
 
   /**
@@ -58,7 +65,8 @@ class ReviewTest extends TlTestBase {
   public function testReviewCommand() {
     $this->setUp();
     $result = $this->executeCommand('review');
-    $this->assertStringContainsString('11 h', $result->getDisplay());
+    $this->assertStringContainsString('11.5 h', $result->getDisplay());
+    $this->assertStringContainsString('0.5', $result->getDisplay());
     $this->assertStringContainsString('Do something', $result->getDisplay());
     $this->assertStringContainsString('Do something else', $result->getDisplay());
     $this->assertStringContainsString('Do something more', $result->getDisplay());
@@ -70,7 +78,7 @@ class ReviewTest extends TlTestBase {
   public function testReviewExact() {
     $this->setUp();
     $result = $this->executeCommand('review', ['--exact' => TRUE]);
-    $this->assertStringContainsString('10:58:36', $result->getDisplay());
+    $this->assertStringContainsString('11:28:36', $result->getDisplay());
     $this->assertStringContainsString('6:58:36', $result->getDisplay());
     $this->assertStringContainsString('3:00:00', $result->getDisplay());
     $this->assertStringContainsString('Do something', $result->getDisplay());

@@ -69,7 +69,6 @@ class Reviewer {
       }
       $roundedDuration = $record->getDuration(FALSE, TRUE) / 3600;
       $exactDuration = $record->getDuration();
-      $duration = sprintf('<fg=%s>%s</>', $details->isBillable() ? 'default' : 'yellow', $roundedDuration);
       $item = new SummaryItem(
         $record,
         $details,
