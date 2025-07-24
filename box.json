@@ -1,22 +1,25 @@
 {
-    "directories": [
-        "src"
-    ],
-    "files": [
-        "LICENSE",
-        "README.md",
-        "services.yml",
-        "manifest.json",
-        "vendor/herrera-io/phar-update/res/schema.json"
-    ],
-    "finder": [
-        {
-            "name": "*.php",
-            "exclude": ["Tests"],
-            "in": "vendor"
-        }
-    ],
-    "git-version": "package_version",
-    "main": "bin/tl.php",
-    "output": "tl.phar"
+  "directories": [
+    "src",
+    "vendor/symfony/console/Resources"
+  ],
+  "files": [
+    "LICENSE",
+    "README.md",
+    "services.yml",
+    "manifest.json",
+    "vendor/herrera-io/phar-update/res/schema.json"
+  ],
+  "finder": [
+    {
+      "name": "*.php",
+      "exclude": [
+        "Tests"
+      ],
+      "in": "vendor"
+    }
+  ],
+  "git-version": "package_version",
+  "main": "bin/tl.php",
+  "output": "tl.phar"
 }
