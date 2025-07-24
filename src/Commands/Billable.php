@@ -378,7 +378,7 @@ class Billable extends Command implements ConfigurableService {
    * @return array
    *   Formatted row.
    */
-  protected function formatProgressRow($caption, $numerator, $denominator, float $fraction_of_month = NULL, $expected = NULL) {
+  protected function formatProgressRow($caption, $numerator, $denominator, ?float $fraction_of_month = NULL, $expected = NULL) {
     if ($denominator < 0) {
       return [$caption, "$numerator/$denominator", '0%'];
     }
@@ -533,7 +533,7 @@ class Billable extends Command implements ConfigurableService {
    * @return null|int
    *   The target or NULL if it was invalid.
    */
-  protected function writeTarget($target, OutputInterface $output, \DateTime $date = NULL) {
+  protected function writeTarget($target, OutputInterface $output, ?\DateTime $date = NULL) {
     if (strpos($target, ',') !== FALSE) {
       $days = explode(',', $target);
       $invalid = array_filter($days, function ($item) {
