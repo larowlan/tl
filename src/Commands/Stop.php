@@ -3,7 +3,7 @@
 namespace Larowlan\Tl\Commands;
 
 use Larowlan\Tl\Connector\Connector;
-use Larowlan\Tl\Formatter;
+use Larowlan\Tl\DurationFormatter;
 use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -60,7 +60,7 @@ class Stop extends Command implements LogAwareCommand {
         $stop->getId(),
         $stop->getTicketId(),
         $stopped->getTitle(),
-        Formatter::formatDuration($stop->getDuration())
+        DurationFormatter::formatDuration($stop->getDuration())
       ));
       if (($comment = $input->getOption('comment')) || $input->getOption('pause')) {
         if ($this->connector->pause($stop->getTicketId(), $comment, $stop->getConnectorId())) {

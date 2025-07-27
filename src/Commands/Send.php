@@ -6,6 +6,7 @@ use GuzzleHttp\Exception\ClientException;
 use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\Repository\Repository;
 use Larowlan\Tl\Reviewer;
+use Larowlan\Tl\SummaryTableFormatter;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\ProgressBar;
@@ -95,12 +96,13 @@ class Send extends Command {
 
     // Find any untagged items needing review, use an arbitrarily early date.
     $review = $this->reviewer->getSummary(static::ALL, TRUE);
-    if (count($review) > 2) {
+    if (count($review->getItems()) > 0) {
       // Incomplete records exist.
       $output->writeln('<error>Please tag/comment on the following entries:</error>');
+      $rows = SummaryTableFormatter::formatTableRows($review, FALSE);
       $table = new Table($output);
-      $table->setHeaders(Reviewer::headers());
-      $table->setRows($review);
+      $table->setHeaders(SummaryTableFormatter::getHeaders(FALSE));
+      $table->setRows($rows);
       $table->render();
       return 1;
     }

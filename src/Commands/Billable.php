@@ -5,7 +5,7 @@ namespace Larowlan\Tl\Commands;
 use Larowlan\Tl\Configuration\ConfigurableService;
 use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\DateHelper;
-use Larowlan\Tl\Formatter;
+use Larowlan\Tl\DurationFormatter;
 use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Console\Command\Command;
@@ -234,7 +234,7 @@ class Billable extends Command implements ConfigurableService {
           $rows[] = [
             '',
             $project_name,
-            Formatter::formatDuration($projects[$connector_id][$project_id]),
+            DurationFormatter::formatDuration($projects[$connector_id][$project_id]),
             '',
           ];
         }
@@ -243,7 +243,7 @@ class Billable extends Command implements ConfigurableService {
       $rows[] = [
         'Billable',
         '',
-        Formatter::formatDuration($billable),
+        DurationFormatter::formatDuration($billable),
         "<$tag>" . ($total ? round(100 * $billable / $total, 2) : 0) . "%</$tag>",
       ];
       $rows[] = new TableSeparator();
@@ -254,7 +254,7 @@ class Billable extends Command implements ConfigurableService {
           $rows[] = [
             '',
             $project_name,
-            Formatter::formatDuration($projects[$connector_id][$project_id]),
+            DurationFormatter::formatDuration($projects[$connector_id][$project_id]),
             '',
           ];
         }
@@ -263,35 +263,35 @@ class Billable extends Command implements ConfigurableService {
       $rows[] = [
         'Non-billable',
         '',
-        Formatter::formatDuration($non_billable),
+        DurationFormatter::formatDuration($non_billable),
         round(100 * $non_billable / $total, 2) . '%',
       ];
       if ($unknown) {
         $rows[] = new TableSeparator();
         $rows[] = ['Unknown', '', '', ''];
-        $rows[] = ['', 'Unknown<comment>*</comment>', Formatter::formatDuration($unknown), round(100 * $unknown / $total, 2) . '%'];
+        $rows[] = ['', 'Unknown<comment>*</comment>', DurationFormatter::formatDuration($unknown), round(100 * $unknown / $total, 2) . '%'];
         $rows[] = ['', '<comment>* Deleted or access denied tickets:</comment> ' . implode(',', $unknowns), '', ''];
       }
       $rows[] = new TableSeparator();
-      $rows[] = ['', 'Total', Formatter::formatDuration($total), ''];
+      $rows[] = ['', 'Total', DurationFormatter::formatDuration($total), ''];
     }
     else {
       $rows[] = [
         'Billable',
-        Formatter::formatDuration($billable),
+        DurationFormatter::formatDuration($billable),
         "<$tag>" . ($total ? round(100 * $billable / $total, 2) : 0) . "%</$tag>",
       ];
       $rows[] = [
         'Non-billable',
-        Formatter::formatDuration($non_billable),
+        DurationFormatter::formatDuration($non_billable),
         ($total ? round(100 * $non_billable / $total, 2) : 0) . '%',
       ];
       if ($unknown) {
-        $rows[] = ['Unknown<comment>*</comment>', Formatter::formatDuration($unknown), round(100 * $unknown / $total, 2) . '%'];
+        $rows[] = ['Unknown<comment>*</comment>', DurationFormatter::formatDuration($unknown), round(100 * $unknown / $total, 2) . '%'];
         $rows[] = ['<comment>* Deleted or access denied tickets:</comment> ' . implode(',', $unknowns), '', ''];
       }
       $rows[] = new TableSeparator();
-      $rows[] = ['Total', Formatter::formatDuration($total), ''];
+      $rows[] = ['Total', DurationFormatter::formatDuration($total), ''];
     }
 
     if ($period === static::MONTH) {
@@ -378,7 +378,7 @@ class Billable extends Command implements ConfigurableService {
    * @return array
    *   Formatted row.
    */
-  protected function formatProgressRow($caption, $numerator, $denominator, float $fraction_of_month = NULL, $expected = NULL) {
+  protected function formatProgressRow($caption, $numerator, $denominator, ?float $fraction_of_month = NULL, $expected = NULL) {
     if ($denominator < 0) {
       return [$caption, "$numerator/$denominator", '0%'];
     }
@@ -533,7 +533,7 @@ class Billable extends Command implements ConfigurableService {
    * @return null|int
    *   The target or NULL if it was invalid.
    */
-  protected function writeTarget($target, OutputInterface $output, \DateTime $date = NULL) {
+  protected function writeTarget($target, OutputInterface $output, ?\DateTime $date = NULL) {
     if (strpos($target, ',') !== FALSE) {
       $days = explode(',', $target);
       $invalid = array_filter($days, function ($item) {

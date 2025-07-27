@@ -65,7 +65,7 @@ class Manager implements ConfigurableService, ConnectorManager {
     if (!empty($config['connector_ids'])) {
       foreach ($config['connector_ids'] as $id) {
         $this->connectors[$id] = $container->get($id);
-      };
+      }
     }
     $this->cache = $cache;
     $this->version = $version;
@@ -82,7 +82,7 @@ class Manager implements ConfigurableService, ConnectorManager {
    *   Connector.
    */
   protected function connector($connector_id) {
-    if (!$this->connectors[$connector_id]) {
+    if (!\array_key_exists($connector_id, $this->connectors)) {
       throw new \InvalidArgumentException('No such backend connector');
     }
     return $this->connectors[$connector_id];
@@ -97,7 +97,7 @@ class Manager implements ConfigurableService, ConnectorManager {
       $backends = [];
       foreach ($this->connectors as $connector_id => $connector) {
         if ($connector->ticketDetails($id, $connector_id)) {
-          list(, $connector_id) = explode('.', $connector_id);
+          [, $connector_id] = explode('.', $connector_id);
           $backends[$connector_id] = call_user_func([
             get_class($connector),
             'getName',

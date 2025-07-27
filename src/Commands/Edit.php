@@ -3,7 +3,7 @@
 namespace Larowlan\Tl\Commands;
 
 use Larowlan\Tl\Connector\Connector;
-use Larowlan\Tl\Formatter;
+use Larowlan\Tl\DurationFormatter;
 use Larowlan\Tl\Input;
 use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Command\Command;
@@ -75,7 +75,7 @@ class Edit extends Command implements LogAwareCommand {
     }
 
     $this->repository->edit($slot_id, $seconds);
-    $output->writeln(sprintf('Updated slot %s to <info>%s</info>', $slot_id, Formatter::formatDuration($seconds)));
+    $output->writeln(sprintf('Updated slot %s to <info>%s</info>', $slot_id, DurationFormatter::formatDuration($seconds)));
     return 0;
   }
 

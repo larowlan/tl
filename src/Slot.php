@@ -2,6 +2,8 @@
 
 namespace Larowlan\Tl;
 
+use Symfony\Component\Serializer\Attribute\Groups;
+
 /**
  * Defines a class for describing a slot which comprises chunks of time.
  */
@@ -76,6 +78,7 @@ class Slot {
    * @return int
    *   Value of Id.
    */
+  #[Groups(['summary'])]
   public function getId(): int {
     return $this->id;
   }
@@ -118,6 +121,7 @@ class Slot {
    * @return bool
    *   TRUE if open
    */
+  #[Groups(['summary'])]
   public function isOpen() : bool {
     $this->sortChunks();
     return !end($this->chunks)->getEnd();
@@ -139,6 +143,7 @@ class Slot {
    * @return string
    *   Value of Comment.
    */
+  #[Groups(['summary'])]
   public function getComment(): ?string {
     return $this->comment;
   }
@@ -207,7 +212,7 @@ class Slot {
    * @return string
    *   Value of ProjectName.
    */
-  public function getProjectName(): string {
+  public function getProjectName(): ?string {
     return $this->projectName;
   }
 
@@ -261,6 +266,7 @@ class Slot {
    * @return int
    *   Value of TicketId.
    */
+  #[Groups(['summary'])]
   public function getTicketId(): int {
     return $this->ticketId;
   }

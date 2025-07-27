@@ -3,10 +3,11 @@
 namespace Larowlan\Tl\Commands;
 
 use Larowlan\Tl\Connector\Connector;
-use Larowlan\Tl\Formatter;
+use Larowlan\Tl\DurationFormatter;
 use Larowlan\Tl\Repository\Repository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -39,6 +40,7 @@ class Open extends Command {
   protected function configure() {
     $this
       ->setName('open')
+      ->addOption('slot', 's', InputOption::VALUE_NONE, 'Show slot ID only')
       ->setDescription('Shows the open time-entry')
       ->setHelp('Shows the open entry. <comment>Usage:</comment> <info>tl open</info>');
   }
@@ -48,11 +50,15 @@ class Open extends Command {
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
     if ($data = $this->repository->getActive()) {
+      if ($input->getOption('slot')) {
+        $output->writeLn($data->getId());
+        return 0;
+      }
       $details = $this->connector->ticketDetails($data->getTicketId(), $data->getConnectorId());
       $output->writeLn(sprintf('%s [<info>%d</info>] - <comment>%s</comment> [slot: <comment>%d</comment>]',
         $details->getTitle(),
         $data->getTicketId(),
-        Formatter::formatDuration($data->getDuration()),
+        DurationFormatter::formatDuration($data->getDuration()),
         $data->getId()
       ));
       return 0;

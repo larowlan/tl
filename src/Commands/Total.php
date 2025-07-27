@@ -2,6 +2,7 @@
 
 namespace Larowlan\Tl\Commands;
 
+use Larowlan\Tl\DurationFormatter;
 use Larowlan\Tl\Reviewer;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -42,8 +43,7 @@ class Total extends Command {
    */
   protected function execute(InputInterface $input, OutputInterface $output) {
     $review = $this->reviewer->getSummary(static::ALL);
-    $total = end($review);
-    $output->writeln(sprintf('<comment>Total:</comment> %s', $total[2]));
+    $output->writeln(sprintf('<comment>Total:</comment> %s', DurationFormatter::formatDuration($review->getExactTotal())));
     return 0;
   }
 

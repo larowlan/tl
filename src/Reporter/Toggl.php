@@ -76,12 +76,12 @@ class Toggl implements Reporter, ConfigurableService {
    */
   public function report(Slot $entry, TicketInterface $details, array $projects, array $categories) {
     $categories = array_reduce($categories, function (array $carry, $item) {
-      list($name, $id) = explode(':', $item);
+      [$name, $id] = explode(':', $item);
       $carry[$id] = $name;
       return $carry;
     }, []);
     $connector_id = $entry->getConnectorId();
-    list(, $connector_id) = explode('.', $connector_id);
+    [, $connector_id] = explode('.', $connector_id);
     $project_id = $this->getProjectId(trim($projects[$details->getProjectId()]), $connector_id);
     $task_id = $this->getTaskId($entry->getTicketId(), $details->getTitle(), $project_id, $connector_id);
     $total = $entry->getDuration(FALSE, TRUE);
@@ -225,7 +225,7 @@ class Toggl implements Reporter, ConfigurableService {
    * {@inheritdoc}
    */
   public static function askPreBootQuestions(QuestionHelper $helper, InputInterface $input, OutputInterface $output, array $config, ContainerBuilder $container) {
-    $default_token = isset($config['toggl_token']) ? $config['toggl_token'] : '';
+    $default_token = $config['toggl_token'] ?? '';
     // Reset.
     $config = [
       'toggl_token' => '',
@@ -247,7 +247,7 @@ class Toggl implements Reporter, ConfigurableService {
    * {@inheritdoc}
    */
   public function askPostBootQuestions(QuestionHelper $helper, InputInterface $input, OutputInterface $output, array $config) {
-    $default_workspace = isset($config['toggl_workspace']) ? $config['toggl_workspace'] : '';
+    $default_workspace = $config['toggl_workspace'] ?? '';
     // Reset.
     $config = [
       'toggl_workspace' => '',
@@ -264,7 +264,7 @@ class Toggl implements Reporter, ConfigurableService {
     }
     $question = new ChoiceQuestion(sprintf('Enter the ID of your Toggle workspace: <comment>[%s]</comment>', $default_workspace), array_combine($choices, $choices), $default_workspace);
     $workspace = $helper->ask($input, $output, $question) ?: $default_workspace;
-    list(, $id) = explode(':', $workspace);
+    [, $id] = explode(':', $workspace);
     $config['toggl_workspace'] = $id;
     return $config;
   }

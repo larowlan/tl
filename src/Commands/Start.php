@@ -4,7 +4,7 @@ namespace Larowlan\Tl\Commands;
 
 use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\Connector\ConnectorManager;
-use Larowlan\Tl\Formatter;
+use Larowlan\Tl\DurationFormatter;
 use Larowlan\Tl\Repository\Repository;
 use Stecman\Component\Symfony\Console\BashCompletion\Completion\CompletionAwareInterface;
 use Stecman\Component\Symfony\Console\BashCompletion\CompletionContext;
@@ -92,7 +92,7 @@ class Start extends Command implements CompletionAwareInterface, LogAwareCommand
           $stop->getId(),
           $stop->getTicketId(),
           $stopped->getTitle(),
-          Formatter::formatDuration($stop->getDuration())
+          DurationFormatter::formatDuration($stop->getDuration())
         ));
       }
       try {
