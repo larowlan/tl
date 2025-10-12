@@ -24,23 +24,25 @@ class DurationFormatter {
    *   Formatted duration.
    */
   public static function formatDuration(int $duration, ?string $format = NULL): string {
+    $sign = $duration < 0 ? '-' : '';
+    $duration = \abs($duration);
     if ($duration < 60) {
       // Less than one minute.
       $seconds = str_pad($duration, 2, '0', STR_PAD_LEFT);
-      return self::FORMAT_ISO8601 === $format ? "PT{$seconds}S" : "{$seconds} secs";
+      return self::FORMAT_ISO8601 === $format ? "{$sign}PT{$seconds}S" : "{$sign}{$seconds} secs";
     }
     elseif ($duration < 3600) {
       // Less than one hour.
       $minutes = str_pad(floor($duration / 60), 2, '0', STR_PAD_LEFT);
       $seconds = str_pad(($duration - ($minutes * 60)), 2, '0', STR_PAD_LEFT);
-      return self::FORMAT_ISO8601 === $format ? "PT{$minutes}M{$seconds}S" : "$minutes:$seconds m";
+      return self::FORMAT_ISO8601 === $format ? "{$sign}PT{$minutes}M{$seconds}S" : "{$sign}$minutes:$seconds m";
     }
     else {
       // Over one hour.
       $hours = floor($duration / 3600);
       $minutes = str_pad(floor((($duration - ($hours * 3600)) / 60)), 2, '0', STR_PAD_LEFT);
       $seconds = str_pad(($duration - ($hours * 3600) - ($minutes * 60)), 2, '0', STR_PAD_LEFT);
-      return self::FORMAT_ISO8601 === $format ? "PT{$hours}H{$minutes}M{$seconds}S" : "$hours:$minutes:$seconds";
+      return self::FORMAT_ISO8601 === $format ? "{$sign}PT{$hours}H{$minutes}M{$seconds}S" : "{$sign}$hours:$minutes:$seconds";
     }
   }
 

@@ -101,6 +101,7 @@ class Billable extends Command implements ConfigurableService {
       ->addOption('start', 's', InputOption::VALUE_OPTIONAL, 'A date offset', NULL)
       ->addOption('project', 'p', InputOption::VALUE_NONE, 'Group by project', NULL)
       ->addOption('set-target-days', 't', InputOption::VALUE_OPTIONAL, 'Set target days for month', NULL)
+      ->addOption('show-diff', 'd', InputOption::VALUE_NONE, 'Show difference from billable target')
       ->addUsage('tl billable day')
       ->addUsage('tl billable day -s Jul-31')
       ->addUsage('tl billable week')
@@ -122,6 +123,7 @@ class Billable extends Command implements ConfigurableService {
     $start = $input->getOption('start');
     $project = $input->getOption('project');
     $target = $input->getOption('set-target-days');
+    $showDiff = $input->getOption('show-diff');
     $start = $start ? new \DateTime($start) : NULL;
     if ($target) {
       $target = $this->writeTarget($target, $output, $start);
@@ -215,6 +217,9 @@ class Billable extends Command implements ConfigurableService {
       if ($period === static::MONTH) {
         $headers[] = 'Tracking';
       }
+      if ($showDiff) {
+        $headers[] = '+/-';
+      }
       $table->setHeaders($headers);
     }
     else {
@@ -276,16 +281,32 @@ class Billable extends Command implements ConfigurableService {
       $rows[] = ['', 'Total', DurationFormatter::formatDuration($total), ''];
     }
     else {
-      $rows[] = [
+      $billableRow = [
         'Billable',
         DurationFormatter::formatDuration($billable),
         "<$tag>" . ($total ? round(100 * $billable / $total, 2) : 0) . "%</$tag>",
       ];
-      $rows[] = [
+      if ($showDiff) {
+        if ($period === static::MONTH) {
+          $billableRow[] = '';
+        }
+        $targetBillable = $this->billablePercentage * $total;
+        $billableRow[] = DurationFormatter::formatDuration($billable - $targetBillable);
+      }
+      $rows[] = $billableRow;
+      $nonBillableRow = [
         'Non-billable',
         DurationFormatter::formatDuration($non_billable),
         ($total ? round(100 * $non_billable / $total, 2) : 0) . '%',
       ];
+      if ($showDiff) {
+        if ($period === static::MONTH) {
+          $nonBillableRow[] = '';
+        }
+        $targetNonBillable = (1 - $this->billablePercentage) * $total;
+        $nonBillableRow[] = DurationFormatter::formatDuration($non_billable - $targetNonBillable);
+      }
+      $rows[] = $nonBillableRow;
       if ($unknown) {
         $rows[] = ['Unknown<comment>*</comment>', DurationFormatter::formatDuration($unknown), round(100 * $unknown / $total, 2) . '%'];
         $rows[] = ['<comment>* Deleted or access denied tickets:</comment> ' . implode(',', $unknowns), '', ''];
