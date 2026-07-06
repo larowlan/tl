@@ -402,6 +402,47 @@ class DbRepository implements Repository {
   /**
    * {@inheritdoc}
    */
+  public function removeAliasByName(string $alias): int {
+    return (int) $this->qb()->delete('aliases')
+      ->where('alias = :alias')
+      ->setParameter(':alias', $alias)
+      ->execute();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function findAlias(string $alias): ?object {
+    $row = $this->qb()->select('alias', 'tid')
+      ->from('aliases')
+      ->where('alias = :alias')
+      ->setParameter(':alias', $alias)
+      ->execute()
+      ->fetch(\PDO::FETCH_OBJ);
+    return $row ?: NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function updateAlias(string $oldAlias, string $newAlias, $ticketId): void {
+    $this->qb()->delete('aliases')
+      ->where('alias = :alias')
+      ->setParameter(':alias', $oldAlias)
+      ->execute();
+    $this->qb()->insert('aliases')
+      ->values([
+        'tid' => ':ticket_id',
+        'alias' => ':alias',
+      ])
+      ->setParameter(':ticket_id', $ticketId)
+      ->setParameter(':alias', $newAlias)
+      ->execute();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function loadAlias($alias) {
     return $this->qb()->select('tid')
       ->from('aliases')

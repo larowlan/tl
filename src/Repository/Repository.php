@@ -45,6 +45,12 @@ interface Repository {
 
   public function removeAlias($ticket_id, $alias);
 
+  public function removeAliasByName(string $alias): int;
+
+  public function findAlias(string $alias): ?object;
+
+  public function updateAlias(string $oldAlias, string $newAlias, $ticketId): void;
+
   public function loadAlias($alias);
 
   public function listAliases($filter = '');
