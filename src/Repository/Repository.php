@@ -47,6 +47,8 @@ interface Repository {
 
   public function removeAliasByName(string $alias): int;
 
+  public function removeNamedAliases(array $aliases): int;
+
   public function findAlias(string $alias): ?object;
 
   public function updateAlias(string $oldAlias, string $newAlias, $ticketId): void;

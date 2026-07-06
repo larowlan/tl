@@ -80,6 +80,26 @@ class Alias extends Command {
   }
 
   /**
+   * Validates an alias name.
+   *
+   * Alias names may only contain letters, digits, underscores, hyphens, and
+   * fullstops. Commas and spaces are excluded because commas are used as the multiselect
+   * separator in interactive choice lists.
+   *
+   * @param string $alias
+   *   The alias name to validate.
+   *
+   * @return string|null
+   *   NULL if valid, or an error message string if invalid.
+   */
+  protected function validateAliasName(string $alias): ?string {
+    if (!preg_match('/^[a-zA-Z0-9_\-\.]+$/', $alias)) {
+      return 'Alias names may only contain letters, digits, underscores, hyphens, and fullstops.';
+    }
+    return NULL;
+  }
+
+  /**
    * Lists all aliases.
    */
   protected function listAliases(OutputInterface $output): int {
@@ -121,6 +141,7 @@ class Alias extends Command {
 
     // Interactive add loop.
     $helper = $this->getHelper('question');
+    $another = TRUE;
     do {
       $tidQuestion = new Question('Ticket ID: ');
       $newTid = $helper->ask($input, $output, $tidQuestion);
@@ -133,6 +154,10 @@ class Alias extends Command {
       $newAlias = $helper->ask($input, $output, $aliasQuestion);
       if (!$newAlias) {
         $output->writeln('<error>Alias cannot be empty</error>');
+        continue;
+      }
+      if ($error = $this->validateAliasName($newAlias)) {
+        $output->writeln(sprintf('<error>%s</error>', $error));
         continue;
       }
 
@@ -150,6 +175,10 @@ class Alias extends Command {
    * @return bool TRUE on success, FALSE on failure.
    */
   protected function doAddAlias($tid, string $alias, InputInterface $input, OutputInterface $output): bool {
+    if ($error = $this->validateAliasName($alias)) {
+      $output->writeln(sprintf('<error>%s</error>', $error));
+      return FALSE;
+    }
     $existing = $this->repository->findAlias($alias);
     if ($existing) {
       $helper = $this->getHelper('question');
@@ -250,8 +279,8 @@ class Alias extends Command {
       return 0;
     }
 
+    $this->repository->removeNamedAliases($toDelete);
     foreach ($toDelete as $aliasName) {
-      $this->repository->removeAliasByName($aliasName);
       $output->writeln(sprintf('Removed alias <comment>%s</comment>', $aliasName));
     }
 
@@ -298,6 +327,12 @@ class Alias extends Command {
 
     // Prompt for new alias name and ticket ID, pre-filled with current values.
     $newAliasQuestion = new Question(sprintf('Alias [<comment>%s</comment>]: ', $existing->alias), $existing->alias);
+    $newAliasQuestion->setValidator(function ($value) {
+      if ($error = $this->validateAliasName((string) $value)) {
+        throw new \InvalidArgumentException($error);
+      }
+      return $value;
+    });
     $newAlias = $helper->ask($input, $output, $newAliasQuestion);
 
     $newTidQuestion = new Question(sprintf('Ticket ID [<comment>%s</comment>]: ', $existing->tid), (string) $existing->tid);

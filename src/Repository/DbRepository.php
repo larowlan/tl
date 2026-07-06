@@ -426,18 +426,31 @@ class DbRepository implements Repository {
    * {@inheritdoc}
    */
   public function updateAlias(string $oldAlias, string $newAlias, $ticketId): void {
-    $this->qb()->delete('aliases')
-      ->where('alias = :alias')
-      ->setParameter(':alias', $oldAlias)
-      ->execute();
-    $this->qb()->insert('aliases')
-      ->values([
-        'tid' => ':ticket_id',
-        'alias' => ':alias',
-      ])
+    $this->qb()->update('aliases')
+      ->set('alias', ':new_alias')
+      ->set('tid', ':ticket_id')
+      ->where('alias = :old_alias')
+      ->setParameter(':new_alias', $newAlias)
       ->setParameter(':ticket_id', $ticketId)
-      ->setParameter(':alias', $newAlias)
+      ->setParameter(':old_alias', $oldAlias)
       ->execute();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function removeNamedAliases(array $aliases): int {
+    if (empty($aliases)) {
+      return 0;
+    }
+    $aliases = array_values($aliases);
+    $placeholders = implode(', ', array_map(fn($i) => ':alias_' . $i, array_keys($aliases)));
+    $qb = $this->qb()->delete('aliases')
+      ->where('alias IN (' . $placeholders . ')');
+    foreach ($aliases as $i => $alias) {
+      $qb->setParameter(':alias_' . $i, $alias);
+    }
+    return (int) $qb->execute();
   }
 
   /**
