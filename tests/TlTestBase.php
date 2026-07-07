@@ -121,10 +121,13 @@ abstract class TlTestBase extends TestCase {
    * @return \Symfony\Component\Console\Tester\CommandTester
    *   Command tester. Use ::getDisplay() to return the output.
    */
-  protected function executeCommand($name, array $input = []) {
+  protected function executeCommand($name, array $input = [], array $inputs = []) {
     $command = $this->container->get('app.command.' . $name);
     $command->setApplication($this->application);
     $command_tester = new CommandTester($command);
+    if ($inputs) {
+      $command_tester->setInputs($inputs);
+    }
     $command_tester->execute(['command' => $command->getName()] + $input);
     return $command_tester;
   }
