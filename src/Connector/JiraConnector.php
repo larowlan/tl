@@ -266,14 +266,6 @@ class JiraConnector implements Connector, ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  public function fetchCategories() {
-    // Jira doesn't require time log entries to be classified.
-    return ['Work:1' => 'Work:1'];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function sendEntry(Slot $entry) {
     if ((float) $entry->getDuration(FALSE, TRUE) == 0) {
       // Zero time after rounding.

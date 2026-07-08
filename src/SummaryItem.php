@@ -16,7 +16,6 @@ class SummaryItem {
   public function __construct(
     readonly protected Slot $slot,
     readonly protected TicketInterface $ticket,
-    readonly protected string $category,
     readonly protected float $exactDuration,
     readonly protected float $roundedDuration,
   ) {}
@@ -33,13 +32,6 @@ class SummaryItem {
    */
   public function getTicket(): TicketInterface {
     return $this->ticket;
-  }
-
-  /**
-   * Gets the category.
-   */
-  public function getCategory(): string {
-    return $this->category;
   }
 
   /**

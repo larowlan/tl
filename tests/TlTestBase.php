@@ -112,9 +112,9 @@ abstract class TlTestBase extends TestCase {
    *   with a -- prefix.
    *
    * @code@
-   *   $this->executeCommand('tag', [
+   *   $this->executeCommand('comment', [
    *     'slot_id' => 12345,
-   *     '--retag' => TRUE
+   *     'comment' => 'Worked on feature'
    *   ]);
    * @endcode@
    *
@@ -142,7 +142,6 @@ abstract class TlTestBase extends TestCase {
     $this->assertEquals($ticket_id, $active->getTicketId());
     $this->assertEquals($comment, $active->getComment());
     $this->assertNull($active->lastChunk()->getEnd());
-    $this->assertNull($active->getCategory());
     $this->assertNull($active->getRemoteEntryId());
     return $active;
   }

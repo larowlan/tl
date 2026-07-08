@@ -25,7 +25,6 @@ class SendTest extends TlTestBase {
       'issue_number' => 1234,
       'comment' => 'Foo bar',
     ]);
-    $this->getRepository()->tag(9, 1234);
     $this->assertTicketIsOpen(1234, 'Foo bar');
     $this->getMockConnector()->expects($this->any())
       ->method('ticketDetails')
@@ -51,7 +50,7 @@ class SendTest extends TlTestBase {
       ->willReturn(new Ticket('Running tests', 1234));
     $output = $this->executeCommand('send');
     $return = trim($output->getDisplay());
-    $this->assertStringContainsString('Please tag/comment on the following entries:', $return);
+    $this->assertStringContainsString('Please comment on the following entries:', $return);
     $this->assertStringContainsString('1234', $return);
   }
 

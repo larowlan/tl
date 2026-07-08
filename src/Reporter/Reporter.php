@@ -19,13 +19,11 @@ interface Reporter {
    *   Ticket details.
    * @param array $projects
    *   Project details.
-   * @param array $categories
-   *   Project categories.
    *
    * @return bool
    *   TRUE if succeeded.
    */
-  public function report(Slot $entry, TicketInterface $details, array $projects, array $categories);
+  public function report(Slot $entry, TicketInterface $details, array $projects);
 
   /**
    * Gets the name of the reporter.

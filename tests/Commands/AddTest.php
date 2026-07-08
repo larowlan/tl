@@ -94,7 +94,6 @@ class AddTest extends TlTestBase {
     $this->assertEquals($ticket_id, $slot->getTicketId());
     $this->assertEquals($comment, $slot->getComment());
     $this->assertNotNull($slot->lastChunk()->getEnd());
-    $this->assertNull($slot->getCategory());
     $this->assertNull($slot->getRemoteEntryId());
     return $slot;
   }

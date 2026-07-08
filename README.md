@@ -81,8 +81,6 @@ tl add 3546 [hours]
 tl review
 # comment on entries before sending
 tl comment
-# tag entries before sending
-tl tag
 # delete entry before sending
 tl del 3546
 # send entries to redmine
