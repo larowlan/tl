@@ -127,28 +127,6 @@ class RedmineConnector implements Connector, ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  public function fetchCategories() {
-    $cid = 'redmine-categories';
-    if (($details = $this->cache->fetch($this->version . ':' . $cid))) {
-      return $details;
-    }
-    $url = $this->url . '/enumerations/time_entry_activities.xml';
-    if ($xml = $this->fetch($url, $this->apiKey)) {
-      $categories = [];
-      $i = 1;
-      foreach ($xml->time_entry_activity as $node) {
-        $categories[(string) str_pad($node->id, 3, 0, STR_PAD_LEFT)] = $node->name . ':' . $node->id;
-        $i++;
-      }
-      $this->cache->save($this->version . ':' . $cid, $categories, static::LIFETIME);
-      return $categories;
-    }
-    return FALSE;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function sendEntry(Slot $entry) {
     if ((float) $entry->getDuration(FALSE, TRUE) == 0) {
       // Zero time after rounding.
@@ -162,7 +140,7 @@ class RedmineConnector implements Connector, ConfigurableService {
       'project_id'  => $details->getProjectId(),
       'spent_on'    => date('Y-m-d', $entry->getStart()),
       'hours'       => $entry->getDuration(FALSE, TRUE) / 3600,
-      'activity_id' => $entry->getCategory(),
+      'activity_id' => 9,
       'comments'    => $entry->getComment(),
     ];
     $xml = new \SimpleXMLElement('<?xml version="1.0"?><time_entry></time_entry>');

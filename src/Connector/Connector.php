@@ -33,14 +33,6 @@ interface Connector {
   public function ticketDetails($id, $connectorId, $for_reporting = FALSE);
 
   /**
-   * Fetch the details of time categories from a remote ticketing system.
-   *
-   * @return array
-   *   Array of categories keyed by id.
-   */
-  public function fetchCategories();
-
-  /**
    * Send a time entry to the remote ticketing system.
    *
    * @param \Larowlan\Tl\Slot $entry

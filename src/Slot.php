@@ -38,13 +38,6 @@ class Slot {
   protected $comment = '';
 
   /**
-   * Category ID.
-   *
-   * @var string
-   */
-  protected $category = '';
-
-  /**
    * Connector ID.
    *
    * @var string
@@ -149,16 +142,6 @@ class Slot {
   }
 
   /**
-   * Gets value of Category.
-   *
-   * @return string
-   *   Value of Category.
-   */
-  public function getCategory(): ?string {
-    return $this->category;
-  }
-
-  /**
    * Gets value of ConnectorId.
    *
    * @return string
@@ -251,7 +234,6 @@ class Slot {
     $static->id = $record->id;
     $static->ticketId = $record->tid;
     $static->comment = $record->comment;
-    $static->category = $record->category;
     $static->connectorId = $record->connector_id;
     $static->remoteEntryId = $record->teid;
     $static->chunks = array_map(function ($chunk) {

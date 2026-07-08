@@ -138,24 +138,12 @@ class Manager implements ConfigurableService, ConnectorManager {
   /**
    * {@inheritdoc}
    */
-  public function fetchCategories() {
-    $categories = [];
-    foreach ($this->connectors as $id => $connector) {
-      $categories[$id] = $connector->fetchCategories();
-    }
-    return $categories;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function sendEntry(Slot $entry) {
     $connector = $this->connector($entry->getConnectorId());
     if ($sendEntry = $connector->sendEntry($entry)) {
       $details = $connector->ticketDetails($entry->getTicketId(), $entry->getConnectorId(), TRUE);
       $projects = $connector->projectNames();
-      $categories = $connector->fetchCategories();
-      if ($this->reporter->report($entry, $details, $projects, $categories)) {
+      if ($this->reporter->report($entry, $details, $projects)) {
         return $sendEntry;
       }
       throw new \Exception('Could not complete reporting');

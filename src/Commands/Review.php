@@ -57,7 +57,7 @@ class Review extends Command {
    * {@inheritdoc}
    */
   protected function execute(InputInterface $input, OutputInterface $output): int {
-    // Find any untagged items needing summary, use an arbitrarily early date.
+    // Find any items needing summary, use an arbitrarily early date.
     $exact = $input->getOption('exact') ?? FALSE;
     $summary = $this->reviewer->getSummary(static::ALL);
     if ($input->getOption('format') == 'json') {

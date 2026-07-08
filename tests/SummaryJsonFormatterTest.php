@@ -36,14 +36,12 @@ class SummaryJsonFormatterTest extends TestCase {
       new SummaryItem(
         $slot1,
         new Ticket('ticket1', 'project1', TRUE),
-        'category1',
         10,
         10,
       ),
       new SummaryItem(
         $slot2,
         new Ticket('ticket2', 'project2', TRUE),
-        'category2',
         20,
         20,
       ),

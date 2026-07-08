@@ -94,11 +94,11 @@ class Send extends Command {
       return 1;
     }
 
-    // Find any untagged items needing review, use an arbitrarily early date.
+    // Find any uncommented items needing review, use an arbitrarily early date.
     $review = $this->reviewer->getSummary(static::ALL, TRUE);
     if (count($review->getItems()) > 0) {
       // Incomplete records exist.
-      $output->writeln('<error>Please tag/comment on the following entries:</error>');
+      $output->writeln('<error>Please comment on the following entries:</error>');
       $rows = SummaryTableFormatter::formatTableRows($review, FALSE);
       $table = new Table($output);
       $table->setHeaders(SummaryTableFormatter::getHeaders(FALSE));

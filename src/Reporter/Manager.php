@@ -117,10 +117,10 @@ class Manager implements ConfigurableService, Reporter {
   /**
    * {@inheritdoc}
    */
-  public function report(Slot $entry, TicketInterface $details, array $projects, array $categories) {
+  public function report(Slot $entry, TicketInterface $details, array $projects) {
     $return = TRUE;
     foreach ($this->reporters as $reporter) {
-      $return = $return && $reporter->report($entry, $details, $projects, $categories);
+      $return = $return && $reporter->report($entry, $details, $projects);
     }
     return $return;
   }

@@ -74,12 +74,7 @@ class Toggl implements Reporter, ConfigurableService {
   /**
    * {@inheritdoc}
    */
-  public function report(Slot $entry, TicketInterface $details, array $projects, array $categories) {
-    $categories = array_reduce($categories, function (array $carry, $item) {
-      [$name, $id] = explode(':', $item);
-      $carry[$id] = $name;
-      return $carry;
-    }, []);
+  public function report(Slot $entry, TicketInterface $details, array $projects) {
     $connector_id = $entry->getConnectorId();
     [, $connector_id] = explode('.', $connector_id);
     $project_id = $this->getProjectId(trim($projects[$details->getProjectId()]), $connector_id);
@@ -98,9 +93,6 @@ class Toggl implements Reporter, ConfigurableService {
         'billable' => $details->isBillable(),
         'duration' => $duration + $difference,
         'created_with' => 'tl',
-        'tags' => [
-          $categories[$entry->getCategory()],
-        ],
         'duronly' => TRUE,
       ]);
       $difference = 0;

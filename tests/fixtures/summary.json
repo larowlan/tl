@@ -11,7 +11,6 @@
                 "title": "ticket1",
                 "billable": true
             },
-            "category": "category1",
             "exactDuration": 10,
             "roundedDuration": 10
         },
@@ -26,7 +25,6 @@
                 "title": "ticket2",
                 "billable": true
             },
-            "category": "category2",
             "exactDuration": 20,
             "roundedDuration": 20
         }

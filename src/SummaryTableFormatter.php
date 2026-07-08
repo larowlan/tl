@@ -28,7 +28,6 @@ class SummaryTableFormatter {
       }
       $rows[] = array_merge($row, [
         substr($ticket->getTitle(), 0, 25) . '...',
-        $item->getCategory(),
         $slot->getComment(),
       ]);
     }
@@ -41,7 +40,6 @@ class SummaryTableFormatter {
         '<info>' . DurationFormatter::formatDuration($summary->getExactTotal()) . '</info>',
         '',
         '',
-        '',
       ];
     }
     else {
@@ -49,7 +47,6 @@ class SummaryTableFormatter {
         '',
         '<comment>Total</comment>',
         '<info>' . $summary->getRoundedTotal() / 3600 . ' h</info>',
-        '',
         '',
         '',
       ];
@@ -71,7 +68,6 @@ class SummaryTableFormatter {
     }
     return array_merge($headers, [
       'Title',
-      'Tag',
       'Comment',
     ]);
   }

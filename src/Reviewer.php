@@ -2,7 +2,6 @@
 
 namespace Larowlan\Tl;
 
-use GuzzleHttp\Exception\ConnectException;
 use Larowlan\Tl\Connector\Connector;
 use Larowlan\Tl\Repository\Repository;
 
@@ -41,38 +40,17 @@ class Reviewer {
     }
 
     $roundedTotal = 0;
-    $offline = FALSE;
-    try {
-      $categories = $this->connector->fetchCategories();
-    }
-    catch (ConnectException $e) {
-      $offline = TRUE;
-    }
     $exactTotal = 0;
     $items = [];
     /** @var \Larowlan\Tl\Slot $record */
     foreach ($data as $record) {
       $roundedTotal += $record->getDuration(FALSE, TRUE);
       $details = $this->connector->ticketDetails($record->getTicketId(), $record->getConnectorId());
-      $category_id = str_pad($record->getCategory() ?? '', 3, 0, STR_PAD_LEFT);
-      $category = '';
-      if ($record->getCategory()) {
-        if ($offline) {
-          $category = 'Offline';
-        }
-        elseif (isset($categories[$record->getConnectorId()][$category_id])) {
-          $category = $categories[$record->getConnectorId()][$category_id];
-        }
-        else {
-          $category = 'Unknown';
-        }
-      }
       $roundedDuration = $record->getDuration(FALSE, TRUE) / 3600;
       $exactDuration = $record->getDuration();
       $item = new SummaryItem(
         $record,
         $details,
-        $category,
         $exactDuration,
         $roundedDuration
       );

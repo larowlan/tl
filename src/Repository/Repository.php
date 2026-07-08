@@ -31,8 +31,6 @@ interface Repository {
 
   public function edit($slot_id, int $duration);
 
-  public function tag($tag_id, $slot_id = NULL);
-
   public function frequent() : array;
 
   public function slot($slot_id) : ?Slot;

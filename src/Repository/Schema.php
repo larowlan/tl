@@ -12,7 +12,7 @@ class Schema {
   /**
    * Schema version.
    */
-  const version = 3;
+  const version = 4;
 
   /**
    * Gets schema.
@@ -28,7 +28,6 @@ class Schema {
     $slots->addColumn('tid', 'bigint', ['unsigned' => TRUE]);
     $slots->addColumn('teid', 'bigint', ['unsigned' => TRUE])->setNotnull(FALSE);
     $slots->addColumn('comment', 'string', ['length' => 255])->setNotnull(FALSE);
-    $slots->addColumn('category', 'string', ['length' => 255])->setNotnull(FALSE);
     $slots->addColumn('connector_id', 'string', ['length' => 50])->setDefault('connector.redmine')->setNotnull(FALSE);
     $slots->setPrimaryKey(['id']);
     $slots->addIndex(['tid']);

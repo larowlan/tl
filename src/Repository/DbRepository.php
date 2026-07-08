@@ -55,7 +55,7 @@ class DbRepository implements Repository {
    */
   public function getActive($slot_id = NULL): ?Slot {
     $q = $this->qb()
-      ->select('s.id', 's.tid', 's.comment', 's.category', 's.connector_id', 's.teid')
+      ->select('s.id', 's.tid', 's.comment', 's.connector_id', 's.teid')
       ->from('slots', 's')
       ->innerJoin('s', 'chunks', 'c', 'c.sid = s.id')
       ->where('c.end IS NULL');
@@ -94,7 +94,7 @@ class DbRepository implements Repository {
    */
   public function latest(): ?Slot {
     $q = $this->qb()
-      ->select('s.id', 's.tid', 's.comment', 's.category', 's.connector_id', 's.teid')
+      ->select('s.id', 's.tid', 's.comment', 's.connector_id', 's.teid')
       ->from('slots', 's')
       ->innerJoin('s', 'chunks', 'c', 'c.sid = s.id')
       ->orderBy('c.end', 'DESC');
@@ -116,8 +116,7 @@ class DbRepository implements Repository {
       ->where('s.teid is NULL')
       ->where('s.tid = :tid');
     if (!$force_continue) {
-      $continue_query->andWhere('s.comment IS NULL')
-        ->andWhere('s.category IS NULL');
+      $continue_query->andWhere('s.comment IS NULL');
     }
     else {
       $continue_query->andWhere('s.id = :id')
@@ -175,11 +174,11 @@ class DbRepository implements Repository {
     }
     return array_map(function ($record) {
       return Slot::fromRecord($record, $this->chunksForSlot($record->id));
-    }, $this->qb()->select('s.id', 's.tid', 's.connector_id', 's.teid', 's.category', 's.comment')
+    }, $this->qb()->select('s.id', 's.tid', 's.connector_id', 's.teid', 's.comment')
       ->from('slots', 's')
       ->innerJoin('s', 'chunks', 'c', 'c.sid = s.id')
       ->having('c.start > :start AND c.start < :end')
-      ->groupBy('s.id', 's.tid', 's.connector_id', 's.teid', 's.category', 's.comment')
+      ->groupBy('s.id', 's.tid', 's.connector_id', 's.teid', 's.comment')
       ->setParameter(':start', $stamp)
       ->setParameter(':end', $stamp + (60 * 60 * 24))
       ->execute()
@@ -197,7 +196,7 @@ class DbRepository implements Repository {
       $stamp = strtotime($date);
     }
     $query = $this->qb()
-      ->select('s.id', 's.tid', 's.connector_id', 's.teid', 's.category', 's.comment', 'c.end', 'c.start', 'c.sid')
+      ->select('s.id', 's.tid', 's.connector_id', 's.teid', 's.comment', 'c.end', 'c.start', 'c.sid')
       ->from('slots', 's')
       ->innerJoin('s', 'chunks', 'c', 'c.sid = s.id');
     $where = $this->qb()->expr()->andX(
@@ -206,11 +205,8 @@ class DbRepository implements Repository {
     );
     $query->setParameter(':stamp', $stamp);
     if ($check) {
-      // Only incomplete records.
-      $where->add($this->qb()->expr()->orX(
-        $this->qb()->expr()->isNull('comment'),
-        $this->qb()->expr()->isNull('category')
-      ));
+      // Only incomplete records (missing comment).
+      $where->add($this->qb()->expr()->isNull('comment'));
     }
     return array_map(function (array $record) {
       return Slot::fromRecord($record['record'], $record['chunks']);
@@ -287,20 +283,6 @@ class DbRepository implements Repository {
    */
   protected static function requestTime() {
     return time();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function tag($tag_id, $slot_id = NULL) {
-    $query = $this->qb()->update('slots')
-      ->set('category', ':tag')
-      ->setParameter(':tag', $tag_id);
-    if ($slot_id) {
-      $query->andWhere('id = :id')
-        ->setParameter(':id', $slot_id);
-    }
-    return $query->execute();
   }
 
   /**
@@ -489,7 +471,7 @@ class DbRepository implements Repository {
       // Some time in the future.
       $end = time() + 86400;
     }
-    $return = $this->qb()->select('s.tid', 's.category', 's.comment', 's.connector_id', 's.teid', 'c.start', 'c.end', 'c.sid')
+    $return = $this->qb()->select('s.tid', 's.comment', 's.connector_id', 's.teid', 'c.start', 'c.end', 'c.sid')
       ->from('slots', 's')
       ->innerJoin('s', 'chunks', 'c', 'c.sid = s.id')
       ->where('c.start > :start AND c.start < :end')
